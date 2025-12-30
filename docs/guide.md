@@ -1,8 +1,5 @@
 # User Guide
 
-!!! tip "Quick Start"
-    New to the site? Start here for everything you need to know about finding and understanding prohibited substances information.
-
 ## How to use this site
 
 !!! info "Navigation"
