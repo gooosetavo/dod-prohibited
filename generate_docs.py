@@ -112,7 +112,7 @@ def main():
 
         # Use a short, unique field for the filename (prefer 'ingredient', 'name', or fallback to hash)
         def get_short_slug(entry):
-            for key in ['ingredient', 'name', 'substance', 'title']:
+            for key in ['Name', 'ingredient', 'name', 'substance', 'title']:
                 if key in entry and isinstance(entry[key], str) and entry[key].strip():
                     return slugify(entry[key])
             # fallback: hash of all values
@@ -121,7 +121,8 @@ def main():
 
         links = []
         for entry in data:
-            name = entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "unknown"
+            # Prefer 'Name' field for display, then fallback
+            name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
             slug = get_short_slug(entry)
             page_path = substances_dir / f"{slug}.md"
             links.append((name, f"{slug}.md"))
