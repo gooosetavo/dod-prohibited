@@ -146,26 +146,178 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
                 f.write(f"**Updated:** {updated}\n\n")
 
 
-def generate_substances_index(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
+def extract_dea_schedule(reasons_data):
+    """Extract DEA schedule information from reasons data."""
+    if not reasons_data:
+        return None
+    
+    if isinstance(reasons_data, str):
+        try:
+            import ast
+            reasons_data = ast.literal_eval(reasons_data)
+        except Exception:
+            reasons_data = [reasons_data]
+    
+    for reason in reasons_data:
+        if isinstance(reason, dict):
+            reason_text = reason.get('reason', '').lower()
+        else:
+            reason_text = str(reason).lower()
+        
+        if 'schedule' in reason_text and 'dea' in reason_text:
+            if 'schedule i' in reason_text:
+                return 'Schedule I'
+            elif 'schedule ii' in reason_text:
+                return 'Schedule II'
+            elif 'schedule iii' in reason_text:
+                return 'Schedule III'
+            elif 'schedule iv' in reason_text:
+                return 'Schedule IV'
+            elif 'schedule v' in reason_text:
+                return 'Schedule V'
+    
+    return None
+
+
+def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
     """
-    Generates the substances index Markdown file.
+    Generates a separate table page with all substances.
     Args:
         data: List of substance dictionaries.
         columns: List of column names to include.
         docs_dir: Path to the docs directory.
     """
-    substances_index = docs_dir / "substances" / "index.md"
+    table_path = docs_dir / "substances" / "table.md"
     links = []
+    
     for entry in data:
         name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
         slug = get_short_slug(entry)
-        links.append((name, f"{slug}.md"))
+        
+        # Extract additional info for table
+        classifications = entry.get('Classifications') or entry.get('classifications') or ''
+        if isinstance(classifications, list):
+            classifications = ', '.join(classifications)
+        elif isinstance(classifications, str) and classifications.startswith('['):
+            try:
+                import ast
+                classifications = ', '.join(ast.literal_eval(classifications))
+            except:
+                pass
+        
+        reasons = entry.get('Reasons') or entry.get('reasons')
+        dea_schedule = extract_dea_schedule(reasons)
+        
+        links.append((name, slug, classifications, dea_schedule or ''))
+    
+    with open(table_path, "w", encoding="utf-8") as f:
+        f.write("# Complete Substances Table\n\n")
+        f.write("This table shows all prohibited substances with their classifications and DEA schedules.\n\n")
+        f.write("| Name | Classifications | DEA Schedule | Details |\n")
+        f.write("|---|---|---|---|\n")
+        
+        for name, slug, classifications, dea_schedule in links:
+            f.write(f"| {name} | {classifications} | {dea_schedule} | [View details]({slug}.md) |\n")
+
+
+def generate_substances_index(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
+    """
+    Generates the substances index with metrics summary.
+    Args:
+        data: List of substance dictionaries.
+        columns: List of column names to include.
+        docs_dir: Path to the docs directory.
+    """
+    # Calculate metrics
+    total_substances = len(data)
+    
+    # DEA Schedule breakdown
+    dea_schedules = {'Schedule I': 0, 'Schedule II': 0, 'Schedule III': 0, 'Schedule IV': 0, 'Schedule V': 0}
+    classifications_count = {}
+    
+    for entry in data:
+        # Count DEA schedules
+        reasons = entry.get('Reasons') or entry.get('reasons')
+        dea_schedule = extract_dea_schedule(reasons)
+        if dea_schedule:
+            dea_schedules[dea_schedule] += 1
+        
+        # Count classifications
+        classifications = entry.get('Classifications') or entry.get('classifications')
+        if classifications:
+            if isinstance(classifications, str):
+                try:
+                    import ast
+                    classifications = ast.literal_eval(classifications)
+                except Exception:
+                    classifications = [classifications]
+            
+            if isinstance(classifications, list):
+                for classification in classifications:
+                    classifications_count[classification] = classifications_count.get(classification, 0) + 1
+            else:
+                classifications_count[str(classifications)] = classifications_count.get(str(classifications), 0) + 1
+    
+    # Generate the table page first
+    generate_substances_table(data, columns, docs_dir)
+    
+    # Generate the index with metrics
+    substances_index = docs_dir / "substances" / "index.md"
     
     with open(substances_index, "w", encoding="utf-8") as f:
         f.write("# Prohibited Substances\n\n")
-        f.write("| Name | Details |\n|---|---|\n")
-        for name, slug in links:
-            f.write(f"| {name} | [View details]({slug}) |\n")
+        
+        # Metrics summary
+        f.write("## Summary Statistics\n\n")
+        f.write(f"**Total prohibited substances:** {total_substances}\n\n")
+        
+        # DEA Schedule breakdown
+        f.write("### DEA Controlled Substances Breakdown\n\n")
+        total_dea = sum(dea_schedules.values())
+        f.write(f"**Total DEA controlled substances:** {total_dea}\n\n")
+        
+        if total_dea > 0:
+            for schedule, count in dea_schedules.items():
+                if count > 0:
+                    percentage = (count / total_dea) * 100
+                    f.write(f"- **{schedule}:** {count} substances ({percentage:.1f}%)\n")
+            f.write("\n")
+        
+        # Top classifications
+        f.write("### Most Common Classifications\n\n")
+        sorted_classifications = sorted(classifications_count.items(), key=lambda x: x[1], reverse=True)
+        for classification, count in sorted_classifications[:10]:  # Top 10
+            if classification and classification.strip():
+                percentage = (count / total_substances) * 100
+                f.write(f"- **{classification}:** {count} substances ({percentage:.1f}%)\n")
+        f.write("\n")
+        
+        # Navigation links
+        f.write("## Browse Substances\n\n")
+        f.write("- **[View Complete Table](table.md)** - All substances in a sortable table\n")
+        f.write("- **[Search substances](#)** - Use the search bar above\n\n")
+        
+        # Recent additions (if available)
+        recent_substances = []
+        for entry in data:
+            added = entry.get('added')
+            if added:
+                name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
+                slug = get_short_slug(entry)
+                recent_substances.append((name, slug, added))
+        
+        # Sort by added date and show recent ones
+        recent_substances.sort(key=lambda x: x[2], reverse=True)
+        if recent_substances[:5]:  # Show last 5 added
+            f.write("## Recently Added\n\n")
+            for name, slug, added in recent_substances[:5]:
+                try:
+                    from datetime import datetime
+                    added_date = datetime.fromisoformat(added.replace('Z', '+00:00')).strftime('%Y-%m-%d')
+                    f.write(f"- **[{name}]({slug}.md)** - Added {added_date}\n")
+                except:
+                    f.write(f"- **[{name}]({slug}.md)**\n")
+            f.write("\n")
 
 def generate_changelog(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
     """

@@ -76,5 +76,6 @@ nav:
   - User Guide: guide.md
   - Substances:
       - substances/index.md
+      - Complete Table: substances/table.md
       # Individual substance pages will be auto-generated in substances/
   - Changelog: changelog.md
