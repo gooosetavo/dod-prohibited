@@ -234,12 +234,12 @@ def main():
                 f.write(f"| {name} | [View details]({slug}) |\n")
 
         # Optionally, update index.md to point to the JSON data and substances
-        md_path = docs_dir / "index.md"
-        with open(md_path, "w", encoding="utf-8") as f:
-            f.write("# DoD Prohibited Dietary Supplement Ingredients\n\n")
-            f.write("This page is automatically updated daily.\n\n")
-            f.write("- [Browse all substances](substances/index.md)\n")
-            f.write("- [Download as JSON](data.json)\n")
+        # md_path = docs_dir / "index.md"
+        # with open(md_path, "w", encoding="utf-8") as f:
+        #     f.write("# DoD Prohibited Dietary Supplement Ingredients\n\n")
+        #     f.write("This page is automatically updated daily.\n\n")
+        #     f.write("- [Browse all substances](substances/index.md)\n")
+        #     f.write("- [Download as JSON](data.json)\n")
     else:
         print("Skipping docs/ generation: not on gh-pages branch and not forced.")
 
