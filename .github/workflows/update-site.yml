@@ -12,6 +12,14 @@ jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
       - name: Checkout repository
         uses: actions/checkout@v4
 

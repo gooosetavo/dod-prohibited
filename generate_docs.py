@@ -127,10 +127,103 @@ def main():
             links.append((name, f"{slug}.md"))
             with open(page_path, "w", encoding="utf-8") as f:
                 f.write(f"# {name}\n\n")
-                for col in columns:
-                    f.write(f"**{col.capitalize()}**: {entry.get(col, '')}\n\n")
-                f.write(f"**Added:** {entry.get('added', '')}\n\n")
-                f.write(f"**Updated:** {entry.get('updated', '')}\n\n")
+                # Other names
+                other_names = entry.get('Other_names') or entry.get('other_names')
+                if other_names:
+                    if isinstance(other_names, str):
+                        try:
+                            import ast
+                            other_names = ast.literal_eval(other_names)
+                        except Exception:
+                            other_names = [other_names]
+                    f.write(f"**Other names:** {', '.join(other_names)}\n\n")
+                # Classifications
+                classifications = entry.get('Classifications') or entry.get('classifications')
+                if classifications:
+                    if isinstance(classifications, str):
+                        try:
+                            import ast
+                            classifications = ast.literal_eval(classifications)
+                        except Exception:
+                            classifications = [classifications]
+                    f.write(f"**Classifications:** {', '.join(classifications)}\n\n")
+                # Reasons
+                reasons = entry.get('Reasons') or entry.get('reasons')
+                if reasons:
+                    if isinstance(reasons, str):
+                        try:
+                            import ast
+                            reasons = ast.literal_eval(reasons)
+                        except Exception:
+                            reasons = [reasons]
+                    f.write("**Reasons for prohibition:**\n")
+                    for reason in reasons:
+                        if isinstance(reason, dict):
+                            line = f"- {reason.get('reason', '')}"
+                            if reason.get('link'):
+                                line += f" ([source]({reason['link']}))"
+                            f.write(line + "\n")
+                        else:
+                            f.write(f"- {reason}\n")
+                    f.write("\n")
+                # Warnings
+                warnings = entry.get('Warnings') or entry.get('warnings')
+                if warnings:
+                    if isinstance(warnings, str):
+                        try:
+                            import ast
+                            warnings = ast.literal_eval(warnings)
+                        except Exception:
+                            warnings = [warnings]
+                    f.write(f"**Warnings:** {', '.join(warnings)}\n\n")
+                # References
+                refs = entry.get('References') or entry.get('references')
+                if refs:
+                    if isinstance(refs, str):
+                        try:
+                            import ast
+                            refs = ast.literal_eval(refs)
+                        except Exception:
+                            refs = [refs]
+                    f.write("**References:**\n")
+                    for ref in refs:
+                        f.write(f"- {ref}\n")
+                    f.write("\n")
+                # More info URL
+                more_info_url = entry.get('More_info_url') or entry.get('more_info_url')
+                if more_info_url:
+                    f.write(f"**More info:** [{more_info_url}]({more_info_url})\n\n")
+                # Sourceof
+                sourceof = entry.get('Sourceof') or entry.get('sourceof')
+                if sourceof:
+                    f.write(f"**Source of:** {sourceof}\n\n")
+                # Reason
+                reason = entry.get('Reason') or entry.get('reason')
+                if reason:
+                    f.write(f"**Reason:** {reason}\n\n")
+                # Label terms
+                label_terms = entry.get('Label_terms') or entry.get('label_terms')
+                if label_terms:
+                    f.write(f"**Label terms:** {label_terms}\n\n")
+                # Linked ingredients
+                linked_ingredients = entry.get('Linked_ingredients') or entry.get('linked_ingredients')
+                if linked_ingredients:
+                    f.write(f"**Linked ingredients:** {linked_ingredients}\n\n")
+                # Searchable name
+                searchable_name = entry.get('Searchable_name') or entry.get('searchable_name')
+                if searchable_name:
+                    f.write(f"**Searchable name:** {searchable_name}\n\n")
+                # Guid
+                guid = entry.get('Guid') or entry.get('guid')
+                if guid:
+                    f.write(f"**GUID:** {guid}\n\n")
+                # Added/Updated
+                added = entry.get('added')
+                if added:
+                    f.write(f"**Added:** {added}\n\n")
+                updated = entry.get('updated')
+                if updated:
+                    f.write(f"**Updated:** {updated}\n\n")
 
         # Create substances/index.md with a table of links
         substances_index = docs_dir / "substances" / "index.md"
