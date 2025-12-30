@@ -4,16 +4,11 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    "beautifulsoup4>=4.14.3",
-    "pandas>=2.3.3",
-    "requests>=2.32.5",
-]
+dependencies = ["beautifulsoup4>=4.14.3", "pandas>=2.3.3", "requests>=2.32.5"]
 
-[dependency-groups]
-jupyterlab = [
-    "jupyterlab>=4.5.1",
-]
+
+[project.optional-dependencies]
+jupyterlab = ["jupyterlab>=4.5.1"]
 docs = [
     "mkdocs-awesome-pages-plugin>=2.10.1",
     "mkdocs-glightbox>=0.5.2",

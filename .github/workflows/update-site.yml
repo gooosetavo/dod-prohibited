@@ -20,8 +20,15 @@ jobs:
       - name: Install uv
         run: pip install uv
 
+      - name: Export requirements from pyproject.toml
+        run: |
+          uv pip compile pyproject.toml --output-file requirements.txt
+          uv pip compile pyproject.toml --output-file requirements-docs.txt --extra docs
+
       - name: Install dependencies with uv
-        run: uv pip install -r requirements.txt --system && uv pip install -r requirements-docs.txt --system || true
+        run: |
+          uv pip install -r requirements.txt --system
+          uv pip install -r requirements-docs.txt --system || true
 
       - name: Generate Markdown docs
         run: python generate_docs.py
