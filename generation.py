@@ -6,7 +6,8 @@ import hashlib
 import re
 import unicodedata
 from collections import defaultdict
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, List, Dict, Any
+from jinja2 import Environment, FileSystemLoader
 
 if TYPE_CHECKING:
     from pydantic_settings import BaseSettings
@@ -181,128 +182,179 @@ def extract_dea_schedule(reasons_data):
 
 def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
     """
-    Generates a comprehensive table page with all substances and their normalized data.
+    Generates a comprehensive table page with all substances and their normalized data using Jinja templates.
     Args:
         data: List of substance dictionaries.
         columns: List of column names to include.
         docs_dir: Path to the docs directory.
     """
-    table_path = docs_dir / "substances" / "table.md"
+    # Setup Jinja environment
+    template_dir = Path(__file__).parent / "templates"
+    env = Environment(loader=FileSystemLoader(template_dir))
     
-    with open(table_path, "w", encoding="utf-8") as f:
-        f.write("# Complete Substances Table\n\n")
-        f.write("This table shows all prohibited substances with their complete normalized data. ")
-        f.write("Click on column headers to sort by that field.\n\n")
+    # Define table structure
+    table_headers = ["Name", "Other Names", "Classifications", "DEA Schedule", "Reason", "Warnings", "References", "Added", "Details"]
+    table_header_alignment = [":-----", ":------------", ":---------------", ":-------------", ":-------", ":----------", ":-----------", ":------", ":--------"]
+    
+    # Define filter configuration
+    filter_columns = [
+        {
+            "type": "text",
+            "id": "filter-name",
+            "placeholder": "Filter by name..."
+        },
+        {
+            "type": "text",
+            "id": "filter-classification",
+            "placeholder": "Filter by classification..."
+        },
+        {
+            "type": "select",
+            "id": "filter-schedule",
+            "default_label": "All DEA Schedules",
+            "options": [
+                {"value": "Schedule I", "label": "Schedule I"},
+                {"value": "Schedule II", "label": "Schedule II"},
+                {"value": "Schedule III", "label": "Schedule III"},
+                {"value": "Schedule IV", "label": "Schedule IV"},
+                {"value": "Schedule V", "label": "Schedule V"},
+                {"value": "N/A", "label": "No DEA Schedule"}
+            ]
+        }
+    ]
+    
+    # Process table data
+    table_data = []
+    for entry in data:
+        # Extract basic info
+        name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
+        slug = get_short_slug(entry)
         
-        # Create comprehensive table with proper column alignment
-        f.write("| Name | Other Names | Classifications | DEA Schedule | Reason | Warnings | References | Added | Details |\n")
-        f.write("|:-----|:------------|:---------------|:-------------|:-------|:---------|:-----------|:------|:--------|\n")
+        # Process other names
+        other_names = entry.get('other_names') or entry.get('Other_names') or ''
+        if isinstance(other_names, str) and other_names.startswith('['):
+            try:
+                import ast
+                other_names_list = ast.literal_eval(other_names)
+                other_names = ', '.join(other_names_list) if other_names_list else ''
+            except:
+                other_names = other_names.strip('[]"')
+        elif isinstance(other_names, list):
+            other_names = ', '.join(other_names)
+        other_names = other_names or 'N/A'
         
-        for entry in data:
-            # Extract basic info
-            name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
-            slug = get_short_slug(entry)
-            
-            # Process other names
-            other_names = entry.get('other_names') or entry.get('Other_names') or ''
-            if isinstance(other_names, str) and other_names.startswith('['):
-                try:
-                    import ast
-                    other_names_list = ast.literal_eval(other_names)
-                    other_names = ', '.join(other_names_list) if other_names_list else ''
-                except:
-                    other_names = other_names.strip('[]"')
-            elif isinstance(other_names, list):
-                other_names = ', '.join(other_names)
-            other_names = other_names or 'N/A'
-            
-            # Process classifications
-            classifications = entry.get('classifications') or entry.get('Classifications') or ''
-            if isinstance(classifications, str) and classifications.startswith('['):
-                try:
-                    import ast
-                    classifications_list = ast.literal_eval(classifications)
-                    classifications = ', '.join(classifications_list) if classifications_list else ''
-                except:
-                    classifications = classifications.strip('[]"')
-            elif isinstance(classifications, list):
-                classifications = ', '.join(classifications)
-            classifications = classifications or 'N/A'
-            
-            # Extract DEA schedule
-            reasons = entry.get('Reasons') or entry.get('reasons')
-            dea_schedule = extract_dea_schedule(reasons) or 'N/A'
-            
-            # Process primary reason
-            primary_reason = entry.get('Reason') or 'N/A'
-            if not primary_reason or primary_reason == '':
-                primary_reason = 'N/A'
-            
-            # Process warnings
-            warnings = entry.get('Warnings') or entry.get('warnings') or ''
-            if isinstance(warnings, str) and warnings.startswith('['):
-                try:
-                    import ast
-                    warnings_list = ast.literal_eval(warnings)
-                    warnings = ', '.join(warnings_list) if warnings_list else ''
-                except:
-                    warnings = warnings.strip('[]"')
-            elif isinstance(warnings, list):
-                warnings = ', '.join(warnings)
-            warnings = warnings or 'N/A'
-            
-            # Process references
-            references = entry.get('References') or entry.get('references') or ''
-            if isinstance(references, str) and references.startswith('['):
-                try:
-                    import ast
-                    references_list = ast.literal_eval(references)
-                    references = str(len(references_list)) + ' refs' if references_list else 'No refs'
-                except:
-                    references = 'No refs'
-            elif isinstance(references, list):
-                references = str(len(references)) + ' refs' if references else 'No refs'
-            else:
+        # Process classifications
+        classifications = entry.get('classifications') or entry.get('Classifications') or ''
+        if isinstance(classifications, str) and classifications.startswith('['):
+            try:
+                import ast
+                classifications_list = ast.literal_eval(classifications)
+                classifications = ', '.join(classifications_list) if classifications_list else ''
+            except:
+                classifications = classifications.strip('[]"')
+        elif isinstance(classifications, list):
+            classifications = ', '.join(classifications)
+        classifications = classifications or 'N/A'
+        
+        # Extract DEA schedule
+        reasons = entry.get('Reasons') or entry.get('reasons')
+        dea_schedule = extract_dea_schedule(reasons) or 'N/A'
+        
+        # Process primary reason
+        primary_reason = entry.get('Reason') or 'N/A'
+        if not primary_reason or primary_reason == '':
+            primary_reason = 'N/A'
+        
+        # Process warnings
+        warnings = entry.get('Warnings') or entry.get('warnings') or ''
+        if isinstance(warnings, str) and warnings.startswith('['):
+            try:
+                import ast
+                warnings_list = ast.literal_eval(warnings)
+                warnings = ', '.join(warnings_list) if warnings_list else ''
+            except:
+                warnings = warnings.strip('[]"')
+        elif isinstance(warnings, list):
+            warnings = ', '.join(warnings)
+        warnings = warnings or 'N/A'
+        
+        # Process references
+        references = entry.get('References') or entry.get('references') or ''
+        if isinstance(references, str) and references.startswith('['):
+            try:
+                import ast
+                references_list = ast.literal_eval(references)
+                references = str(len(references_list)) + ' refs' if references_list else 'No refs'
+            except:
                 references = 'No refs'
-            
-            # Process added date
-            added_date = entry.get('added', '')
-            if added_date:
-                try:
-                    from datetime import datetime
-                    added_date = datetime.fromisoformat(added_date.replace('Z', '+00:00')).strftime('%Y-%m-%d')
-                except:
-                    added_date = 'Unknown'
-            else:
-                added_date = 'Unknown'
-            
-            # Escape pipe characters in content to prevent table breakage
-            name = name.replace('|', '\\|')
-            other_names = other_names.replace('|', '\\|')
-            classifications = classifications.replace('|', '\\|')
-            primary_reason = primary_reason.replace('|', '\\|')
-            warnings = warnings.replace('|', '\\|')
-            
-            # Truncate long content to keep table readable
-            if len(other_names) > 50:
-                other_names = other_names[:47] + '...'
-            if len(classifications) > 30:
-                classifications = classifications[:27] + '...'
-            if len(primary_reason) > 40:
-                primary_reason = primary_reason[:37] + '...'
-            if len(warnings) > 30:
-                warnings = warnings[:27] + '...'
-            
-            # Write table row
-            f.write(f"| {name} | {other_names} | {classifications} | {dea_schedule} | {primary_reason} | {warnings} | {references} | {added_date} | [View details]({slug}.md) |\n")
+        elif isinstance(references, list):
+            references = str(len(references)) + ' refs' if references else 'No refs'
+        else:
+            references = 'No refs'
         
-        # Add note about table functionality
-        f.write("\n---\n\n")
-        f.write("**Table Features:**\n")
-        f.write("- **Sortable columns:** Click any column header to sort the table\n")
-        f.write("- **Search:** Use your browser's search function (Ctrl/Cmd+F) to find specific substances\n")
-        f.write("- **Details:** Click 'View details' for comprehensive information about each substance\n\n")
-        f.write("**Note:** Some content may be truncated in this table view. Click 'View details' for complete information.\n")
+        # Process added date
+        added_date = entry.get('added', '')
+        if added_date:
+            try:
+                from datetime import datetime
+                added_date = datetime.fromisoformat(added_date.replace('Z', '+00:00')).strftime('%Y-%m-%d')
+            except:
+                added_date = 'Unknown'
+        else:
+            added_date = 'Unknown'
+        
+        # Escape pipe characters in content to prevent table breakage
+        name = name.replace('|', '\\|')
+        other_names = other_names.replace('|', '\\|')
+        classifications = classifications.replace('|', '\\|')
+        primary_reason = primary_reason.replace('|', '\\|')
+        warnings = warnings.replace('|', '\\|')
+        
+        # Truncate long content to keep table readable
+        if len(other_names) > 50:
+            other_names = other_names[:47] + '...'
+        if len(classifications) > 30:
+            classifications = classifications[:27] + '...'
+        if len(primary_reason) > 40:
+            primary_reason = primary_reason[:37] + '...'
+        if len(warnings) > 30:
+            warnings = warnings[:27] + '...'
+        
+        # Add row data
+        table_data.append([
+            name,
+            other_names,
+            classifications,
+            dea_schedule,
+            primary_reason,
+            warnings,
+            references,
+            added_date,
+            f"[View details]({slug}.md)"
+        ])
+    
+    # Render filter controls
+    filter_template = env.get_template('table-filter-controls.html')
+    filter_controls = filter_template.render(filter_columns=filter_columns)
+    
+    # Render table features note
+    features_template = env.get_template('table-features-note.md')
+    table_features_note = features_template.render(has_filters=True)
+    
+    # Render main table template
+    table_template = env.get_template('substances-table.md')
+    table_content = table_template.render(
+        table_headers=table_headers,
+        table_header_alignment=table_header_alignment,
+        table_data=table_data,
+        filter_controls=filter_controls,
+        table_features_note=table_features_note
+    )
+    
+    # Write the rendered content
+    table_path = docs_dir / "substances" / "table.md"
+    with open(table_path, "w", encoding="utf-8") as f:
+        f.write(table_content)
 
 
 def generate_substances_index(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:

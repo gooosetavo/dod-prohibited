@@ -18,6 +18,12 @@ function initTables() {
       // Initialize tablesort
       new Tablesort(table);
       
+      // Initialize filtering if controls exist
+      if (document.getElementById('filter-name') && typeof TableFilter !== 'undefined') {
+        table.tableFilter = new TableFilter(table);
+        console.log('Table filtering initialized');
+      }
+      
       // Mark as initialized
       table.setAttribute('data-tablesort-init', 'true');
       
@@ -35,6 +41,11 @@ function initTables() {
       console.warn('Failed to initialize tablesort for table:', error);
     }
   });
+  
+  // Setup advanced search features
+  if (typeof setupAdvancedSearch !== 'undefined') {
+    setupAdvancedSearch();
+  }
 }
 
 // Initialize on DOM content loaded

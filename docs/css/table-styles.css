@@ -1,0 +1,136 @@
+/* Table filtering styles */
+.table-controls {
+  margin-bottom: 20px;
+  padding: 15px;
+  background-color: var(--md-default-bg-color, #fff);
+  border-radius: 5px;
+  border: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.table-controls h4 {
+  margin: 0 0 15px 0;
+  color: var(--md-default-fg-color, #333);
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.table-controls input,
+.table-controls select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--md-default-fg-color--lightest, #ccc);
+  border-radius: 4px;
+  font-size: 14px;
+  background-color: var(--md-default-bg-color, #fff);
+  color: var(--md-default-fg-color, #333);
+  transition: border-color 0.2s ease;
+}
+
+.table-controls input:focus,
+.table-controls select:focus {
+  outline: none;
+  border-color: var(--md-primary-fg-color, #1976d2);
+  box-shadow: 0 0 0 2px var(--md-primary-fg-color--light, rgba(25, 118, 210, 0.2));
+}
+
+.table-controls input::placeholder {
+  color: var(--md-default-fg-color--light, #666);
+}
+
+.table-controls button {
+  padding: 8px 16px;
+  background-color: var(--md-default-fg-color--lightest, #f0f0f0);
+  border: 1px solid var(--md-default-fg-color--lighter, #ccc);
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.2s ease;
+}
+
+.table-controls button:hover {
+  background-color: var(--md-default-fg-color--lighter, #e0e0e0);
+}
+
+.table-controls button:active {
+  background-color: var(--md-default-fg-color--light, #d0d0d0);
+}
+
+#filter-count {
+  display: flex;
+  align-items: center;
+  font-size: 0.9em;
+  color: var(--md-default-fg-color--light, #666);
+  font-weight: 500;
+}
+
+/* Responsive grid for filter controls */
+@media (max-width: 768px) {
+  .table-controls div[style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+  }
+  
+  .table-controls div[style*="display: flex"] {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+}
+
+/* Table wrapper for better mobile handling */
+.table-wrapper {
+  overflow-x: auto;
+  margin: 10px 0;
+}
+
+.table-wrapper table {
+  min-width: 100%;
+  white-space: nowrap;
+}
+
+/* Dark theme compatibility */
+@media (prefers-color-scheme: dark) {
+  .table-controls {
+    background-color: var(--md-default-bg-color, #121212);
+    border-color: var(--md-default-fg-color--lightest, #333);
+  }
+  
+  .table-controls input,
+  .table-controls select {
+    background-color: var(--md-default-bg-color, #1a1a1a);
+    border-color: var(--md-default-fg-color--lightest, #404040);
+    color: var(--md-default-fg-color, #fff);
+  }
+  
+  .table-controls button {
+    background-color: var(--md-default-fg-color--lightest, #333);
+    border-color: var(--md-default-fg-color--lighter, #404040);
+    color: var(--md-default-fg-color, #fff);
+  }
+}
+
+/* Material theme specific overrides */
+[data-md-color-scheme="slate"] .table-controls {
+  background-color: var(--md-code-bg-color);
+  border-color: var(--md-default-fg-color--lightest);
+}
+
+[data-md-color-scheme="slate"] .table-controls input,
+[data-md-color-scheme="slate"] .table-controls select {
+  background-color: var(--md-default-bg-color);
+  border-color: var(--md-default-fg-color--lightest);
+}
+
+/* Highlight filtered table */
+.table-wrapper table tbody tr[style*="display: none"] {
+  display: none !important;
+}
+
+.table-wrapper table tbody tr:not([style*="display: none"]) {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0.5; }
+  to { opacity: 1; }
+}

@@ -1,0 +1,21 @@
+<div class="table-controls" style="margin-bottom: 20px; padding: 15px; background-color: var(--md-default-bg-color); border-radius: 5px; border: 1px solid var(--md-default-fg-color--lightest);">
+<h4>Filter Table</h4>
+<div style="display: grid; grid-template-columns: repeat({{ filter_columns | length }}, 1fr); gap: 10px; margin-bottom: 10px;">
+{% for filter_config in filter_columns %}
+  {% if filter_config.type == 'text' %}
+  <input type="text" id="{{ filter_config.id }}" placeholder="{{ filter_config.placeholder }}" style="padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+  {% elif filter_config.type == 'select' %}
+  <select id="{{ filter_config.id }}" style="padding: 8px; border: 1px solid #ccc; border-radius: 3px;">
+    <option value="">{{ filter_config.default_label }}</option>
+    {% for option in filter_config.options %}
+    <option value="{{ option.value }}">{{ option.label }}</option>
+    {% endfor %}
+  </select>
+  {% endif %}
+{% endfor %}
+</div>
+<div style="display: flex; gap: 10px;">
+<button id="clear-filters" style="padding: 8px 16px; background-color: #f0f0f0; border: 1px solid #ccc; border-radius: 3px; cursor: pointer;">Clear Filters</button>
+<span id="filter-count" style="padding: 8px; font-size: 0.9em; color: var(--md-default-fg-color--light);"></span>
+</div>
+</div>
