@@ -1,7 +1,9 @@
 [project]
 name = "dod-prohibited"
 version = "0.1.0"
-description = "Add your description here"
+description = "Provides an easy-to-browse, searchable, and regularly updated list of substances prohibited by the Department of Defense (DoD) for use in dietary supplements."
+authors = [{ name = "Gustavo Argote", email = "gustavo.argote@icloud.com" }]
+license = { file = "LICENSE" }
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
