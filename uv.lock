@@ -374,7 +374,7 @@ dependencies = [
     { name = "requests" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 docs = [
     { name = "mkdocs-awesome-pages-plugin" },
     { name = "mkdocs-glightbox" },
@@ -388,18 +388,14 @@ jupyterlab = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
+    { name = "jupyterlab", marker = "extra == 'jupyterlab'", specifier = ">=4.5.1" },
+    { name = "mkdocs-awesome-pages-plugin", marker = "extra == 'docs'", specifier = ">=2.10.1" },
+    { name = "mkdocs-glightbox", marker = "extra == 'docs'", specifier = ">=0.5.2" },
+    { name = "mkdocs-literate-nav", marker = "extra == 'docs'", specifier = ">=0.6.2" },
+    { name = "mkdocs-material", marker = "extra == 'docs'", specifier = ">=9.7.1" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
-
-[package.metadata.requires-dev]
-docs = [
-    { name = "mkdocs-awesome-pages-plugin", specifier = ">=2.10.1" },
-    { name = "mkdocs-glightbox", specifier = ">=0.5.2" },
-    { name = "mkdocs-literate-nav", specifier = ">=0.6.2" },
-    { name = "mkdocs-material", specifier = ">=9.7.1" },
-]
-jupyterlab = [{ name = "jupyterlab", specifier = ">=4.5.1" }]
 
 [[package]]
 name = "executing"
