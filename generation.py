@@ -297,7 +297,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
         
         # Create the correct relative path from table.md to individual substance pages
         # Since table.md is at /substances/table.md, we need to go up one level to reach /substances/
-        substance_link = f"../{slug}.md"
+        substance_link = f"../{slug}"
         
         # Add row data
         table_data.append([
