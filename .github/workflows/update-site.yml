@@ -1,4 +1,7 @@
+
 name: Update and Deploy MkDocs Site
+permissions:
+  contents: write
 
 on:
   schedule:
@@ -31,7 +34,11 @@ jobs:
           uv pip install -r requirements-docs.txt --system || true
 
       - name: Generate Markdown docs
-        run: python generate_docs.py
+        run: |
+          export DOD_PROHIBITED_GENERATE_DOCS=1
+          python generate_docs.py
 
       - name: Deploy to GitHub Pages
-        run: mkdocs gh-deploy --force
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mkdocs gh-deploy --force --remote-name origin --remote-branch gh-pages
