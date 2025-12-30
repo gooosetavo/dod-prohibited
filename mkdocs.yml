@@ -41,6 +41,9 @@ extra_javascript:
 
 markdown_extensions:
   - pymdownx.snippets
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
 
 extra_templates:
   - analytics_head.html
