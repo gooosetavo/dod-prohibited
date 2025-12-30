@@ -41,7 +41,7 @@ This table shows all prohibited substances with their complete normalized data. 
 {% for row in table_data %}
 <tr>
 {% for cell in row %}
-<td>{{ cell }}</td>
+<td>{{ cell | safe }}</td>
 {% endfor %}
 </tr>
 {% endfor %}
