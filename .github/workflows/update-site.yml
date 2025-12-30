@@ -1,0 +1,30 @@
+name: Update and Deploy MkDocs Site
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight UTC
+  workflow_dispatch:
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies with uv
+        run: uv pip install -r requirements.txt --system && uv pip install -r requirements-docs.txt --system || true
+
+      - name: Generate Markdown docs
+        run: python generate_docs.py
+
+      - name: Deploy to GitHub Pages
+        run: mkdocs gh-deploy --force
