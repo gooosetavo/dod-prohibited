@@ -70,6 +70,7 @@ extra:
 
 nav:
   - Home: index.md
+  - User Guide: guide.md
   - Substances:
       - substances/index.md
       # Individual substance pages will be auto-generated in substances/

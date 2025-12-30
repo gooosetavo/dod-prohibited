@@ -1,8 +1,10 @@
+
 # DoD Prohibited Dietary Supplement Ingredients Project
 
 This project provides an easy-to-browse, searchable, and regularly updated list of substances prohibited by the Department of Defense (DoD) for use in dietary supplements. The data is automatically retrieved, parsed, and published as a website using MkDocs.
 
 ## What does this project do?
+
 - **Retrieves** the official DoD prohibited ingredients list from the [OPSS website](https://www.opss.org/dod-prohibited-dietary-supplement-ingredients).
 - **Parses** the data into a structured format.
 - **Generates** a user-friendly website with a page for each substance, a changelog, and search functionality.
