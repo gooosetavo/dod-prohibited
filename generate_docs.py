@@ -104,17 +104,23 @@ def main():
             json.dump(data, f, indent=2)
 
         # Generate a Markdown file for each substance
+        import re
+        import unicodedata
         def slugify(value):
-            import re
             value = str(value).strip().lower()
+            # Normalize unicode to ASCII
+            value = unicodedata.normalize('NFKD', value).encode('ascii', 'ignore').decode('ascii')
             value = re.sub(r'[^a-z0-9]+', '-', value)
-            return value.strip('-')
+            value = value.strip('-')
+            return value or None
 
-        # Use a short, unique field for the filename (prefer 'ingredient', 'name', or fallback to hash)
+        # Use a short, unique field for the filename (prefer 'Name', 'ingredient', 'name', or fallback to hash)
         def get_short_slug(entry):
             for key in ['Name', 'ingredient', 'name', 'substance', 'title']:
                 if key in entry and isinstance(entry[key], str) and entry[key].strip():
-                    return slugify(entry[key])
+                    slug = slugify(entry[key])
+                    if slug:
+                        return slug
             # fallback: hash of all values
             hashval = hashlib.sha1(json.dumps(entry, sort_keys=True).encode('utf-8')).hexdigest()[:10]
             return f"substance-{hashval}"
