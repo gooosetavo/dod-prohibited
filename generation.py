@@ -141,6 +141,31 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
             if updated:
                 f.write(f"**Updated:** {updated}\n\n")
 
+def generate_main_index(docs_dir: Path) -> None:
+    """
+    Generates the main index.md file that includes README content plus site-specific info.
+    Args:
+        docs_dir: Path to the docs directory.
+    """
+    index_path = docs_dir / "index.md"
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write("--8<-- \"README.md\"\n\n")
+        f.write("---\n\n")
+        f.write("## How to use this site\n\n")
+        f.write("- Use the search bar or navigation to find a substance.\n")
+        f.write("- Click on a substance to view detailed information, including:\n")
+        f.write("\t- Name and other known names\n")
+        f.write("\t- Classifications and legal status\n")
+        f.write("\t- Reasons for prohibition (with links)\n")
+        f.write("\t- Warnings and references\n")
+        f.write("\t- Source and more info links\n")
+        f.write("\t- When the entry was added/updated\n")
+        f.write("- Use the dark/light mode toggle in the top right for your preferred viewing mode.\n\n")
+        f.write("---\n\n")
+        f.write("- [Browse all substances](substances/index.md)\n")
+        f.write("- [Download as JSON](data.json)\n\n")
+
+
 def generate_substances_index(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
     """
     Generates the substances index Markdown file.

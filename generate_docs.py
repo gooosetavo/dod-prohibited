@@ -232,6 +232,7 @@ def main():
             json.dump(data, f, indent=2)
 
         # Use generation module for page and changelog creation
+        generation.generate_main_index(docs_dir)
         generation.generate_substance_pages(data, columns, substances_dir)
         generation.generate_substances_index(data, columns, docs_dir)
         generation.generate_changelog(data, columns, docs_dir)
