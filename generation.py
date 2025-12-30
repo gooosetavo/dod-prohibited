@@ -164,35 +164,15 @@ def generate_substances_index(data: List[Dict[str, Any]], columns: List[str], do
 
 def generate_changelog(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
     """
-    Generates a changelog Markdown file listing updates by date.
+    Generates a changelog Markdown file that references the main CHANGELOG.md.
     Args:
-        data: List of substance dictionaries.
-        columns: List of column names to include.
+        data: List of substance dictionaries (not used).
+        columns: List of column names (not used).
         docs_dir: Path to the docs directory.
     """
     changelog_path = docs_dir / "changelog.md"
-    # Group by date (YYYY-MM-DD)
-    changes_by_date = defaultdict(list)
-    for entry in data:
-        updated = entry.get("updated")
-        if updated:
-            date = updated[:10]
-            changes_by_date[date].append(entry)
-
+    
     with open(changelog_path, "w", encoding="utf-8") as f:
         f.write("# Changelog\n\n")
-        f.write("This page lists all updates to the prohibited substances database, with the most recent changes first.\n\n")
-        for date in sorted(changes_by_date.keys(), reverse=True):
-            f.write(f"## {date}\n\n")
-            for entry in changes_by_date[date]:
-                name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
-                f.write(f"### {name}\n\n")
-                f.write(f"- **Updated:** {entry.get('updated','')}\n")
-                f.write(f"- **Added:** {entry.get('added','')}\n")
-                # Optionally, show a summary of the entry
-                f.write("\n")
-                for col in columns:
-                    val = entry.get(col)
-                    if val:
-                        f.write(f"    - **{col}**: {val}\n")
-                f.write("\n")
+        f.write("For the complete changelog of DoD prohibited substances updates, see the main [CHANGELOG.md](../CHANGELOG.md) file in the repository root.\n\n")
+        f.write("The changelog tracks all changes to the prohibited substances list, including new substances added and modifications to existing entries.\n\n")
