@@ -164,7 +164,7 @@ def generate_substances_index(data: List[Dict[str, Any]], columns: List[str], do
 
 def generate_changelog(data: List[Dict[str, Any]], columns: List[str], docs_dir: Path) -> None:
     """
-    Generates a changelog Markdown file that references the main CHANGELOG.md.
+    Generates a changelog Markdown file that includes the main CHANGELOG.md content.
     Args:
         data: List of substance dictionaries (not used).
         columns: List of column names (not used).
@@ -173,6 +173,4 @@ def generate_changelog(data: List[Dict[str, Any]], columns: List[str], docs_dir:
     changelog_path = docs_dir / "changelog.md"
     
     with open(changelog_path, "w", encoding="utf-8") as f:
-        f.write("# Changelog\n\n")
-        f.write("For the complete changelog of DoD prohibited substances updates, see the main [CHANGELOG.md](../CHANGELOG.md) file in the repository root.\n\n")
-        f.write("The changelog tracks all changes to the prohibited substances list, including new substances added and modifications to existing entries.\n\n")
+        f.write("--8<-- \"CHANGELOG.md\"\n")

@@ -14,4 +14,5 @@ docs = [
     "mkdocs-glightbox>=0.5.2",
     "mkdocs-literate-nav>=0.6.2",
     "mkdocs-material>=9.7.1",
+    "pymdown-extensions>=10.12",
 ]
