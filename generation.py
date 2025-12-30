@@ -297,7 +297,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
         
         # Add row data
         table_data.append([
-            name,
+            f'<a href="{slug}">{name}</a>',
             other_names,
             classifications,
             dea_schedule,
