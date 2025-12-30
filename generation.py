@@ -8,6 +8,8 @@ import unicodedata
 from collections import defaultdict
 from typing import TYPE_CHECKING, List, Dict, Any
 from jinja2 import Environment, FileSystemLoader
+# The rest of the generation logic (writing markdown, changelog, etc.) would be implemented here as functions.
+from typing import List, Dict, Any
 
 if TYPE_CHECKING:
     from pydantic_settings import BaseSettings
@@ -28,17 +30,20 @@ def get_short_slug(entry):
     hashval = hashlib.sha1(json.dumps(entry, sort_keys=True).encode('utf-8')).hexdigest()[:10]
     return f"substance-{hashval}"
 
-# The rest of the generation logic (writing markdown, changelog, etc.) would be implemented here as functions.
-from typing import List, Dict, Any
 
 def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], substances_dir: Path) -> None:
     """
-    Generates a Markdown file for each substance in the data list.
+    Generates a Markdown file for each substance in the data list using Jinja templates.
     Args:
         data: List of substance dictionaries.
         columns: List of column names to include.
         substances_dir: Path to the directory where files will be written.
     """
+    # Setup Jinja environment
+    template_dir = Path(__file__).parent / "templates"
+    env = Environment(loader=FileSystemLoader(template_dir))
+    substance_template = env.get_template('substance-page.md')
+    
     links = []
     for entry in data:
         # Prefer 'Name' field for display, then fallback
@@ -46,107 +51,92 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
         slug = get_short_slug(entry)
         page_path = substances_dir / f"{slug}.md"
         links.append((name, f"{slug}.md"))
+        
+        # Prepare template data
+        template_data = {
+            'substance_name': name,
+            'last_updated': datetime.now(timezone.utc).strftime('%Y-%m-%d'),
+        }
+        
+        # Process other names
+        other_names = entry.get('Other_names') or entry.get('other_names')
+        if other_names:
+            if isinstance(other_names, str):
+                try:
+                    import ast
+                    other_names = ast.literal_eval(other_names)
+                except Exception:
+                    other_names = [other_names]
+            template_data['other_names'] = other_names
+        
+        # Process classifications
+        classifications = entry.get('Classifications') or entry.get('classifications')
+        if classifications:
+            if isinstance(classifications, str):
+                try:
+                    import ast
+                    classifications = ast.literal_eval(classifications)
+                except Exception:
+                    classifications = [classifications]
+            template_data['classifications'] = classifications
+        
+        # Process reasons
+        reasons = entry.get('Reasons') or entry.get('reasons')
+        if reasons:
+            if isinstance(reasons, str):
+                try:
+                    import ast
+                    reasons = ast.literal_eval(reasons)
+                except Exception:
+                    reasons = [reasons]
+            template_data['reasons'] = reasons
+        
+        # Process warnings
+        warnings = entry.get('Warnings') or entry.get('warnings')
+        if warnings:
+            if isinstance(warnings, str):
+                try:
+                    import ast
+                    warnings = ast.literal_eval(warnings)
+                except Exception:
+                    warnings = [warnings]
+            template_data['warnings'] = warnings
+        
+        # Process references
+        refs = entry.get('References') or entry.get('references')
+        if refs:
+            if isinstance(refs, str):
+                try:
+                    import ast
+                    refs = ast.literal_eval(refs)
+                except Exception:
+                    refs = [refs]
+            template_data['references'] = refs
+        
+        # Add other fields
+        template_data['more_info_url'] = entry.get('More_info_url') or entry.get('more_info_url')
+        template_data['sourceof'] = entry.get('Sourceof') or entry.get('sourceof')
+        template_data['reason'] = entry.get('Reason') or entry.get('reason')
+        template_data['label_terms'] = entry.get('Label_terms') or entry.get('label_terms')
+        template_data['linked_ingredients'] = entry.get('Linked_ingredients') or entry.get('linked_ingredients')
+        template_data['searchable_name'] = entry.get('Searchable_name') or entry.get('searchable_name')
+        template_data['guid'] = entry.get('Guid') or entry.get('guid')
+        template_data['added'] = entry.get('added')
+        template_data['updated'] = entry.get('updated')
+        
+        # Add conditional content flags
+        template_data['dea_schedule'] = extract_dea_schedule(reasons)
+        
+        # Check if substance is classified as anabolic steroid
+        classifications_text = str(classifications).lower() if classifications else ''
+        template_data['has_steroid_classification'] = any(
+            term in classifications_text for term in ['anabolic', 'steroid', 'hormone']
+        )
+        
+        # Render and write the page
+        rendered_content = substance_template.render(**template_data)
         with open(page_path, "w", encoding="utf-8") as f:
-            f.write(f"# {name}\n\n")
-            # Other names
-            other_names = entry.get('Other_names') or entry.get('other_names')
-            if other_names:
-                if isinstance(other_names, str):
-                    try:
-                        import ast
-                        other_names = ast.literal_eval(other_names)
-                    except Exception:
-                        other_names = [other_names]
-                f.write(f"**Other names:** {', '.join(other_names)}\n\n")
-            # Classifications
-            classifications = entry.get('Classifications') or entry.get('classifications')
-            if classifications:
-                if isinstance(classifications, str):
-                    try:
-                        import ast
-                        classifications = ast.literal_eval(classifications)
-                    except Exception:
-                        classifications = [classifications]
-                f.write(f"**Classifications:** {', '.join(classifications)}\n\n")
-            # Reasons
-            reasons = entry.get('Reasons') or entry.get('reasons')
-            if reasons:
-                if isinstance(reasons, str):
-                    try:
-                        import ast
-                        reasons = ast.literal_eval(reasons)
-                    except Exception:
-                        reasons = [reasons]
-                f.write("**Reasons for prohibition:**\n")
-                for reason in reasons:
-                    if isinstance(reason, dict):
-                        line = f"- {reason.get('reason', '')}"
-                        if reason.get('link'):
-                            line += f" ([source]({reason['link']}))"
-                        f.write(line + "\n")
-                    else:
-                        f.write(f"- {reason}\n")
-                f.write("\n")
-            # Warnings
-            warnings = entry.get('Warnings') or entry.get('warnings')
-            if warnings:
-                if isinstance(warnings, str):
-                    try:
-                        import ast
-                        warnings = ast.literal_eval(warnings)
-                    except Exception:
-                        warnings = [warnings]
-                f.write(f"**Warnings:** {', '.join(warnings)}\n\n")
-            # References
-            refs = entry.get('References') or entry.get('references')
-            if refs:
-                if isinstance(refs, str):
-                    try:
-                        import ast
-                        refs = ast.literal_eval(refs)
-                    except Exception:
-                        refs = [refs]
-                f.write("**References:**\n")
-                for ref in refs:
-                    f.write(f"- {ref}\n")
-                f.write("\n")
-            # More info URL
-            more_info_url = entry.get('More_info_url') or entry.get('more_info_url')
-            if more_info_url:
-                f.write(f"**More info:** [{more_info_url}]({more_info_url})\n\n")
-            # Sourceof
-            sourceof = entry.get('Sourceof') or entry.get('sourceof')
-            if sourceof:
-                f.write(f"**Source of:** {sourceof}\n\n")
-            # Reason
-            reason = entry.get('Reason') or entry.get('reason')
-            if reason:
-                f.write(f"**Reason:** {reason}\n\n")
-            # Label terms
-            label_terms = entry.get('Label_terms') or entry.get('label_terms')
-            if label_terms:
-                f.write(f"**Label terms:** {label_terms}\n\n")
-            # Linked ingredients
-            linked_ingredients = entry.get('Linked_ingredients') or entry.get('linked_ingredients')
-            if linked_ingredients:
-                f.write(f"**Linked ingredients:** {linked_ingredients}\n\n")
-            # Searchable name
-            searchable_name = entry.get('Searchable_name') or entry.get('searchable_name')
-            if searchable_name:
-                f.write(f"**Searchable name:** {searchable_name}\n\n")
-            # Guid
-            guid = entry.get('Guid') or entry.get('guid')
-            if guid:
-                f.write(f"**GUID:** {guid}\n\n")
-            # Added/Updated
-            added = entry.get('added')
-            if added:
-                f.write(f"**Added:** {added}\n\n")
-            updated = entry.get('updated')
-            if updated:
-                f.write(f"**Updated:** {updated}\n\n")
-
-
+            f.write(rendered_content)
 def extract_dea_schedule(reasons_data):
     """Extract DEA schedule information from reasons data."""
     if not reasons_data:
