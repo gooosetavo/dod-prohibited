@@ -32,7 +32,7 @@ This project provides an easy-to-browse, searchable, and regularly updated list 
   3. Serve the site with `mkdocs serve`
 
 ## License
-This project is open source. See [LICENSE](LICENSE).
+This project is open source. See [LICENSE](LICENSE.md).
 
 ## Contact
 For questions or suggestions, open an issue or pull request on [GitHub](https://github.com/gooosetavo/dod-prohibited).
