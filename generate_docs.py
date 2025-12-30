@@ -8,6 +8,46 @@ from pathlib import Path
 import os
 import json
 from datetime import datetime, timezone
+from pydantic_settings import BaseSettings
+from pydantic import ConfigDict
+from typing import Optional
+
+
+class Settings(BaseSettings):
+    """Configuration settings for the DoD prohibited substances project."""
+    
+    model_config = ConfigDict(env_prefix="DOD_", case_sensitive=False)
+    
+    # Data source
+    source_url: str = "https://www.opss.org/dod-prohibited-dietary-supplement-ingredients"
+    
+    # GitHub configuration
+    github_owner: str = "gooosetavo"
+    github_repo: str = "dod-prohibited"
+    
+    # Site configuration
+    site_title: str = "DoD Prohibited Dietary Supplement Ingredients"
+    site_description: str = "A searchable, browsable, and regularly updated list of substances prohibited by the Department of Defense (DoD) for use in dietary supplements."
+    
+    # Environment overrides
+    github_ref: Optional[str] = None
+    branch: Optional[str] = None
+    generate_docs_force: str = "0"
+    
+    @property
+    def github_url(self) -> str:
+        return f"https://github.com/{self.github_owner}/{self.github_repo}"
+    
+    @property
+    def should_generate_docs(self) -> bool:
+        """Determine if docs should be generated based on branch and environment."""
+        branch = os.environ.get("GITHUB_REF", "") or os.environ.get("BRANCH", "")
+        force = os.environ.get("DOD_PROHIBITED_GENERATE_DOCS", "0") == "1"
+        is_gh_pages = branch.endswith("/gh-pages") or branch == "gh-pages"
+        return is_gh_pages or force
+
+
+settings = Settings()
 
 
 def update_persistent_changelog(changes_detected, today):
@@ -99,9 +139,8 @@ def load_previous_data_from_git():
 
 
 def main():
-    url = "https://www.opss.org/dod-prohibited-dietary-supplement-ingredients"
-    settings = fetch_drupal_settings(url)
-    df = parse_prohibited_list(settings)
+    drupal_settings = fetch_drupal_settings(settings.source_url)
+    df = parse_prohibited_list(drupal_settings)
 
     # Setup SQLite DB
     db_path = Path("prohibited.db")
@@ -215,10 +254,7 @@ def main():
     conn.commit()
 
     # Only generate docs if on gh-pages branch or DOD_PROHIBITED_GENERATE_DOCS=1
-    branch = os.environ.get("GITHUB_REF", "") or os.environ.get("BRANCH", "")
-    force = os.environ.get("DOD_PROHIBITED_GENERATE_DOCS", "0") == "1"
-    is_gh_pages = branch.endswith("/gh-pages") or branch == "gh-pages"
-    if is_gh_pages or force:
+    if settings.should_generate_docs:
         docs_dir = Path("docs")
         docs_dir.mkdir(exist_ok=True)
         substances_dir = docs_dir / "substances"
@@ -232,7 +268,6 @@ def main():
             json.dump(data, f, indent=2)
 
         # Use generation module for page and changelog creation
-        generation.generate_main_index(docs_dir)
         generation.generate_substance_pages(data, columns, substances_dir)
         generation.generate_substances_index(data, columns, docs_dir)
         generation.generate_changelog(data, columns, docs_dir)
