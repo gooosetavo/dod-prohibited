@@ -196,32 +196,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
     table_headers = ["Name", "Other Names", "Classifications", "DEA Schedule", "Reason", "Warnings", "References", "Added", "Details"]
     table_header_alignment = [":-----", ":------------", ":---------------", ":-------------", ":-------", ":----------", ":-----------", ":------", ":--------"]
     
-    # Define filter configuration
-    filter_columns = [
-        {
-            "type": "text",
-            "id": "filter-name",
-            "placeholder": "Filter by name..."
-        },
-        {
-            "type": "text",
-            "id": "filter-classification",
-            "placeholder": "Filter by classification..."
-        },
-        {
-            "type": "select",
-            "id": "filter-schedule",
-            "default_label": "All DEA Schedules",
-            "options": [
-                {"value": "Schedule I", "label": "Schedule I"},
-                {"value": "Schedule II", "label": "Schedule II"},
-                {"value": "Schedule III", "label": "Schedule III"},
-                {"value": "Schedule IV", "label": "Schedule IV"},
-                {"value": "Schedule V", "label": "Schedule V"},
-                {"value": "N/A", "label": "No DEA Schedule"}
-            ]
-        }
-    ]
+    # Column filters are now embedded in the table headers, no separate configuration needed
     
     # Process table data
     table_data = []
@@ -333,10 +308,6 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
             f"[View details]({slug}.md)"
         ])
     
-    # Render filter controls
-    filter_template = env.get_template('table-filter-controls.html')
-    filter_controls = filter_template.render(filter_columns=filter_columns)
-    
     # Render table features note
     features_template = env.get_template('table-features-note.md')
     table_features_note = features_template.render(has_filters=True)
@@ -345,9 +316,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
     table_template = env.get_template('substances-table.md')
     table_content = table_template.render(
         table_headers=table_headers,
-        table_header_alignment=table_header_alignment,
         table_data=table_data,
-        filter_controls=filter_controls,
         table_features_note=table_features_note
     )
     

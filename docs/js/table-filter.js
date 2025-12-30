@@ -6,32 +6,42 @@ class TableFilter {
     this.totalRows = this.rows.length;
     this.visibleRows = this.totalRows;
     
-    // Dynamically discover filters
-    this.filters = {};
-    this.filterElements = {};
+    // Column-based filters
+    this.columnFilters = {};
+    this.filterElements = [];
     
     this.setupFilterControls();
     this.updateCounter();
   }
   
   setupFilterControls() {
-    // Auto-discover filter elements
-    const filterInputs = document.querySelectorAll('[id^="filter-"]');
+    // Find all column filter elements
+    const filterInputs = this.table.querySelectorAll('.column-filter');
     
     filterInputs.forEach(element => {
-      const filterId = element.id.replace('filter-', '');
-      this.filters[filterId] = '';
-      this.filterElements[filterId] = element;
+      const columnIndex = parseInt(element.dataset.column);
+      this.columnFilters[columnIndex] = '';
+      this.filterElements.push(element);
       
       if (element.tagName === 'INPUT') {
         element.addEventListener('input', (e) => {
-          this.filters[filterId] = e.target.value.toLowerCase();
+          this.columnFilters[columnIndex] = e.target.value.toLowerCase();
           this.applyFilters();
+        });
+        
+        // Prevent sorting when clicking on input
+        element.addEventListener('click', (e) => {
+          e.stopPropagation();
         });
       } else if (element.tagName === 'SELECT') {
         element.addEventListener('change', (e) => {
-          this.filters[filterId] = e.target.value;
+          this.columnFilters[columnIndex] = e.target.value;
           this.applyFilters();
+        });
+        
+        // Prevent sorting when clicking on select
+        element.addEventListener('click', (e) => {
+          e.stopPropagation();
         });
       }
     });
@@ -53,31 +63,27 @@ class TableFilter {
       
       let visible = true;
       
-      // Apply filters dynamically based on discovered filters
-      Object.keys(this.filters).forEach(filterId => {
-        const filterValue = this.filters[filterId];
+      // Apply filters for each column
+      Object.keys(this.columnFilters).forEach(columnIndex => {
+        const filterValue = this.columnFilters[columnIndex];
         if (!filterValue) return;
         
-        let cellContent = '';
+        const cellContent = (cells[columnIndex]?.textContent || '').toLowerCase();
         
-        // Map filter IDs to table column indices
-        switch (filterId) {
-          case 'name':
-            cellContent = (cells[0]?.textContent || '').toLowerCase();
-            if (!cellContent.includes(filterValue)) visible = false;
-            break;
-          case 'classification':
-            cellContent = (cells[2]?.textContent || '').toLowerCase();
-            if (!cellContent.includes(filterValue)) visible = false;
-            break;
-          case 'schedule':
-            cellContent = cells[3]?.textContent || '';
-            if (cellContent !== filterValue) visible = false;
-            break;
-          // Add more filter mappings as needed
-          default:
-            // Try to find matching cell by header text or position
-            break;
+        // For select elements (like DEA schedule), do exact match
+        // For text inputs, do partial match
+        const filterElement = this.filterElements.find(el => 
+          parseInt(el.dataset.column) === parseInt(columnIndex)
+        );
+        
+        if (filterElement?.tagName === 'SELECT') {
+          if (cells[columnIndex]?.textContent.trim() !== filterValue) {
+            visible = false;
+          }
+        } else {
+          if (!cellContent.includes(filterValue.toLowerCase())) {
+            visible = false;
+          }
         }
       });
       
@@ -96,14 +102,14 @@ class TableFilter {
   }
   
   clearFilters() {
-    Object.keys(this.filterElements).forEach(filterId => {
-      const element = this.filterElements[filterId];
+    this.filterElements.forEach(element => {
       if (element.tagName === 'INPUT') {
         element.value = '';
       } else if (element.tagName === 'SELECT') {
         element.selectedIndex = 0;
       }
-      this.filters[filterId] = '';
+      const columnIndex = parseInt(element.dataset.column);
+      this.columnFilters[columnIndex] = '';
     });
     
     this.rows.forEach(row => {
@@ -120,7 +126,7 @@ function setupAdvancedSearch() {
   // Add keyboard shortcuts
   document.addEventListener('keydown', function(e) {
     if ((e.ctrlKey || e.metaKey) && e.key === 'f') {
-      const nameFilter = document.getElementById('filter-name');
+      const nameFilter = document.querySelector('.column-filter[data-column="0"]');
       if (nameFilter) {
         e.preventDefault();
         nameFilter.focus();
@@ -142,7 +148,7 @@ function setupAdvancedSearch() {
   const scheduleParam = urlParams.get('filter-schedule');
   
   if (nameParam) {
-    const nameFilter = document.getElementById('filter-name');
+    const nameFilter = document.querySelector('.column-filter[data-column="0"]');
     if (nameFilter) {
       nameFilter.value = nameParam;
       nameFilter.dispatchEvent(new Event('input'));
@@ -150,7 +156,7 @@ function setupAdvancedSearch() {
   }
   
   if (classificationParam) {
-    const classificationFilter = document.getElementById('filter-classification');
+    const classificationFilter = document.querySelector('.column-filter[data-column="2"]');
     if (classificationFilter) {
       classificationFilter.value = classificationParam;
       classificationFilter.dispatchEvent(new Event('input'));
@@ -158,7 +164,7 @@ function setupAdvancedSearch() {
   }
   
   if (scheduleParam) {
-    const scheduleFilter = document.getElementById('filter-schedule');
+    const scheduleFilter = document.querySelector('.column-filter[data-column="3"]');
     if (scheduleFilter) {
       scheduleFilter.value = scheduleParam;
       scheduleFilter.dispatchEvent(new Event('change'));

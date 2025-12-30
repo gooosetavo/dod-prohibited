@@ -64,6 +64,98 @@
   font-weight: 500;
 }
 
+/* Column-based filtering styles */
+.substances-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+}
+
+.substances-table th {
+  background-color: var(--md-default-bg-color, #f8f9fa);
+  border-bottom: 2px solid var(--md-default-fg-color--lightest, #e0e0e0);
+  padding: 0;
+  position: relative;
+}
+
+.substances-table th .header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 8px;
+}
+
+.substances-table th .header-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--md-default-fg-color, #333);
+  cursor: pointer;
+  user-select: none;
+}
+
+.substances-table th .header-title:hover {
+  color: var(--md-primary-fg-color, #1976d2);
+}
+
+.substances-table th .column-filter {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid var(--md-default-fg-color--lightest, #ddd);
+  border-radius: 3px;
+  font-size: 12px;
+  background-color: var(--md-default-bg-color, #fff);
+  color: var(--md-default-fg-color, #333);
+  transition: border-color 0.2s ease;
+  box-sizing: border-box;
+}
+
+.substances-table th .column-filter:focus {
+  outline: none;
+  border-color: var(--md-primary-fg-color, #1976d2);
+  box-shadow: 0 0 0 1px var(--md-primary-fg-color--light, rgba(25, 118, 210, 0.3));
+}
+
+.substances-table th .column-filter::placeholder {
+  color: var(--md-default-fg-color--light, #999);
+  font-size: 11px;
+}
+
+.substances-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.substances-table tbody tr:hover {
+  background-color: var(--md-default-fg-color--lightest, #f5f5f5);
+}
+
+/* Table stats section */
+.table-stats {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 15px 0;
+  padding: 10px 0;
+  border-top: 1px solid var(--md-default-fg-color--lightest, #e0e0e0);
+}
+
+.clear-filters-btn {
+  padding: 6px 12px;
+  background-color: var(--md-default-fg-color--lightest, #f0f0f0);
+  border: 1px solid var(--md-default-fg-color--lighter, #ccc);
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--md-default-fg-color, #333);
+  transition: background-color 0.2s ease;
+}
+
+.clear-filters-btn:hover {
+  background-color: var(--md-default-fg-color--lighter, #e0e0e0);
+}
+
 /* Responsive grid for filter controls */
 @media (max-width: 768px) {
   .table-controls div[style*="grid-template-columns"] {

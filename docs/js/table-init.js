@@ -9,17 +9,12 @@ function initTables() {
       return;
     }
     
-    // Skip tables with existing classes (they might have custom behavior)
-    if (table.className && table.className.trim()) {
-      return;
-    }
-    
     try {
       // Initialize tablesort
       new Tablesort(table);
       
-      // Initialize filtering if controls exist
-      if (document.getElementById('filter-name') && typeof TableFilter !== 'undefined') {
+      // Initialize filtering if column filters exist
+      if (table.querySelector('.column-filter') && typeof TableFilter !== 'undefined') {
         table.tableFilter = new TableFilter(table);
         console.log('Table filtering initialized');
       }
@@ -28,11 +23,15 @@ function initTables() {
       table.setAttribute('data-tablesort-init', 'true');
       
       // Add some styling to indicate sortable columns
-      const headers = table.querySelectorAll('th, thead td');
+      const headers = table.querySelectorAll('th');
       headers.forEach(function(header) {
         if (header.getAttribute('data-sort-method') !== 'none') {
           header.style.cursor = 'pointer';
-          header.title = header.title || 'Click to sort';
+          // Only add title to the header title span, not the entire header
+          const titleSpan = header.querySelector('.header-title');
+          if (titleSpan && !titleSpan.title) {
+            titleSpan.title = 'Click to sort';
+          }
         }
       });
       
