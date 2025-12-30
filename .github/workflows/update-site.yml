@@ -3,6 +3,9 @@ name: Update and Deploy MkDocs Site
 permissions:
   contents: write
 
+concurrency:
+  group: deploy-site
+  cancel-in-progress: true
 
 on:
   push:
