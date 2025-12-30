@@ -1,5 +1,3 @@
-def fetch_drupal_settings(url):
-
 import requests
 from bs4 import BeautifulSoup
 import json

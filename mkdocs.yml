@@ -69,3 +69,4 @@ nav:
   - Substances:
       - substances/index.md
       # Individual substance pages will be auto-generated in substances/
+  - Changelog: changelog.md
