@@ -294,10 +294,14 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
             primary_reason = primary_reason[:37] + '...'
         if len(warnings) > 30:
             warnings = warnings[:27] + '...'
-        updated_slug = slug.replace('substances/table', 'substances')
+        
+        # Create the correct relative path from table.md to individual substance pages
+        # Since table.md is at /substances/table.md, we need to go up one level to reach /substances/
+        substance_link = f"../{slug}.md"
+        
         # Add row data
         table_data.append([
-            f'<a href="{updated_slug}">{name}</a>',
+            f'<a href="{substance_link}">{name}</a>',
             other_names,
             classifications,
             dea_schedule,
@@ -305,7 +309,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
             warnings,
             references,
             added_date,
-            f'<a href="{updated_slug}">View details</a>'
+            f'<a href="{substance_link}">View details</a>'
         ])
     
     # Render table features note

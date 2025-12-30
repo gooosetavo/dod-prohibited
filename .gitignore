@@ -226,3 +226,5 @@ $RECYCLE.BIN/
 # Project specific
 prohibited.db
 prohibited.html
+
+docs/substances
