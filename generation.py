@@ -305,7 +305,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
             warnings,
             references,
             added_date,
-            f'<a href="{slug}.md">View details</a>'
+            f'<a href="{slug}">View details</a>'
         ])
     
     # Render table features note
