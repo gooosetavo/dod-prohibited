@@ -1,6 +1,45 @@
+
+site_name: DoD Prohibited Ingredients
+theme:
+  name: material
+  palette:
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.action.edit
+    - navigation.top
+    - navigation.instant
+    - toc.integrate
+    - navigation.tracking
+    - navigation.expand
+    - navigation.indexes
+    - navigation.path
+    - navigation.footer
+    - content.tabs.link
+    - content.tabs.sticky
+  # Table of contents permalink
+  toc:
+    permalink: true
+
 extra_javascript:
   - https://www.googletagmanager.com/gtag/js?id=G-8BSH5K4NKY
-
+extra_templates:
+  - analytics_head.html
 extra:
   analytics_head: |
     <!-- Google tag (gtag.js) -->
@@ -10,65 +49,21 @@ extra:
       gtag('js', new Date());
       gtag('config', 'G-8BSH5K4NKY');
     </script>
-extra_templates:
-  - analytics_head.html
-
-site_name: DoD Prohibited Ingredients
-theme:
-  name: material
-  features:
-    - navigation.tabs
-    - navigation.sections
-    - search.suggest
-      name: material
-      palette:
-        - scheme: slate
-          primary: indigo
-          accent: indigo
-          toggle:
-            icon: material/weather-night
-            name: Switch to light mode
-        - scheme: default
-          primary: indigo
-          accent: indigo
-          toggle:
-            icon: material/weather-sunny
-            name: Switch to dark mode
-      features:
-        - navigation.tabs
-        - navigation.sections
-        - search.suggest
-        - search.highlight
-        - content.code.copy
-        - content.action.edit
-        - navigation.top
-        - navigation.instant
-        - toc.integrate
-        - navigation.tracking
-        - navigation.expand
-        - navigation.indexes
-        - navigation.path
-        - navigation.footer
-        - content.tabs.link
-        - content.tabs.sticky
-  extra:
-    instructions: |
-      ## How to Use This Site
-      - Use the search bar or navigation to find a substance.
-      - Click on a substance to view detailed information, including:
-        - Name and other known names
-        - Classifications and legal status
-        - Reasons for prohibition (with links)
-        - Warnings and references
-        - Source and more info links
-        - When the entry was added/updated
-      - Use the dark/light mode toggle in the top right for your preferred viewing mode.
-  - toc:
-      permalink: true
-extra:
+  instructions: |
+    ## How to Use This Site
+    - Use the search bar or navigation to find a substance.
+    - Click on a substance to view detailed information, including:
+      - Name and other known names
+      - Classifications and legal status
+      - Reasons for prohibition (with links)
+      - Warnings and references
+      - Source and more info links
+      - When the entry was added/updated
+    - Use the dark/light mode toggle in the top right for your preferred viewing mode.
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/gooosetavo/dod-prohibited
+
 nav:
   - Home: index.md
   - Substances:
