@@ -1,5 +1,6 @@
 
 import subprocess
+import logging
 from retrieval import fetch_drupal_settings
 from parsing import parse_prohibited_list
 import generation
@@ -47,6 +48,14 @@ class Settings(BaseSettings):
         return is_gh_pages or force
 
 
+
+# Configure logging for GitHub Actions (stdout, INFO level by default)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[logging.StreamHandler()]
+)
+
 settings = Settings()
 
 
@@ -58,6 +67,7 @@ def update_persistent_changelog(changes_detected, today):
         with open(changelog_file, "w", encoding="utf-8") as f:
             f.write("# Changelog\n\n")
             f.write("All notable changes to the DoD prohibited substances list will be documented in this file.\n\n")
+        logging.info("Created new CHANGELOG.md file.")
     
     # Read existing changelog
     with open(changelog_file, "r", encoding="utf-8") as f:
@@ -65,6 +75,7 @@ def update_persistent_changelog(changes_detected, today):
     
     # Prepare new entry
     new_entry = f"## {today}\n\n"
+    logging.info(f"Preparing changelog entry for {today}.")
     
     new_substances = [c for c in changes_detected if c['type'] == 'added']
     updated_substances = [c for c in changes_detected if c['type'] == 'updated']
@@ -73,6 +84,7 @@ def update_persistent_changelog(changes_detected, today):
         new_entry += "### New Substances Added\n\n"
         for change in new_substances:
             new_entry += f"- **{change['name']}**\n"
+        logging.info(f"Added {len(new_substances)} new substances to changelog.")
         new_entry += "\n"
     
     if updated_substances:
@@ -83,6 +95,7 @@ def update_persistent_changelog(changes_detected, today):
                 new_entry += f"- **{change['name']}:** Updated {field_list}\n"
             else:
                 new_entry += f"- **{change['name']}:** Updated\n"
+        logging.info(f"Updated {len(updated_substances)} substances in changelog.")
         new_entry += "\n"
     
     # Insert new entry after the header
@@ -131,43 +144,51 @@ def load_previous_data_from_git():
                 if len(data_columns) >= 2:
                     key = '|'.join(str(item.get(col, '')) for col in data_columns[:2])
                     previous_dict[key] = item
+            logging.info("Loaded previous data.json from git history.")
             return previous_dict
-    except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError):
-        pass
+    except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError) as e:
+        logging.warning(f"Could not load previous data.json from git: {e}")
     
     return None
 
 
 def main():
+    logging.info("Starting generate_docs.py script.")
     drupal_settings = fetch_drupal_settings(settings.source_url)
+    logging.info("Fetched Drupal settings.")
     df = parse_prohibited_list(drupal_settings)
+    logging.info(f"Parsed prohibited list. {len(df)} substances found.")
 
     # Setup SQLite DB
     db_path = Path("prohibited.db")
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
+    logging.info("Connected to SQLite database.")
 
     columns = list(df.columns)
     col_defs = ", ".join([f'"{col}" TEXT' for col in columns])
     c.execute(f'''CREATE TABLE IF NOT EXISTS substances (
         id INTEGER PRIMARY KEY AUTOINCREMENT
     )''')
+    logging.debug("Ensured substances table exists.")
     c.execute('PRAGMA table_info(substances)')
     existing_cols = set([row[1] for row in c.fetchall()])
     for col in columns + ["added", "updated"]:
         if col not in existing_cols:
             try:
                 c.execute(f'ALTER TABLE substances ADD COLUMN "{col}" TEXT')
+                logging.debug(f"Added column '{col}' to substances table.")
             except sqlite3.OperationalError:
                 # Column might already exist, ignore
-                pass
+                logging.debug(f"Column '{col}' already exists in substances table.")
     unique_cols = ", ".join([f'"{col}"' for col in columns])
     # Create unique index only on the actual data columns, not added/updated timestamps
     try:
         c.execute(f'DROP INDEX IF EXISTS idx_unique_substance')
         c.execute(f'CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_substance ON substances ({unique_cols})')
-    except Exception:
-        pass
+        logging.debug("Ensured unique index on substances table.")
+    except Exception as e:
+        logging.warning(f"Could not create unique index: {e}")
 
     # Create changes table to track daily summaries (but use git for persistence)
     c.execute('''
@@ -181,13 +202,16 @@ def main():
             UNIQUE(substance_key, change_date, change_type)
         )
     ''')
+    logging.debug("Ensured substance_changes table exists.")
 
     # Clear the table to avoid duplicates on each run
     c.execute('DELETE FROM substances')
     c.execute('DELETE FROM substance_changes')
+    logging.debug("Cleared substances and substance_changes tables.")
 
     now = datetime.now(timezone.utc).isoformat()
     today = now[:10]  # YYYY-MM-DD
+    logging.info(f"Current date: {today}")
     
     # Load previous data from git history for comparison
     previous_data = load_previous_data_from_git()
@@ -224,6 +248,7 @@ def main():
                     'name': substance_name,
                     'fields': []
                 })
+                logging.debug(f"Detected new substance: {substance_name}")
             else:
                 # Check for changes
                 changed_fields = []
@@ -231,7 +256,6 @@ def main():
                 for col in columns:
                     if current_values.get(col) != prev_substance.get(col):
                         changed_fields.append(col)
-                
                 if changed_fields:
                     changes_detected.append({
                         'type': 'updated',
@@ -239,6 +263,7 @@ def main():
                         'name': substance_name,
                         'fields': changed_fields
                     })
+                    logging.debug(f"Detected updated substance: {substance_name} (fields: {changed_fields})")
     
     # Store changes in database for changelog generation
     for change in changes_detected:
@@ -247,10 +272,12 @@ def main():
             (substance_key, substance_name, change_date, change_type, fields_changed)
             VALUES (?, ?, ?, ?, ?)
         ''', (change['key'], change['name'], today, change['type'], json.dumps(change['fields'])))
+    logging.info(f"Detected {len(changes_detected)} changes.")
     
     # Also update persistent changelog file that gets committed to git
     if changes_detected:
         update_persistent_changelog(changes_detected, today)
+        logging.info("Updated persistent changelog.")
     conn.commit()
 
     # Only generate docs if on gh-pages branch or DOD_PROHIBITED_GENERATE_DOCS=1
@@ -266,15 +293,20 @@ def main():
         data = [dict(zip(all_cols, row)) for row in rows]
         with open(json_path, "w", encoding="utf-8") as f:
             json.dump(data, f, indent=2)
+        logging.info(f"Wrote {len(data)} substances to docs/data.json.")
 
         # Use generation module for page and changelog creation
         generation.generate_substance_pages(data, columns, substances_dir)
+        logging.info("Generated substance pages.")
         generation.generate_substances_index(data, columns, docs_dir)
+        logging.info("Generated substances index.")
         generation.generate_changelog(data, columns, docs_dir)
+        logging.info("Generated changelog page.")
     else:
-        print("Skipping docs/ generation: not on gh-pages branch and not forced.")
+        logging.info("Skipping docs/ generation: not on gh-pages branch and not forced.")
 
     conn.close()
+    logging.info("Closed SQLite connection. Script complete.")
 
 if __name__ == "__main__":
     main()
