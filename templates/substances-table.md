@@ -1,3 +1,8 @@
+---
+search:
+  exclude: true
+---
+
 # Complete Substances Table
 
 This table shows all prohibited substances with their complete normalized data. Use the filter inputs in each column header to filter the data. Click on column headers to sort by that field.
