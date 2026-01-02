@@ -138,7 +138,22 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
                         refs = [refs]
                 f.write("**References:**\n")
                 for ref in refs:
-                    f.write(f"- {ref}\n")
+                    if isinstance(ref, dict):
+                        # Handle dictionary format with title/url
+                        title = ref.get('title', '')
+                        url = ref.get('url', '')
+                        if title and url:
+                            f.write(f"- [{title}]({url})\n")
+                        elif title:
+                            f.write(f"- {title}\n")
+                        elif url:
+                            f.write(f"- {url}\n")
+                        else:
+                            # Fallback to string representation
+                            f.write(f"- {ref}\n")
+                    else:
+                        # Handle string format (existing behavior)
+                        f.write(f"- {ref}\n")
                 f.write("\n")
             # More info URL
             more_info_url = entry.get('More_info_url') or entry.get('more_info_url')
