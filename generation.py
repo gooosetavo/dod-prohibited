@@ -141,10 +141,22 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
             # Added/Updated
             added = entry.get('added')
             if added:
-                f.write(f"**Added:** {added}\n\n")
+                f.write(f"**Added to this Database:** {added}\n\n")
             updated = entry.get('updated')
             if updated:
-                f.write(f"**Updated:** {updated}\n\n")
+                # Try to extract and format the source timestamp
+                try:
+                    import json
+                    updated_json = json.loads(updated)
+                    if isinstance(updated_json, dict) and '_seconds' in updated_json:
+                        from datetime import datetime
+                        source_timestamp = updated_json['_seconds']
+                        source_date = datetime.fromtimestamp(source_timestamp).isoformat()
+                        f.write(f"**Last updated in source database:** {source_date}\n\n")
+                    else:
+                        f.write(f"**Updated:** {updated}\n\n")
+                except (json.JSONDecodeError, ValueError, TypeError, OSError):
+                    f.write(f"**Updated:** {updated}\n\n")
 
 
 def extract_dea_schedule(reasons_data):
@@ -193,8 +205,8 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
     env = Environment(loader=FileSystemLoader(template_dir))
     
     # Define table structure
-    table_headers = ["Name", "Other Names", "Classifications", "DEA Schedule", "Reason", "Warnings", "References", "Added", "Details"]
-    table_header_alignment = [":-----", ":------------", ":---------------", ":-------------", ":-------", ":----------", ":-----------", ":------", ":--------"]
+    table_headers = ["Name", "Other Names", "Classifications", "DEA Schedule", "Reason", "Warnings", "References", "Added to Database", "Source Updated", "Details"]
+    table_header_alignment = [":-----", ":------------", ":---------------", ":-------------", ":-------", ":----------", ":-----------", ":------", ":------", ":--------"]
     
     # Column filters are now embedded in the table headers, no separate configuration needed
     
@@ -267,7 +279,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
         else:
             references = 'No refs'
         
-        # Process added date
+        # Process added date (when added to our database)
         added_date = entry.get('added', '')
         if added_date:
             try:
@@ -277,6 +289,20 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
                 added_date = 'Unknown'
         else:
             added_date = 'Unknown'
+        
+        # Process source updated date (when last modified in source database)
+        source_updated = 'Unknown'
+        try:
+            updated_field = entry.get('updated', '')
+            if isinstance(updated_field, str) and updated_field.strip():
+                import json
+                updated_json = json.loads(updated_field)
+                if isinstance(updated_json, dict) and '_seconds' in updated_json:
+                    from datetime import datetime
+                    source_timestamp = updated_json['_seconds']
+                    source_updated = datetime.fromtimestamp(source_timestamp).strftime('%Y-%m-%d')
+        except (json.JSONDecodeError, ValueError, TypeError, OSError):
+            source_updated = 'Unknown'
         
         # Escape pipe characters in content to prevent table breakage
         name = name.replace('|', '\\|')
@@ -309,6 +335,7 @@ def generate_substances_table(data: List[Dict[str, Any]], columns: List[str], do
             warnings,
             references,
             added_date,
+            source_updated,
             f'<a href="{substance_link}">View details</a>'
         ])
     

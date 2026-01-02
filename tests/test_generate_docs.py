@@ -137,13 +137,17 @@ class TestGenerateDocs:
             assert 'New Substance 2' in content
             assert 'Removed Substance' in content
     
+    @patch('generate_docs.Path')
     @patch('subprocess.run')
-    def test_load_previous_data_from_git_success(self, mock_run):
+    def test_load_previous_data_from_git_success(self, mock_run, mock_path):
         """Test loading previous data from git successfully"""
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_result.stdout = '[{"Name": "Test", "updated": "{\\"_seconds\\": 1640995200}"}]'
         mock_run.return_value = mock_result
+        
+        # Mock Path.cwd() to return a valid path
+        mock_path.cwd.return_value = Path('/fake/path')
         
         columns = ['Name', 'Reason']
         result = load_previous_data_from_git(columns)

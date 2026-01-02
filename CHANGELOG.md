@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-01-02
+
+### Substances Modified
+
+*Changes detected through data comparison*
+
+- **dihexa:** Updated `other_names`
+- **nikethamide:** Updated `other_names`, `label_terms`, `linked_ingredients`
+
 ## 2025-12-30
 
 ### New Substances Added
@@ -887,3 +896,11 @@
 
 All notable changes to the DoD prohibited substances list will be documented in this file.
 
+
+## 2025-12-23
+
+### New Substances Added
+
+- **2-Phenylbenzo[h]chromen-4-one**
+- **5-N,6-N-bis(2-fluorophenyl)-[1,2,5]oxadiazolo[3,4-b]pyrazine-5,6-diamine**
+- **pegmolesatide**

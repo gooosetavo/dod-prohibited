@@ -36,6 +36,10 @@ This table shows all prohibited substances with their complete normalized data. 
 <input type="text" class="column-filter" data-column="4" placeholder="Filter reasons..." title="Filter by reason">
 {% elif header == 'Warnings' %}
 <input type="text" class="column-filter" data-column="5" placeholder="Filter warnings..." title="Filter by warnings">
+{% elif header == 'Added to this Database' %}
+<input type="text" class="column-filter" data-column="7" placeholder="Filter dates..." title="Filter by date added to database">
+{% elif header == 'Last updated in source database' %}
+<input type="text" class="column-filter" data-column="8" placeholder="Filter dates..." title="Filter by source update date">
 {% endif %}
 </div>
 </th>
