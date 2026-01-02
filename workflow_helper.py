@@ -99,9 +99,6 @@ def check_for_changes():
         if len(initial_status) > 5:
             print(f"   ... and {len(initial_status) - 5} more files")
     
-    # Set environment variable for docs generation
-    os.environ["DOD_PROHIBITED_GENERATE_DOCS"] = "1"
-    
     # Run the generation script
     print("🔄 Running prohibited substances data generation...")
     try:

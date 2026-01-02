@@ -33,19 +33,10 @@ class Settings(BaseSettings):
     # Environment overrides
     github_ref: Optional[str] = None
     branch: Optional[str] = None
-    generate_docs_force: str = "0"
     
     @property
     def github_url(self) -> str:
         return f"https://github.com/{self.github_owner}/{self.github_repo}"
-    
-    @property
-    def should_generate_docs(self) -> bool:
-        """Determine if docs should be generated based on branch and environment."""
-        branch = os.environ.get("GITHUB_REF", "") or os.environ.get("BRANCH", "")
-        force = os.environ.get("DOD_PROHIBITED_GENERATE_DOCS", "0") == "1"
-        is_gh_pages = branch.endswith("/gh-pages") or branch == "gh-pages"
-        return is_gh_pages or force
 
 
 
@@ -503,30 +494,27 @@ def main():
     
     conn.commit()
 
-    # Only generate docs if on gh-pages branch or DOD_PROHIBITED_GENERATE_DOCS=1
-    if settings.should_generate_docs:
-        docs_dir = Path("docs")
-        docs_dir.mkdir(exist_ok=True)
-        substances_dir = docs_dir / "substances"
-        substances_dir.mkdir(exist_ok=True)
-        json_path = docs_dir / "data.json"
-        c.execute(f'SELECT {unique_cols}, added, updated FROM substances')
-        rows = c.fetchall()
-        all_cols = columns + ["added", "updated"]
-        data = [dict(zip(all_cols, row)) for row in rows]
-        with open(json_path, "w", encoding="utf-8") as f:
-            json.dump(data, f, indent=2)
-        logging.info(f"Wrote {len(data)} substances to docs/data.json.")
+    # Always generate docs since they're gitignored and needed for deployment
+    docs_dir = Path("docs")
+    docs_dir.mkdir(exist_ok=True)
+    substances_dir = docs_dir / "substances"
+    substances_dir.mkdir(exist_ok=True)
+    json_path = docs_dir / "data.json"
+    c.execute(f'SELECT {unique_cols}, added, updated FROM substances')
+    rows = c.fetchall()
+    all_cols = columns + ["added", "updated"]
+    data = [dict(zip(all_cols, row)) for row in rows]
+    with open(json_path, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+    logging.info(f"Wrote {len(data)} substances to docs/data.json.")
 
-        # Use generation module for page and changelog creation
-        generation.generate_substance_pages(data, columns, substances_dir)
-        logging.info("Generated substance pages.")
-        generation.generate_substances_index(data, columns, docs_dir)
-        logging.info("Generated substances index.")
-        generation.generate_changelog(data, columns, docs_dir)
-        logging.info("Generated changelog page.")
-    else:
-        logging.info("Skipping docs/ generation: not on gh-pages branch and not forced.")
+    # Use generation module for page and changelog creation
+    generation.generate_substance_pages(data, columns, substances_dir)
+    logging.info("Generated substance pages.")
+    generation.generate_substances_index(data, columns, docs_dir)
+    logging.info("Generated substances index.")
+    generation.generate_changelog(data, columns, docs_dir)
+    logging.info("Generated changelog page.")
 
     conn.close()
     logging.info("Closed SQLite connection. Script complete.")
