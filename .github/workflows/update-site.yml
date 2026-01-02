@@ -101,9 +101,9 @@ jobs:
         run: |
           python generate_docs.py
 
-      - name: Clean up temporary files before deployment
-        run: |
-          python workflow_helper.py cleanup
+      # - name: Clean up temporary files before deployment
+      #   run: |
+      #     python workflow_helper.py cleanup
 
       - name: Deploy to GitHub Pages
         env:
