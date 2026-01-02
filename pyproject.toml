@@ -24,3 +24,8 @@ docs = [
     "pymdown-extensions>=10.12",
 ]
 test = ["pytest>=7.0.0", "pytest-mock>=3.10.0", "pytest-cov>=4.0.0"]
+
+[dependency-groups]
+docs = [
+    "mkdocs-awesome-pages-plugin>=2.10.1",
+]

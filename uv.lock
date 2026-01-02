@@ -475,6 +475,11 @@ test = [
     { name = "pytest-mock" },
 ]
 
+[package.dev-dependencies]
+docs = [
+    { name = "mkdocs-awesome-pages-plugin" },
+]
+
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
@@ -491,6 +496,9 @@ requires-dist = [
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.10.0" },
     { name = "requests", specifier = ">=2.32.5" },
 ]
+
+[package.metadata.requires-dev]
+docs = [{ name = "mkdocs-awesome-pages-plugin", specifier = ">=2.10.1" }]
 
 [[package]]
 name = "executing"
