@@ -116,63 +116,57 @@ jobs:
 
       - name: Create Pull Request if changes detected
         if: needs.check-for-changes.outputs.has-changes == 'true'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          # Create a new branch for the changes
-          BRANCH_NAME="update-substances-${{ github.run_number }}-$(date +%s)"
-          git checkout -b "$BRANCH_NAME"
-          
-          # Commit the changes
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add -A
-          git commit -m "Update prohibited substances database (${{ needs.check-for-changes.outputs.changes-summary }})
-
-          - Updated docs/data.json with new data
-          - Updated CHANGELOG.md with detected changes
-          - Updated documentation pages and site content"
-          
-          # Push the branch
-          git push origin "$BRANCH_NAME"
-          
-          # Create the pull request using GitHub CLI
-          gh pr create \
-            --title "Update prohibited substances database (${{ needs.check-for-changes.outputs.changes-summary }})" \
-            --body "## Automated Update of DoD Prohibited Substances
-
-          This PR contains automatically detected updates to the Department of Defense prohibited dietary supplement ingredients list.
-
-          ### Change Summary
-          **${{ needs.check-for-changes.outputs.changes-summary }}**
-
-          ### Files Updated
-          - \`docs/data.json\` - JSON export for web interface  
-          - \`CHANGELOG.md\` - Updated with detected changes
-          - Documentation pages and site content
-
-          ### Detailed Changes
-          Please review the CHANGELOG.md file for detailed information about:
-          - Which specific substances were added, modified, or removed
-          - What fields were updated for modified substances
-          - The exact date of these changes
-
-          ### Data Quality Notes
-          If you notice a large number of \"updated\" substances when only a few were actually changed:
-          - This may indicate data structure changes from the source website
-          - Field formatting or metadata updates that don't affect the core substance information
-          - Timestamp or internal ID changes that trigger our change detection
-
-          ### Automatic Deployment
-          ✅ The GitHub Pages site has been automatically updated with these changes. This PR serves as a record of the changes for review and audit purposes.
-
-          ---
-          *This PR was automatically created by the scheduled workflow that monitors the [DoD OPSS website](https://www.opss.org/dod-prohibited-dietary-supplement-ingredients) for changes.*" \
-            --head "$BRANCH_NAME" \
-            --base main
-          
-          # Switch back to main branch
-          git checkout main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            Update prohibited substances database (${{ needs.check-for-changes.outputs.changes-summary }})
+            
+            - Updated docs/data.json with new data
+            - Updated CHANGELOG.md with detected changes
+            - Updated documentation pages and site content
+          title: "Update prohibited substances database (${{ needs.check-for-changes.outputs.changes-summary }})"
+          body: |
+            ## Automated Update of DoD Prohibited Substances
+            
+            This PR contains automatically detected updates to the Department of Defense prohibited dietary supplement ingredients list.
+            
+            ### Change Summary
+            **${{ needs.check-for-changes.outputs.changes-summary }}**
+            
+            ### Files Updated
+            - `docs/data.json` - JSON export for web interface  
+            - `CHANGELOG.md` - Updated with detected changes
+            - Documentation pages and site content
+            
+            ### Detailed Changes
+            Please review the CHANGELOG.md file for detailed information about:
+            - Which specific substances were added, modified, or removed
+            - What fields were updated for modified substances
+            - The exact date of these changes
+            
+            ### Data Quality Notes
+            If you notice a large number of "updated" substances when only a few were actually changed:
+            - This may indicate data structure changes from the source website
+            - Field formatting or metadata updates that don't affect the core substance information
+            - Timestamp or internal ID changes that trigger our change detection
+            
+            ### Automatic Deployment
+            ✅ The GitHub Pages site has been automatically updated with these changes. This PR serves as a record of the changes for review and audit purposes.
+            
+            ---
+            *This PR was automatically created by the scheduled workflow that monitors the [DoD OPSS website](https://www.opss.org/dod-prohibited-dietary-supplement-ingredients) for changes.*
+          branch: update-substances-${{ github.run_number }}
+          branch-suffix: timestamp
+          delete-branch: true
+          draft: false
+          add-paths: |
+            docs/data.json
+            CHANGELOG.md
+            docs/substances/
+            docs/index.md
+            docs/guide.md
+            docs/changelog.md
 
       - name: Deploy to GitHub Pages
         env:
