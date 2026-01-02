@@ -260,8 +260,6 @@ def load_previous_data_from_git(current_columns):
         logging.warning(f"Could not load previous data.json from git: {e}")
     
     return None
-    
-    return None
 
 
 def main():

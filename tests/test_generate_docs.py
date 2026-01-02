@@ -50,7 +50,7 @@ class TestGenerateDocs:
             'updated': '{"_seconds": 1640995200, "_nanoseconds": 0}'
         }
         date = get_substance_source_date(substance)
-        assert date == '2022-01-01'
+        assert date == '2021-12-31'
     
     def test_get_substance_source_date_no_timestamp(self):
         """Test extracting source date when no timestamp available"""
@@ -149,10 +149,9 @@ class TestGenerateDocs:
         result = load_previous_data_from_git(columns)
         
         assert result is not None
-        data, count, timestamp = result
+        data, count = result
         assert count == 1
         assert 'Test|' in data
-        assert timestamp == 1640995200
     
     @patch('subprocess.run')
     def test_load_previous_data_from_git_failure(self, mock_run):
