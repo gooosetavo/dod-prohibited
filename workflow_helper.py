@@ -140,6 +140,15 @@ def check_for_changes():
         # Parse changelog to get detailed counts
         new_count, updated_count, removed_count = parse_changelog_counts()
         
+        # Only report meaningful changes
+        total_changes = new_count + updated_count + removed_count
+        if total_changes == 0:
+            print("⚠️  Warning: Files changed but no meaningful substance changes detected")
+            print("   This might indicate only metadata/timestamp changes occurred")
+            set_github_output("has-changes", "false")
+            set_github_output("changes-summary", "metadata only")
+            return False
+        
         # Create summary
         summary_parts = []
         if new_count > 0:
@@ -204,9 +213,14 @@ def main():
     if action == "check-changes":
         has_changes = check_for_changes()
         sys.exit(0 if has_changes else 1)  # Exit code indicates if changes found
+    elif action == "debug":
+        print("🔍 Running change detection debug analysis...")
+        print("For detailed analysis, run: python tests/debug_changes.py")
+        has_changes = check_for_changes()
+        sys.exit(0 if has_changes else 1)
     else:
         print(f"❌ Unknown action: {action}")
-        print("Available actions: check-changes")
+        print("Available actions: check-changes, debug")
         sys.exit(1)
 
 

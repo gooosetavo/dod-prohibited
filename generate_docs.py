@@ -59,8 +59,14 @@ logging.basicConfig(
 settings = Settings()
 
 
-def update_persistent_changelog(changes_detected, today):
-    """Update the persistent changelog file that gets committed to git."""
+def update_persistent_changelog(changes_detected, today, detection_date=None):
+    """Update the persistent changelog file that gets committed to git.
+    
+    Args:
+        changes_detected: List of detected changes
+        today: Today's date string (YYYY-MM-DD)
+        detection_date: Optional date when changes were detected (for computed changes)
+    """
     changelog_file = Path("CHANGELOG.md")
     
     if not changelog_file.exists():
@@ -73,60 +79,153 @@ def update_persistent_changelog(changes_detected, today):
     with open(changelog_file, "r", encoding="utf-8") as f:
         existing_content = f.read()
     
-    # Prepare new entry
-    new_entry = f"## {today}\n\n"
-    logging.info(f"Preparing changelog entry for {today}.")
+    # Group changes by their source date
+    changes_by_date = {}
+    computed_changes = []
     
-    new_substances = [c for c in changes_detected if c['type'] == 'added']
-    updated_substances = [c for c in changes_detected if c['type'] == 'updated']
-    removed_substances = [c for c in changes_detected if c['type'] == 'removed']
+    for change in changes_detected:
+        if change['type'] == 'added' and 'source_date' in change:
+            # Use self-reported date from the substance data
+            date_key = change['source_date']
+            if date_key not in changes_by_date:
+                changes_by_date[date_key] = {'added': [], 'updated': [], 'removed': []}
+            changes_by_date[date_key]['added'].append(change)
+        elif change['type'] in ['removed', 'updated']:
+            # Use computed detection date for our analysis
+            computed_changes.append(change)
+        else:
+            # Fallback to today's date
+            if today not in changes_by_date:
+                changes_by_date[today] = {'added': [], 'updated': [], 'removed': []}
+            changes_by_date[today][change['type']].append(change)
     
-    if new_substances:
-        new_entry += "### New Substances Added\n\n"
-        for change in new_substances:
-            new_entry += f"- **{change['name']}**\n"
-        logging.info(f"Added {len(new_substances)} new substances to changelog.")
-        new_entry += "\n"
+    # Add computed changes to detection date
+    detection_date = detection_date or today
+    if computed_changes:
+        if detection_date not in changes_by_date:
+            changes_by_date[detection_date] = {'added': [], 'updated': [], 'removed': []}
+        for change in computed_changes:
+            changes_by_date[detection_date][change['type']].append(change)
     
-    if updated_substances:
-        new_entry += "### Substances Modified\n\n"
-        for change in updated_substances:
-            if change['fields']:
-                field_list = ", ".join(f"`{field}`" for field in change['fields'])
-                new_entry += f"- **{change['name']}:** Updated {field_list}\n"
-            else:
-                new_entry += f"- **{change['name']}:** Updated\n"
-        logging.info(f"Updated {len(updated_substances)} substances in changelog.")
-        new_entry += "\n"
+    # Generate changelog entries for each date
+    new_entries = []
+    for date_key in sorted(changes_by_date.keys(), reverse=True):
+        date_changes = changes_by_date[date_key]
+        
+        new_entry = f"## {date_key}\n\n"
+        has_content = False
+        
+        # New substances (from self-reported dates)
+        if date_changes['added']:
+            new_entry += "### New Substances Added\n\n"
+            for change in date_changes['added']:
+                new_entry += f"- **{change['name']}**"
+                if 'source_date' in change and change['source_date'] != date_key:
+                    new_entry += f" (source date: {change['source_date']})"
+                new_entry += "\n"
+            new_entry += "\n"
+            has_content = True
+        
+        # Modified substances (from our detection)
+        if date_changes['updated']:
+            new_entry += "### Substances Modified\n\n"
+            new_entry += "*Changes detected through data comparison*\n\n"
+            for change in date_changes['updated']:
+                if change['fields']:
+                    field_list = ", ".join(f"`{field}`" for field in change['fields'])
+                    new_entry += f"- **{change['name']}:** Updated {field_list}\n"
+                else:
+                    new_entry += f"- **{change['name']}:** Updated\n"
+            new_entry += "\n"
+            has_content = True
+        
+        # Removed substances (from our detection)
+        if date_changes['removed']:
+            new_entry += "### Substances Removed\n\n"
+            new_entry += "*Removals detected through data comparison*\n\n"
+            for change in date_changes['removed']:
+                new_entry += f"- **{change['name']}**\n"
+            new_entry += "\n"
+            has_content = True
+        
+        if has_content:
+            new_entries.append(new_entry.rstrip())
+            
+    if new_entries:
+        # Prepare combined new entry
+        combined_entry = "\n\n".join(new_entries) + "\n\n"
+        
+        # Insert new entries after the header
+        lines = existing_content.split('\n')
+        header_end = 0
+        for i, line in enumerate(lines):
+            if line.startswith('# ') and i == 0:
+                continue
+            elif line.strip() == "":
+                continue
+            elif not line.startswith('#') and line.strip():
+                header_end = i
+                break
+            elif line.startswith('## '):
+                header_end = i
+                break
+        
+        # Insert new entries
+        new_lines = lines[:header_end] + combined_entry.rstrip().split('\n') + [''] + lines[header_end:]
+        
+        # Write back
+        with open(changelog_file, "w", encoding="utf-8") as f:
+            f.write('\n'.join(new_lines))
+        
+        total_changes = sum(len(changes_by_date[d]['added']) + len(changes_by_date[d]['updated']) + len(changes_by_date[d]['removed']) for d in changes_by_date)
+        logging.info(f"Updated changelog with {total_changes} changes across {len(changes_by_date)} date(s).")
+
+
+def get_substance_source_date(substance_data):
+    """Extract the source date when a substance was actually added/modified.
     
-    if removed_substances:
-        new_entry += "### Substances Removed\n\n"
-        for change in removed_substances:
-            new_entry += f"- **{change['name']}**\n"
-        logging.info(f"Removed {len(removed_substances)} substances from changelog.")
-        new_entry += "\n"
-    
-    # Insert new entry after the header
-    lines = existing_content.split('\n')
-    header_end = 0
-    for i, line in enumerate(lines):
-        if line.startswith('# ') and i == 0:
-            continue
-        elif line.strip() == "":
-            continue
-        elif not line.startswith('#') and line.strip():
-            header_end = i
-            break
-        elif line.startswith('## '):
-            header_end = i
-            break
-    
-    # Insert new entry
-    new_lines = lines[:header_end] + new_entry.rstrip().split('\n') + [''] + lines[header_end:]
-    
-    # Write back
-    with open(changelog_file, "w", encoding="utf-8") as f:
-        f.write('\n'.join(new_lines))
+    This looks for self-reported dates in the substance data that indicate
+    when the substance was actually changed in the source system.
+    """
+    try:
+        # Try to get the date from the 'updated' timestamp
+        timestamp = get_substance_last_modified(substance_data)
+        if timestamp > 0:
+            from datetime import datetime
+            return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
+        
+        # Fallback: look for other date fields
+        for field in ['date_added', 'created', 'modified_date', 'last_updated']:
+            if field in substance_data and substance_data[field]:
+                # Try to parse various date formats
+                date_str = str(substance_data[field])
+                # Add date parsing logic here if needed
+                return date_str[:10] if len(date_str) >= 10 else None
+        
+        return None
+    except Exception as e:
+        logging.debug(f"Could not extract source date: {e}")
+        return None
+
+
+def get_substance_last_modified(substance_data):
+    """Extract the last modified timestamp from substance data."""
+    try:
+        updated_field = substance_data.get('updated', '')
+        if isinstance(updated_field, str) and updated_field.strip():
+            import json
+            updated_json = json.loads(updated_field)
+            if isinstance(updated_json, dict) and '_seconds' in updated_json:
+                return updated_json['_seconds']
+        return 0
+    except (json.JSONDecodeError, ValueError, TypeError):
+        return 0
+
+
+def has_substance_been_modified_since(substance_data, timestamp_threshold):
+    """Check if substance was modified after a given timestamp."""
+    last_modified = get_substance_last_modified(substance_data)
+    return last_modified > timestamp_threshold
 
 
 def load_previous_data_from_git(current_columns):
@@ -230,11 +329,26 @@ def main():
     previous_result = load_previous_data_from_git(columns)
     previous_data = None
     previous_count = 0
+    latest_previous_timestamp = 0
     if previous_result:
-        previous_data, previous_count = previous_result
+        if len(previous_result) == 3:
+            previous_data, previous_count, latest_previous_timestamp = previous_result
+        else:
+            previous_data, previous_count = previous_result
     
     current_count = len(df)
     logging.info(f"Current substances: {current_count}, Previous substances: {previous_count}")
+    
+    # Log first few substance keys for debugging
+    sample_keys = []
+    for i, row in df.head(3).iterrows():
+        sample_key = '|'.join(str(row.get(col, '')) for col in columns[:2])
+        sample_keys.append(sample_key[:100])  # Truncate for readability
+    logging.info(f"Sample current keys: {sample_keys}")
+    
+    if previous_data:
+        sample_prev_keys = list(previous_data.keys())[:3]
+        logging.info(f"Sample previous keys: {[k[:100] for k in sample_prev_keys]}")
     
     changes_detected = []
     current_keys = set()
@@ -263,29 +377,66 @@ def main():
         if previous_data is not None:
             prev_substance = previous_data.get(substance_key)
             if prev_substance is None:
-                # New substance
-                changes_detected.append({
+                # New substance - use self-reported date if available
+                current_row_dict = dict(zip(columns, values))
+                source_date = get_substance_source_date(current_row_dict)
+                
+                change_data = {
                     'type': 'added',
                     'key': substance_key,
                     'name': substance_name,
                     'fields': []
-                })
-                logging.debug(f"NEW SUBSTANCE: {substance_name} (key: {substance_key[:50]}...)")
+                }
+                
+                if source_date:
+                    change_data['source_date'] = source_date
+                    logging.debug(f"NEW SUBSTANCE: {substance_name} (source date: {source_date})")
+                else:
+                    logging.debug(f"NEW SUBSTANCE: {substance_name} (detection date: {today})")
+                
+                changes_detected.append(change_data)
             else:
-                # Check for changes
-                changed_fields = []
-                current_values = dict(zip(columns, values))
-                for col in columns:
-                    if current_values.get(col) != prev_substance.get(col):
-                        changed_fields.append(col)
-                if changed_fields:
-                    changes_detected.append({
-                        'type': 'updated',
-                        'key': substance_key,
-                        'name': substance_name,
-                        'fields': changed_fields
-                    })
-                    logging.debug(f"UPDATED SUBSTANCE: {substance_name} (fields: {changed_fields})")
+                # Check if substance was modified using timestamp
+                current_row_dict = dict(zip(columns, values))
+                current_timestamp = get_substance_last_modified(current_row_dict)
+                prev_timestamp = get_substance_last_modified(prev_substance)
+                
+                if current_timestamp > prev_timestamp:
+                    # Substance was modified - check what fields actually changed
+                    changed_fields = []
+                    ignore_fields = {'added', 'updated', 'guid', 'More_info_URL', 'SourceOf'}
+                    
+                    for col in columns:
+                        if col in ignore_fields:
+                            continue
+                            
+                        current_val = current_row_dict.get(col)
+                        prev_val = prev_substance.get(col)
+                        
+                        if current_val != prev_val:
+                            # Special handling for JSON fields
+                            if isinstance(current_val, str) and isinstance(prev_val, str):
+                                try:
+                                    import ast
+                                    curr_parsed = ast.literal_eval(current_val) if current_val else None
+                                    prev_parsed = ast.literal_eval(prev_val) if prev_val else None
+                                    if curr_parsed != prev_parsed:
+                                        changed_fields.append(col)
+                                except:
+                                    if current_val != prev_val:
+                                        changed_fields.append(col)
+                            else:
+                                changed_fields.append(col)
+                    
+                    if changed_fields:
+                        changes_detected.append({
+                            'type': 'updated',
+                            'key': substance_key,
+                            'name': substance_name,
+                            'fields': changed_fields,
+                            'detection_date': today
+                        })
+                        logging.debug(f"UPDATED SUBSTANCE: {substance_name} (timestamp: {current_timestamp} > {prev_timestamp}, fields: {changed_fields}, detected: {today})")
     
     # Check for removed substances
     if previous_data is not None:
@@ -298,7 +449,8 @@ def main():
                 'type': 'removed',
                 'key': removed_key,
                 'name': removed_name,
-                'fields': []
+                'fields': [],
+                'detection_date': today
             })
             logging.debug(f"REMOVED SUBSTANCE: {removed_name} (key: {removed_key[:50]}...)")
         
@@ -320,8 +472,27 @@ def main():
     
     # Also update persistent changelog file that gets committed to git
     if changes_detected:
-        update_persistent_changelog(changes_detected, today)
-        logging.info("Updated persistent changelog.")
+        # Filter out changes that are only metadata/timestamp changes
+        meaningful_changes = []
+        for change in changes_detected:
+            if change['type'] in ['added', 'removed']:
+                meaningful_changes.append(change)
+            elif change['type'] == 'updated':
+                # Only include updates that aren't just metadata changes
+                meaningful_fields = [f for f in change['fields'] 
+                                   if f not in {'added', 'updated', 'guid', 'More_info_URL', 'SourceOf'}]
+                if meaningful_fields:
+                    change['fields'] = meaningful_fields  # Update to show only meaningful fields
+                    meaningful_changes.append(change)
+        
+        if meaningful_changes:
+            update_persistent_changelog(meaningful_changes, today, detection_date=today)
+            logging.info(f"Updated persistent changelog with {len(meaningful_changes)} meaningful changes.")
+        else:
+            logging.info("No meaningful changes detected (only metadata/timestamp changes).")
+    else:
+        logging.info("No changes detected.")
+    
     conn.commit()
 
     # Only generate docs if on gh-pages branch or DOD_PROHIBITED_GENERATE_DOCS=1
