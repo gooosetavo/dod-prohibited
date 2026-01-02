@@ -366,12 +366,22 @@ def main():
         substance_name = row.get('Name') or row.get('ingredient') or row.get('name') or substance_key
         current_keys.add(substance_key)
         
+        # Check if this substance is new or changed compared to git history
+        added_date = now  # Default for new substances
+        if previous_data is not None:
+            prev_substance = previous_data.get(substance_key)
+            if prev_substance is not None:
+                # Existing substance - preserve original added date
+                existing_added = prev_substance.get('added')
+                if existing_added:
+                    added_date = existing_added
+        
         placeholders = ", ".join(["?"] * len(columns))
         sql = f'''
             INSERT INTO substances ({unique_cols}, added, updated)
             VALUES ({placeholders}, ?, ?)
         '''
-        c.execute(sql, (*values, now, now))
+        c.execute(sql, (*values, added_date, now))
         
         # Check if this substance is new or changed compared to git history
         if previous_data is not None:
