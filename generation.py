@@ -39,15 +39,45 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
         columns: List of column names to include.
         substances_dir: Path to the directory where files will be written.
     """
+    # Sort data alphabetically by name for consistent ordering
+    sorted_data = sorted(data, key=lambda x: (x.get('Name') or x.get('ingredient') or x.get('name') or x.get('substance') or x.get('title') or "(no name)").lower())
+    
     links = []
-    for entry in data:
+    for i, entry in enumerate(sorted_data):
         # Prefer 'Name' field for display, then fallback
         name = entry.get('Name') or entry.get('ingredient') or entry.get('name') or entry.get('substance') or entry.get('title') or "(no name)"
         slug = get_short_slug(entry)
         page_path = substances_dir / f"{slug}.md"
         links.append((name, f"{slug}.md"))
+        
+        # Determine previous and next substance
+        prev_substance = None
+        next_substance = None
+        if i > 0:
+            prev_entry = sorted_data[i-1]
+            prev_name = prev_entry.get('Name') or prev_entry.get('ingredient') or prev_entry.get('name') or prev_entry.get('substance') or prev_entry.get('title') or "(no name)"
+            prev_slug = get_short_slug(prev_entry)
+            prev_substance = (prev_name, f"{prev_slug}.md")
+        if i < len(sorted_data) - 1:
+            next_entry = sorted_data[i+1]
+            next_name = next_entry.get('Name') or next_entry.get('ingredient') or next_entry.get('name') or next_entry.get('substance') or next_entry.get('title') or "(no name)"
+            next_slug = get_short_slug(next_entry)
+            next_substance = (next_name, f"{next_slug}.md")
+        
         with open(page_path, "w", encoding="utf-8") as f:
             f.write(f"# {name}\n\n")
+            
+            # Navigation at the top
+            f.write("---\n\n")
+            nav_parts = []
+            if prev_substance:
+                nav_parts.append(f"← [Previous: {prev_substance[0]}]({prev_substance[1]})")
+            nav_parts.append("[🏠 All Substances](index.md)")
+            nav_parts.append("[📊 Complete Table](table.md)")
+            if next_substance:
+                nav_parts.append(f"[Next: {next_substance[0]}]({next_substance[1]}) →")
+            f.write(" | ".join(nav_parts) + "\n\n")
+            f.write("---\n\n")
             # Other names
             other_names = entry.get('Other_names') or entry.get('other_names')
             if other_names:
@@ -157,6 +187,11 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
                         f.write(f"**Updated:** {updated}\n\n")
                 except (json.JSONDecodeError, ValueError, TypeError, OSError):
                     f.write(f"**Updated:** {updated}\n\n")
+            
+            # Navigation at the bottom
+            f.write("---\n\n")
+            f.write(f"📊 [Complete Table](table.md) | 🏠 [All Substances](index.md)\n\n")
+            f.write(f"*Substance {i+1} of {len(sorted_data)}*\n\n")
 
 
 def extract_dea_schedule(reasons_data):

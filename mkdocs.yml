@@ -55,6 +55,7 @@ plugins:
   - search:
       lang: en
   - awesome-pages
+  - section-index
 
 extra:
   analytics:
@@ -81,5 +82,5 @@ nav:
   - Substances:
       - substances/index.md
       - Complete Table: substances/table.md
-      # Individual substance pages will be auto-generated in substances/
+      - substances/
   - Changelog: changelog.md
