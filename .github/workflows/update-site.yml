@@ -61,13 +61,6 @@ jobs:
         run: |
           python workflow_helper.py check-changes
 
-      - name: Upload changes summary
-        uses: actions/upload-artifact@v4
-        with:
-          name: changes-summary
-          path: changes_summary.json
-          retention-days: 30
-
   update-and-deploy:
     needs: check-for-changes
     runs-on: ubuntu-latest
@@ -104,16 +97,15 @@ jobs:
           uv pip install -r requirements.txt --system
           uv pip install -r requirements-docs.txt --system || true
 
-      - name: Download changes summary
-        if: needs.check-for-changes.outputs.has-changes == 'true'
-        uses: actions/download-artifact@v4
-        with:
-          name: changes-summary
-
       - name: Regenerate data and documentation
         run: |
-          python workflow_helper.py check-changes
+          python generate_docs.py
 
+      - name: Clean up temporary files before PR creation
+        if: needs.check-for-changes.outputs.has-changes == 'true'
+        run: |
+          python workflow_helper.py cleanup
+          
       - name: Create Pull Request if changes detected
         if: needs.check-for-changes.outputs.has-changes == 'true'
         uses: peter-evans/create-pull-request@v5
@@ -180,10 +172,14 @@ jobs:
             echo "📖 GitHub Pages site updated with latest data"
             echo "🔄 Pull request created for review and audit"
             
-            # Show summary from JSON if available
-            if [ -f "changes_summary.json" ]; then
+            # Show summary from temp JSON if available
+            TEMP_SUMMARY="/tmp/changes_summary.json"
+            if [ -f "$TEMP_SUMMARY" ]; then
               echo "📊 Detailed change summary:"
-              cat changes_summary.json | python -m json.tool
+              cat "$TEMP_SUMMARY" | python -m json.tool
+            elif [ -f "changes_summary_temp.json" ]; then
+              echo "📊 Detailed change summary:"
+              cat changes_summary_temp.json | python -m json.tool
             fi
           else
             echo "✅ No changes detected: Documentation regenerated and deployed"

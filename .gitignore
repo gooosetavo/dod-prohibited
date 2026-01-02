@@ -226,5 +226,7 @@ $RECYCLE.BIN/
 # Project specific
 prohibited.db
 prohibited.html
+changes_summary.json
+changes_summary_temp.json
 
 docs/substances

@@ -9,6 +9,8 @@ import os
 import sys
 import logging
 import json
+import glob
+import json
 from pathlib import Path
 from generate_docs import main as generate_docs_main
 
@@ -166,7 +168,7 @@ def check_for_changes():
         set_github_output("has-changes", "true")
         set_github_output("changes-summary", changes_summary)
         
-        # Also create a JSON summary file for more detailed information
+        # Create a JSON summary file in a temp location to avoid conflicts
         summary_data = {
             "has_changes": True,
             "new_count": new_count,
@@ -176,8 +178,11 @@ def check_for_changes():
             "changed_files": changed_files.splitlines() if changed_files else []
         }
         
-        with open("changes_summary.json", "w") as f:
+        # Write to temp file that won't be committed
+        temp_summary_path = "/tmp/changes_summary.json" if os.path.exists("/tmp") else "changes_summary_temp.json"
+        with open(temp_summary_path, "w") as f:
             json.dump(summary_data, f, indent=2)
+        print(f"📄 Summary written to {temp_summary_path}")
         
     else:
         print("✅ No changes detected in prohibited substances list")
@@ -194,10 +199,88 @@ def check_for_changes():
             "changed_files": []
         }
         
-        with open("changes_summary.json", "w") as f:
+        temp_summary_path = "/tmp/changes_summary.json" if os.path.exists("/tmp") else "changes_summary_temp.json"
+        with open(temp_summary_path, "w") as f:
             json.dump(summary_data, f, indent=2)
     
     return has_changes
+
+
+def cleanup_workflow_files():
+    """
+    Clean up temporary files and resolve git conflicts that might
+    interfere with PR creation.
+    """
+    print("🧹 Cleaning up workflow temporary files...")
+    
+    # Remove temporary summary files
+    temp_files = [
+        "changes_summary.json", 
+        "changes_summary_temp.json",
+        "/tmp/changes_summary.json"
+    ]
+    
+    for temp_file in temp_files:
+        try:
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                print(f"🗑️  Removed {temp_file}")
+        except Exception as e:
+            logging.warning(f"Could not remove {temp_file}: {e}")
+    
+    # Find and remove any other temp files with glob pattern
+    try:
+        for temp_file in glob.glob("changes_summary*.json"):
+            if os.path.exists(temp_file):
+                os.remove(temp_file)
+                print(f"🗑️  Removed {temp_file}")
+    except Exception as e:
+        logging.warning(f"Error cleaning glob pattern: {e}")
+    
+    # Clean git conflicts for summary files
+    try:
+        result = subprocess.run(
+            ["git", "status", "--porcelain"], 
+            capture_output=True, text=True, check=False
+        )
+        
+        if result.returncode == 0 and "changes_summary" in result.stdout:
+            print("🔧 Resolving git conflicts for summary files...")
+            
+            # Remove from git index if tracked
+            subprocess.run(
+                ["git", "rm", "--cached", "changes_summary.json"], 
+                capture_output=True, check=False
+            )
+            subprocess.run(
+                ["git", "rm", "--cached", "changes_summary_temp.json"], 
+                capture_output=True, check=False
+            )
+            
+            # Reset any staging of these files
+            subprocess.run(
+                ["git", "reset", "--", "changes_summary.json", "changes_summary_temp.json"], 
+                capture_output=True, check=False
+            )
+            
+    except Exception as e:
+        logging.warning(f"Error cleaning git conflicts: {e}")
+    
+    # Clean up git stash if it contains temp files
+    try:
+        stash_result = subprocess.run(
+            ["git", "stash", "list"], 
+            capture_output=True, text=True, check=False
+        )
+        
+        if stash_result.returncode == 0 and "WIP" in stash_result.stdout:
+            print("🗑️  Clearing potentially conflicting git stash...")
+            subprocess.run(["git", "stash", "clear"], check=False)
+            
+    except Exception as e:
+        logging.warning(f"Error clearing git stash: {e}")
+    
+    print("✅ Workflow cleanup completed")
 
 
 def main():
@@ -213,6 +296,9 @@ def main():
     if action == "check-changes":
         has_changes = check_for_changes()
         sys.exit(0 if has_changes else 1)  # Exit code indicates if changes found
+    elif action == "cleanup":
+        cleanup_workflow_files()
+        sys.exit(0)
     elif action == "debug":
         print("🔍 Running change detection debug analysis...")
         print("For detailed analysis, run: python tests/debug_changes.py")
@@ -220,7 +306,7 @@ def main():
         sys.exit(0 if has_changes else 1)
     else:
         print(f"❌ Unknown action: {action}")
-        print("Available actions: check-changes, debug")
+        print("Available actions: check-changes, cleanup, debug")
         sys.exit(1)
 
 
