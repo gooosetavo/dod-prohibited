@@ -50,7 +50,7 @@ class TestWorkflowHelper:
     @patch('workflow_helper.run_command')
     def test_get_git_status(self, mock_run_command):
         """Test getting git status"""
-        mock_run_command.return_value = ('M file1.txt\\nA file2.txt', '', 0)
+        mock_run_command.return_value = ('M file1.txt\nA file2.txt', '', 0)
         
         status = get_git_status()
         assert len(status) == 2
@@ -62,7 +62,7 @@ class TestWorkflowHelper:
         with tempfile.TemporaryDirectory() as temp_dir:
             os.chdir(temp_dir)
             
-            changelog_content = \"\"\"# Changelog
+            changelog_content = """# Changelog
 
 ## 2026-01-02
 
@@ -84,7 +84,7 @@ class TestWorkflowHelper:
 
 - **Substance 1**
 - **Substance 2**
-\"\"\"
+"""
             
             changelog_path = Path('CHANGELOG.md')
             changelog_path.write_text(changelog_content)
@@ -106,19 +106,19 @@ class TestWorkflowHelper:
     
     @patch.dict(os.environ, {'GITHUB_OUTPUT': '/tmp/github_output'})
     def test_set_github_output(self):
-        \"\"\"Test setting GitHub output variable\"\"\"
+        """Test setting GitHub output variable"""
         with patch('builtins.open', mock_open()) as mock_file:
             set_github_output('test-key', 'test-value')
             mock_file.assert_called_once_with('/tmp/github_output', 'a')
             handle = mock_file()
-            handle.write.assert_called_once_with('test-key=test-value\\n')
+            handle.write.assert_called_once_with('test-key=test-value\n')
     
     def test_parse_changelog_counts_ignores_metadata_markers(self):
-        \"\"\"Test that changelog parsing correctly handles metadata markers\"\"\"
+        """Test that changelog parsing correctly handles metadata markers"""
         with tempfile.TemporaryDirectory() as temp_dir:
             os.chdir(temp_dir)
             
-            changelog_content = \"\"\"# Changelog
+            changelog_content = """# Changelog
 
 ## 2026-01-02
 
@@ -141,7 +141,7 @@ class TestWorkflowHelper:
 
 - **Substance D** (source date: 2022-01-01)
 - **Substance E**
-\"\"\"
+"""
             
             changelog_path = Path('CHANGELOG.md')
             changelog_path.write_text(changelog_content)
