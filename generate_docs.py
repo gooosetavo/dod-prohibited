@@ -499,11 +499,34 @@ def main():
     current_count = len(df)
     logging.info(f"Current substances: {current_count}, Previous substances: {previous_count}")
     
-    # Log first few substance keys for debugging
+    # Log first few substance keys for debugging  
     sample_keys = []
     for i, row in df.head(3).iterrows():
-        sample_key = '|'.join(str(row.get(col, '')) for col in columns[:2])
-        sample_keys.append(sample_key[:100])  # Truncate for readability
+        # Use the same key generation logic as the main loop
+        values = []
+        for col in columns:
+            val = row.get(col, None)
+            if isinstance(val, (list, dict)):
+                val = json.dumps(val, ensure_ascii=False)
+            values.append(val)
+        
+        current_row_dict = dict(zip(columns, values))
+        substance_key = None
+        
+        # Try guid first (most unique)
+        guid = current_row_dict.get('guid') or current_row_dict.get('Guid')
+        if guid and str(guid).strip():
+            substance_key = f"guid:{guid}"
+        # Try Name second
+        elif current_row_dict.get('Name') and str(current_row_dict['Name']).strip():
+            substance_key = f"name:{current_row_dict['Name']}"
+        # Try searchable_name third  
+        elif current_row_dict.get('searchable_name') and str(current_row_dict['searchable_name']).strip():
+            substance_key = f"search:{current_row_dict['searchable_name']}"
+        else:
+            substance_key = f"fallback_{i}"
+            
+        sample_keys.append(substance_key[:100])  # Truncate for readability
     logging.info(f"Sample current keys: {sample_keys}")
     
     if previous_data:
