@@ -79,6 +79,7 @@ def update_persistent_changelog(changes_detected, today):
     
     new_substances = [c for c in changes_detected if c['type'] == 'added']
     updated_substances = [c for c in changes_detected if c['type'] == 'updated']
+    removed_substances = [c for c in changes_detected if c['type'] == 'removed']
     
     if new_substances:
         new_entry += "### New Substances Added\n\n"
@@ -96,6 +97,13 @@ def update_persistent_changelog(changes_detected, today):
             else:
                 new_entry += f"- **{change['name']}:** Updated\n"
         logging.info(f"Updated {len(updated_substances)} substances in changelog.")
+        new_entry += "\n"
+    
+    if removed_substances:
+        new_entry += "### Substances Removed\n\n"
+        for change in removed_substances:
+            new_entry += f"- **{change['name']}**\n"
+        logging.info(f"Removed {len(removed_substances)} substances from changelog.")
         new_entry += "\n"
     
     # Insert new entry after the header
@@ -121,7 +129,7 @@ def update_persistent_changelog(changes_detected, today):
         f.write('\n'.join(new_lines))
 
 
-def load_previous_data_from_git():
+def load_previous_data_from_git(current_columns):
     """Load the previous version of data.json from git history for comparison."""
     try:
         # Try to get the previous version of docs/data.json
@@ -134,20 +142,25 @@ def load_previous_data_from_git():
         
         if result.returncode == 0:
             data = json.loads(result.stdout)
-            # Convert to dict keyed by substance_key for easy lookup
             previous_dict = {}
+            previous_count = len(data)
+            
             for item in data:
-                # Recreate the same key logic
-                columns = list(item.keys())
-                # Remove added/updated if present
-                data_columns = [col for col in columns if col not in ['added', 'updated']]
-                if len(data_columns) >= 2:
-                    key = '|'.join(str(item.get(col, '')) for col in data_columns[:2])
+                # Use the same key logic as current data - first two columns of current data
+                if len(current_columns) >= 2:
+                    key = '|'.join(str(item.get(col, '')) for col in current_columns[:2])
                     previous_dict[key] = item
-            logging.info("Loaded previous data.json from git history.")
-            return previous_dict
+                else:
+                    # Fallback to all available fields
+                    key = '|'.join(str(item.get(col, '')) for col in sorted(item.keys()) if col not in ['added', 'updated'])
+                    previous_dict[key] = item
+                    
+            logging.info(f"Loaded previous data.json from git history: {previous_count} substances")
+            return previous_dict, previous_count
     except (subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError) as e:
         logging.warning(f"Could not load previous data.json from git: {e}")
+    
+    return None
     
     return None
 
@@ -214,9 +227,17 @@ def main():
     logging.info(f"Current date: {today}")
     
     # Load previous data from git history for comparison
-    previous_data = load_previous_data_from_git()
+    previous_result = load_previous_data_from_git(columns)
+    previous_data = None
+    previous_count = 0
+    if previous_result:
+        previous_data, previous_count = previous_result
+    
+    current_count = len(df)
+    logging.info(f"Current substances: {current_count}, Previous substances: {previous_count}")
     
     changes_detected = []
+    current_keys = set()
     
     for _, row in df.iterrows():
         values = []
@@ -229,6 +250,7 @@ def main():
         # Create a unique key and readable name
         substance_key = '|'.join(str(row.get(col, '')) for col in columns[:2])
         substance_name = row.get('Name') or row.get('ingredient') or row.get('name') or substance_key
+        current_keys.add(substance_key)
         
         placeholders = ", ".join(["?"] * len(columns))
         sql = f'''
@@ -248,7 +270,7 @@ def main():
                     'name': substance_name,
                     'fields': []
                 })
-                logging.debug(f"Detected new substance: {substance_name}")
+                logging.debug(f"NEW SUBSTANCE: {substance_name} (key: {substance_key[:50]}...)")
             else:
                 # Check for changes
                 changed_fields = []
@@ -263,7 +285,29 @@ def main():
                         'name': substance_name,
                         'fields': changed_fields
                     })
-                    logging.debug(f"Detected updated substance: {substance_name} (fields: {changed_fields})")
+                    logging.debug(f"UPDATED SUBSTANCE: {substance_name} (fields: {changed_fields})")
+    
+    # Check for removed substances
+    if previous_data is not None:
+        previous_keys = set(previous_data.keys())
+        removed_keys = previous_keys - current_keys
+        for removed_key in removed_keys:
+            removed_substance = previous_data[removed_key]
+            removed_name = removed_substance.get('Name') or removed_substance.get('ingredient') or removed_substance.get('name') or removed_key
+            changes_detected.append({
+                'type': 'removed',
+                'key': removed_key,
+                'name': removed_name,
+                'fields': []
+            })
+            logging.debug(f"REMOVED SUBSTANCE: {removed_name} (key: {removed_key[:50]}...)")
+        
+        # Log summary of changes
+        new_count = len([c for c in changes_detected if c['type'] == 'added'])
+        updated_count = len([c for c in changes_detected if c['type'] == 'updated'])
+        removed_count = len([c for c in changes_detected if c['type'] == 'removed'])
+        logging.info(f"Change summary: {new_count} added, {updated_count} updated, {removed_count} removed")
+        logging.info(f"Net change: {current_count - previous_count} (from {previous_count} to {current_count})")
     
     # Store changes in database for changelog generation
     for change in changes_detected:

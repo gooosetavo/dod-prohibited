@@ -1,10 +1,12 @@
 
-name: Update and Deploy MkDocs Site
+name: Update DoD Prohibited Substances
+
 permissions:
   contents: write
+  pull-requests: write
 
 concurrency:
-  group: deploy-site
+  group: update-prohibited-substances
   cancel-in-progress: true
 
 on:
@@ -16,8 +18,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-deploy:
+  check-for-changes:
     runs-on: ubuntu-latest
+    outputs:
+      has-changes: ${{ steps.check-changes.outputs.has-changes }}
+      changes-summary: ${{ steps.check-changes.outputs.changes-summary }}
     steps:
       - name: Cache uv dependencies
         uses: actions/cache@v4
@@ -27,8 +32,11 @@ jobs:
           key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('requirements*.txt') }}
           restore-keys: |
             uv-${{ runner.os }}-
+
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # Need history to compare with previous version
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,12 +56,136 @@ jobs:
           uv pip install -r requirements.txt --system
           uv pip install -r requirements-docs.txt --system || true
 
-      - name: Generate Markdown docs
+      - name: Check for substance changes
+        id: check-changes
         run: |
-          export DOD_PROHIBITED_GENERATE_DOCS=1
-          python generate_docs.py
+          python workflow_helper.py check-changes
+
+      - name: Upload changes summary
+        uses: actions/upload-artifact@v4
+        with:
+          name: changes-summary
+          path: changes_summary.json
+          retention-days: 30
+
+  update-and-deploy:
+    needs: check-for-changes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cache uv dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('requirements*.txt') }}
+          restore-keys: |
+            uv-${{ runner.os }}-
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Export requirements from pyproject.toml
+        run: |
+          uv pip compile pyproject.toml --output-file requirements.txt
+          uv pip compile pyproject.toml --output-file requirements-docs.txt --extra docs
+
+      - name: Install dependencies with uv
+        run: |
+          uv pip install -r requirements.txt --system
+          uv pip install -r requirements-docs.txt --system || true
+
+      - name: Download changes summary
+        if: needs.check-for-changes.outputs.has-changes == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: changes-summary
+
+      - name: Regenerate data and documentation
+        run: |
+          python workflow_helper.py check-changes
+
+      - name: Create Pull Request if changes detected
+        if: needs.check-for-changes.outputs.has-changes == 'true'
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: |
+            Update prohibited substances database (${{ needs.check-for-changes.outputs.changes-summary }})
+            
+            - Updated docs/data.json with new data
+            - Updated CHANGELOG.md with detected changes
+            - Updated documentation pages and site content
+          title: "Update prohibited substances database (${{ needs.check-for-changes.outputs.changes-summary }})"
+          body: |
+            ## Automated Update of DoD Prohibited Substances
+            
+            This PR contains automatically detected updates to the Department of Defense prohibited dietary supplement ingredients list.
+            
+            ### Change Summary
+            **${{ needs.check-for-changes.outputs.changes-summary }}**
+            
+            ### Files Updated
+            - `docs/data.json` - JSON export for web interface  
+            - `CHANGELOG.md` - Updated with detected changes
+            - Documentation pages and site content
+            
+            ### Detailed Changes
+            Please review the CHANGELOG.md file for detailed information about:
+            - Which specific substances were added, modified, or removed
+            - What fields were updated for modified substances
+            - The exact date of these changes
+            
+            ### Data Quality Notes
+            If you notice a large number of "updated" substances when only a few were actually changed:
+            - This may indicate data structure changes from the source website
+            - Field formatting or metadata updates that don't affect the core substance information
+            - Timestamp or internal ID changes that trigger our change detection
+            
+            ### Automatic Deployment
+            ✅ The GitHub Pages site has been automatically updated with these changes. This PR serves as a record of the changes for review and audit purposes.
+            
+            ---
+            *This PR was automatically created by the scheduled workflow that monitors the [DoD OPSS website](https://www.opss.org/dod-prohibited-dietary-supplement-ingredients) for changes.*
+          branch: update-substances-${{ github.run_number }}
+          branch-suffix: timestamp
+          delete-branch: true
+          draft: false
+          add-paths: |
+            docs/data.json
+            CHANGELOG.md
+            docs/substances/
+            docs/index.md
+            docs/guide.md
+            docs/changelog.md
 
       - name: Deploy to GitHub Pages
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: mkdocs gh-deploy --force --remote-name origin --remote-branch gh-pages
+
+      - name: Log deployment results
+        run: |
+          if [ "${{ needs.check-for-changes.outputs.has-changes }}" = "true" ]; then
+            echo "✅ Changes detected: ${{ needs.check-for-changes.outputs.changes-summary }}"
+            echo "📖 GitHub Pages site updated with latest data"
+            echo "🔄 Pull request created for review and audit"
+            
+            # Show summary from JSON if available
+            if [ -f "changes_summary.json" ]; then
+              echo "📊 Detailed change summary:"
+              cat changes_summary.json | python -m json.tool
+            fi
+          else
+            echo "✅ No changes detected: Documentation regenerated and deployed"
+            echo "📖 GitHub Pages site refreshed with existing data"
+          fi
