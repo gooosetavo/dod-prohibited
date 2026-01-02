@@ -1,5 +1,5 @@
 
-name: Update DoD Prohibited Substances
+name: Update DoD Prohibited Substances page
 
 permissions:
   contents: write
@@ -155,7 +155,6 @@ jobs:
           add-paths: |
             docs/data.json
             CHANGELOG.md
-            docs/substances/
             docs/index.md
             docs/guide.md
             docs/changelog.md
