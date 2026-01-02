@@ -54,8 +54,6 @@ markdown_extensions:
 plugins:
   - search:
       lang: en
-  - awesome-pages
-  - section-index
 
 extra:
   analytics:
@@ -82,5 +80,4 @@ nav:
   - Substances:
       - substances/index.md
       - Complete Table: substances/table.md
-      - substances/
   - Changelog: changelog.md
