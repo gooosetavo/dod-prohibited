@@ -98,12 +98,10 @@ jobs:
           uv pip install -r requirements-docs.txt --system || true
 
       - name: Regenerate data and documentation
+        env:
+          DOD_PROHIBITED_GENERATE_DOCS: "1"
         run: |
           python generate_docs.py
-
-      # - name: Clean up temporary files before deployment
-      #   run: |
-      #     python workflow_helper.py cleanup
 
       - name: Deploy to GitHub Pages
         env:
