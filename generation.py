@@ -225,7 +225,10 @@ def generate_substance_pages(
                         other_names = ast.literal_eval(other_names)
                     except Exception:
                         other_names = [other_names]
-                f.write(f"**Other names:** {', '.join(other_names)}\n\n")
+                f.write("**Other names:**\n\n")
+                for name in other_names:
+                    f.write(f"- {name}\n")
+                f.write("\n")
             # Classifications
             classifications = entry.get("Classifications") or entry.get(
                 "classifications"
@@ -238,7 +241,10 @@ def generate_substance_pages(
                         classifications = ast.literal_eval(classifications)
                     except Exception:
                         classifications = [classifications]
-                f.write(f"**Classifications:** {', '.join(classifications)}\n\n")
+                f.write("**Classifications:**\n\n")
+                for classification in classifications:
+                    f.write(f"- {classification}\n")
+                f.write("\n")
             # Reasons
             reasons = entry.get("Reasons") or entry.get("reasons")
             if reasons:
@@ -249,7 +255,7 @@ def generate_substance_pages(
                         reasons = ast.literal_eval(reasons)
                     except Exception:
                         reasons = [reasons]
-                f.write("**Reasons for prohibition:**\n")
+                f.write("**Reasons for prohibition:**\n\n")
                 for reason in reasons:
                     if isinstance(reason, dict):
                         line = f"- {reason.get('reason', '')}"
@@ -269,7 +275,10 @@ def generate_substance_pages(
                         warnings = ast.literal_eval(warnings)
                     except Exception:
                         warnings = [warnings]
-                f.write(f"**Warnings:** {', '.join(warnings)}\n\n")
+                f.write("**Warnings:**\n\n")
+                for warning in warnings:
+                    f.write(f"- {warning}\n")
+                f.write("\n")
             # References
             refs = entry.get("References") or entry.get("references")
             if refs:
@@ -280,7 +289,7 @@ def generate_substance_pages(
                         refs = ast.literal_eval(refs)
                     except Exception:
                         refs = [refs]
-                f.write("**References:**\n")
+                f.write("**References:**\n\n")
                 for ref in refs:
                     if isinstance(ref, dict):
                         # Handle dictionary format with title/url
@@ -363,6 +372,7 @@ def generate_substance_pages(
                 unii_data = find_unii_data_for_substance(name, unii_df)
                 if unii_data:
                     f.write("## UNII (Unique Ingredient Identifier) Information\n\n")
+                    
                     f.write(f"**UNII ID:** {unii_data.get('UNII', 'Not available')}\n\n")
                     
                     # Preferred Term
@@ -381,7 +391,7 @@ def generate_substance_pages(
                         f.write(f"**Substance Type:** {substance_type}\n\n")
                     
                     # External links
-                    f.write("**External Resources:**\n")
+                    f.write("**External Resources:**\n\n")
                     
                     links_added = False
                     
