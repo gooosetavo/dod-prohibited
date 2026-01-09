@@ -3,8 +3,10 @@ import json
 import hashlib
 import re
 import unicodedata
-from typing import TYPE_CHECKING, List, Dict, Any
+import pandas as pd
+from typing import TYPE_CHECKING, List, Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
+from unii_client import UniiDataClient
 
 if TYPE_CHECKING:
     pass
@@ -32,11 +34,97 @@ def get_short_slug(entry):
     return f"substance-{hashval}"
 
 
-# The rest of the generation logic (writing markdown, changelog, etc.) would be implemented here as functions.
+def enhance_unii_data(unii_df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Enhance UNII DataFrame with additional URL fields for external resources.
+    
+    Args:
+        unii_df: DataFrame containing UNII data
+        
+    Returns:
+        Enhanced DataFrame with additional URL columns
+    """
+    enhanced_df = unii_df.copy()
+    
+    # Helper functions for URL generation
+    def to_pubchem_url(pubchem_id):
+        return f"https://pubchem.ncbi.nlm.nih.gov/compound/{int(pubchem_id)}" if not pd.isna(pubchem_id) else None
+    
+    def to_comptox_url(comptox_id):
+        return f"https://comptox.epa.gov/dashboard/chemical/details/{comptox_id}" if not pd.isna(comptox_id) else None
+    
+    # Add DISPLAY_NAME column for matching (uppercase preferred term)
+    if 'PT' in enhanced_df.columns:
+        enhanced_df["DISPLAY_NAME"] = enhanced_df["PT"].str.upper()
+    
+    # Add URL columns
+    enhanced_df["UNII_URL"] = enhanced_df["UNII"].apply(lambda x: f"https://precision.fda.gov/uniisearch/srs/unii/{x}")
+    enhanced_df["COMMONCHEMISTRY_URL"] = enhanced_df["RN"].apply(lambda x: f"https://commonchemistry.cas.org/detail?cas_rn={x}" if not pd.isna(x) else None)
+    enhanced_df["NCATS_URL"] = enhanced_df["UNII"].apply(lambda x: f"https://drugs.ncats.io/substance/{x}")
+    enhanced_df["GSRS_FULL_RECORD_URL"] = enhanced_df["UNII"].apply(lambda x: f"https://precision.fda.gov/ginas/app/ui/substances/{x}")
+    enhanced_df["PUBCHEM_URL"] = enhanced_df["PUBCHEM"].apply(to_pubchem_url)
+    enhanced_df["EPA_COMPTOX_URL"] = enhanced_df["EPA_CompTox"].apply(to_comptox_url)
+    
+    return enhanced_df
+
+
+def load_unii_data() -> Optional[pd.DataFrame]:
+    """
+    Load and enhance UNII data from the FDA database.
+    
+    Returns:
+        Enhanced UNII DataFrame or None if data cannot be loaded
+    """
+    try:
+        client = UniiDataClient()
+        # Download ZIP if needed
+        client.download_zip()
+        
+        # Load the UNII records (assuming this is the main file)
+        unii_df = client.load_csv_data('UNII_Records_18Aug2025.txt', sep='\t')
+        
+        # Enhance with URLs
+        enhanced_df = enhance_unii_data(unii_df)
+        
+        return enhanced_df
+    except Exception as e:
+        print(f"Warning: Could not load UNII data: {e}")
+        return None
+
+
+def find_unii_data_for_substance(substance_name: str, unii_df: pd.DataFrame) -> Optional[Dict[str, Any]]:
+    """
+    Find UNII data for a given substance name.
+    
+    Args:
+        substance_name: Name of the substance to look up
+        unii_df: Enhanced UNII DataFrame
+        
+    Returns:
+        Dictionary containing UNII data if found, None otherwise
+    """
+    if unii_df is None or substance_name is None:
+        return None
+    
+    # Create display name for matching
+    display_name = substance_name.upper()
+    
+    # Try exact match first
+    match = unii_df[unii_df['DISPLAY_NAME'] == display_name]
+    if not match.empty:
+        return match.iloc[0].to_dict()
+    
+    # Try partial match on PT (preferred term)
+    if 'PT' in unii_df.columns:
+        match = unii_df[unii_df['PT'].str.upper() == display_name]
+        if not match.empty:
+            return match.iloc[0].to_dict()
+    
+    return None
 
 
 def generate_substance_pages(
-    data: List[Dict[str, Any]], columns: List[str], substances_dir: Path
+    data: List[Dict[str, Any]], columns: List[str], substances_dir: Path, settings=None
 ) -> None:
     """
     Generates a Markdown file for each substance in the data list.
@@ -44,7 +132,17 @@ def generate_substance_pages(
         data: List of substance dictionaries.
         columns: List of column names to include.
         substances_dir: Path to the directory where files will be written.
+        settings: Settings object containing configuration options.
     """
+    # Load UNII data if enabled in settings
+    unii_df = None
+    if settings and getattr(settings, 'use_unii_data', False):
+        unii_df = load_unii_data()
+        if unii_df is not None:
+            print(f"Loaded UNII data with {len(unii_df)} records")
+        else:
+            print("UNII data not available - substance pages will be generated without UNII information")
+    
     # Sort data alphabetically by name for consistent ordering
     sorted_data = sorted(
         data,
@@ -259,6 +357,74 @@ def generate_substance_pages(
                         f.write(f"**Updated:** {updated}\n\n")
                 except (json.JSONDecodeError, ValueError, TypeError, OSError):
                     f.write(f"**Updated:** {updated}\n\n")
+
+            # UNII Data Section
+            if unii_df is not None:
+                unii_data = find_unii_data_for_substance(name, unii_df)
+                if unii_data:
+                    f.write("## UNII (Unique Ingredient Identifier) Information\n\n")
+                    f.write(f"**UNII ID:** {unii_data.get('UNII', 'Not available')}\n\n")
+                    
+                    # Preferred Term
+                    pt = unii_data.get('PT')
+                    if pt and pd.notna(pt):
+                        f.write(f"**Preferred Term:** {pt}\n\n")
+                    
+                    # Registry Number (CAS)
+                    rn = unii_data.get('RN')
+                    if rn and pd.notna(rn):
+                        f.write(f"**CAS Registry Number:** {rn}\n\n")
+                    
+                    # Substance Type
+                    substance_type = unii_data.get('TYPE')
+                    if substance_type and pd.notna(substance_type):
+                        f.write(f"**Substance Type:** {substance_type}\n\n")
+                    
+                    # External links
+                    f.write("**External Resources:**\n")
+                    
+                    links_added = False
+                    
+                    # UNII URL
+                    unii_url = unii_data.get('UNII_URL')
+                    if unii_url:
+                        f.write(f"- [FDA UNII Search]({unii_url})\n")
+                        links_added = True
+                    
+                    # GSRS Full Record
+                    gsrs_url = unii_data.get('GSRS_FULL_RECORD_URL')
+                    if gsrs_url:
+                        f.write(f"- [GSRS Full Record]({gsrs_url})\n")
+                        links_added = True
+                    
+                    # NCATS
+                    ncats_url = unii_data.get('NCATS_URL')
+                    if ncats_url:
+                        f.write(f"- [NCATS Inxight Drugs]({ncats_url})\n")
+                        links_added = True
+                    
+                    # Common Chemistry (CAS)
+                    cc_url = unii_data.get('COMMONCHEMISTRY_URL')
+                    if cc_url and pd.notna(unii_data.get('RN')):
+                        f.write(f"- [CAS Common Chemistry]({cc_url})\n")
+                        links_added = True
+                    
+                    # PubChem
+                    pubchem_url = unii_data.get('PUBCHEM_URL')
+                    if pubchem_url and pd.notna(unii_data.get('PUBCHEM')):
+                        f.write(f"- [PubChem]({pubchem_url})\n")
+                        links_added = True
+                    
+                    # EPA CompTox
+                    epa_url = unii_data.get('EPA_COMPTOX_URL')
+                    if epa_url and pd.notna(unii_data.get('EPA_CompTox')):
+                        f.write(f"- [EPA CompTox Dashboard]({epa_url})\n")
+                        links_added = True
+                    
+                    if not links_added:
+                        f.write("- No external resources available\n")
+                    
+                    f.write("\n")
 
             # Navigation at the bottom
             f.write("---\n\n")

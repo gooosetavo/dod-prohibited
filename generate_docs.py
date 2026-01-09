@@ -51,7 +51,7 @@ class Settings:
     branch: Optional[str] = None
     """Git branch name, typically set via environment variables."""
     
-    use_unii_data: bool = False
+    use_unii_data: bool = True
     """Whether to include UNII (Unique Ingredient Identifier) data in substance pages."""
 
     @property
@@ -693,7 +693,7 @@ def main():
     logging.info(f"Wrote {len(data)} substances to docs/data.json.")
 
     # Use generation module for page and changelog creation
-    generation.generate_substance_pages(data, columns, substances_dir)
+    generation.generate_substance_pages(data, columns, substances_dir, settings)
     logging.info("Generated substance pages.")
     generation.generate_substances_index(data, columns, docs_dir)
     logging.info("Generated substances index.")
