@@ -78,14 +78,21 @@ class Substance:
     
     # Core data attributes (dynamically populated from DataFrame columns)
     data: Dict[str, Any] = field(default_factory=dict)
+    """Dictionary containing all substance data fields from the source (e.g., Name, Reason, Classifications, etc.)."""
     
     # Metadata
     added_date: Optional[str] = None
+    """Date when this substance was first added to the database (ISO format string)."""
+    
     updated_date: Optional[str] = None
+    """Date when this substance was last updated in the database (ISO format string)."""
     
     # Computed fields
     key: Optional[str] = field(default=None, init=False)
+    """Unique identifier key generated from substance data (computed after initialization)."""
+    
     name: Optional[str] = field(default=None, init=False)
+    """Display name extracted from substance data (computed after initialization)."""
     
     def __post_init__(self):
         """Initialize computed fields after creation."""
