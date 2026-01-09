@@ -11,12 +11,12 @@ import sys
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from generate_docs import (
+from generate_docs import load_previous_data_from_git
+from changelog import (
     update_persistent_changelog,
     get_substance_last_modified,
     get_substance_source_date,
     has_substance_been_modified_since,
-    load_previous_data_from_git,
 )
 
 
@@ -152,7 +152,7 @@ class TestGenerateDocs:
         assert result is not None
         data, count = result
         assert count == 1
-        assert "Test|" in data
+        assert "name:Test" in data
 
     @patch("subprocess.run")
     def test_load_previous_data_from_git_failure(self, mock_run):
