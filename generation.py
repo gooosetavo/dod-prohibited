@@ -260,7 +260,7 @@ def generate_substance_pages(
                     if isinstance(reason, dict):
                         line = f"- {reason.get('reason', '')}"
                         if reason.get("link"):
-                            line += f" ([source]({reason['link']}))"
+                            line += f" (<a href=\"{reason['link']}\" target=\"_blank\">source</a>)"
                         f.write(line + "\n")
                     else:
                         f.write(f"- {reason}\n")
@@ -296,11 +296,11 @@ def generate_substance_pages(
                         title = ref.get("title", "")
                         url = ref.get("url", "")
                         if title and url:
-                            f.write(f"- [{title}]({url})\n")
+                            f.write(f"- <a href=\"{url}\" target=\"_blank\">{title}</a>\n")
                         elif title:
                             f.write(f"- {title}\n")
                         elif url:
-                            f.write(f"- {url}\n")
+                            f.write(f"- <a href=\"{url}\" target=\"_blank\">{url}</a>\n")
                         else:
                             # Fallback to string representation
                             f.write(f"- {ref}\n")
@@ -311,7 +311,7 @@ def generate_substance_pages(
             # More info URL
             more_info_url = entry.get("More_info_url") or entry.get("more_info_url")
             if more_info_url and more_info_url.strip():
-                f.write(f"**More info:** [{more_info_url}]({more_info_url})\n\n")
+                f.write(f"**More info:** <a href=\"{more_info_url}\" target=\"_blank\">{more_info_url}</a>\n\n")
             else:
                 f.write("**More info:** Not specified\n\n")
             
@@ -398,37 +398,37 @@ def generate_substance_pages(
                     # UNII URL
                     unii_url = unii_data.get('UNII_URL')
                     if unii_url:
-                        f.write(f"- [FDA UNII Search]({unii_url})\n")
+                        f.write(f"- <a href=\"{unii_url}\" target=\"_blank\">FDA UNII Search</a>\n")
                         links_added = True
                     
                     # GSRS Full Record
                     gsrs_url = unii_data.get('GSRS_FULL_RECORD_URL')
                     if gsrs_url:
-                        f.write(f"- [GSRS Full Record]({gsrs_url})\n")
+                        f.write(f"- <a href=\"{gsrs_url}\" target=\"_blank\">GSRS Full Record</a>\n")
                         links_added = True
                     
                     # NCATS
                     ncats_url = unii_data.get('NCATS_URL')
                     if ncats_url:
-                        f.write(f"- [NCATS Inxight Drugs]({ncats_url})\n")
+                        f.write(f"- <a href=\"{ncats_url}\" target=\"_blank\">NCATS Inxight Drugs</a>\n")
                         links_added = True
                     
                     # Common Chemistry (CAS)
                     cc_url = unii_data.get('COMMONCHEMISTRY_URL')
                     if cc_url and pd.notna(unii_data.get('RN')):
-                        f.write(f"- [CAS Common Chemistry]({cc_url})\n")
+                        f.write(f"- <a href=\"{cc_url}\" target=\"_blank\">CAS Common Chemistry</a>\n")
                         links_added = True
                     
                     # PubChem
                     pubchem_url = unii_data.get('PUBCHEM_URL')
                     if pubchem_url and pd.notna(unii_data.get('PUBCHEM')):
-                        f.write(f"- [PubChem]({pubchem_url})\n")
+                        f.write(f"- <a href=\"{pubchem_url}\" target=\"_blank\">PubChem</a>\n")
                         links_added = True
                     
                     # EPA CompTox
                     epa_url = unii_data.get('EPA_COMPTOX_URL')
                     if epa_url and pd.notna(unii_data.get('EPA_CompTox')):
-                        f.write(f"- [EPA CompTox Dashboard]({epa_url})\n")
+                        f.write(f"- <a href=\"{epa_url}\" target=\"_blank\">EPA CompTox Dashboard</a>\n")
                         links_added = True
                     
                     if not links_added:
