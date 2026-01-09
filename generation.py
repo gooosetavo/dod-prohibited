@@ -203,36 +203,37 @@ def generate_substance_pages(
                 f.write("\n")
             # More info URL
             more_info_url = entry.get("More_info_url") or entry.get("more_info_url")
-            if more_info_url:
+            if more_info_url and more_info_url.strip():
                 f.write(f"**More info:** [{more_info_url}]({more_info_url})\n\n")
+            else:
+                f.write(f"**More info:** Not specified\n\n")
+            
             # Sourceof
             sourceof = entry.get("Sourceof") or entry.get("sourceof")
-            if sourceof:
-                f.write(f"**Source of:** {sourceof}\n\n")
+            f.write(f"**Source of:** {sourceof or 'Not specified'}\n\n")
+            
             # Reason
             reason = entry.get("Reason") or entry.get("reason")
-            if reason:
-                f.write(f"**Reason:** {reason}\n\n")
+            f.write(f"**Reason:** {reason or 'Not specified'}\n\n")
+            
             # Label terms
             label_terms = entry.get("Label_terms") or entry.get("label_terms")
-            if label_terms:
-                f.write(f"**Label terms:** {label_terms}\n\n")
+            f.write(f"**Label terms:** {label_terms or 'Not specified'}\n\n")
+            
             # Linked ingredients
             linked_ingredients = entry.get("Linked_ingredients") or entry.get(
                 "linked_ingredients"
             )
-            if linked_ingredients:
-                f.write(f"**Linked ingredients:** {linked_ingredients}\n\n")
+            f.write(f"**Linked ingredients:** {linked_ingredients or 'Not specified'}\n\n")
             # Searchable name
             searchable_name = entry.get("Searchable_name") or entry.get(
                 "searchable_name"
             )
-            if searchable_name:
-                f.write(f"**Searchable name:** {searchable_name}\n\n")
+            f.write(f"**Searchable name:** {searchable_name or 'Not specified'}\n\n")
+            
             # Guid
             guid = entry.get("Guid") or entry.get("guid")
-            if guid:
-                f.write(f"**GUID:** {guid}\n\n")
+            f.write(f"**GUID:** {guid or 'Not specified'}\n\n")
             # Added/Updated
             added = entry.get("added")
             if added:

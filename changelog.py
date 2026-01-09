@@ -7,11 +7,91 @@ import json
 import subprocess
 from pathlib import Path
 from datetime import datetime
+from dataclasses import dataclass, field
+from typing import List, Set, Dict, Optional
+from enum import Enum
 
 
-def parse_existing_changelog_entries(changelog_content):
+class ChangeType(Enum):
+    """Type of change to a substance."""
+    ADDED = "added"
+    UPDATED = "updated"
+    REMOVED = "removed"
+
+
+@dataclass
+class SubstanceChange:
+    """Represents a change to a substance."""
+    name: str
+    change_type: ChangeType
+    key: Optional[str] = None
+    fields: List[str] = field(default_factory=list)
+    source_date: Optional[str] = None
+    detection_date: Optional[str] = None
+
+    @property
+    def type(self) -> str:
+        """Return the change type as a string for backward compatibility."""
+        return self.change_type.value
+
+
+@dataclass
+class DateChanges:
+    """Container for changes organized by type for a specific date."""
+    added: List[SubstanceChange] = field(default_factory=list)
+    updated: List[SubstanceChange] = field(default_factory=list)
+    removed: List[SubstanceChange] = field(default_factory=list)
+
+    def get_changes(self, change_type: ChangeType) -> List[SubstanceChange]:
+        """Get changes by type."""
+        if change_type == ChangeType.ADDED:
+            return self.added
+        elif change_type == ChangeType.UPDATED:
+            return self.updated
+        elif change_type == ChangeType.REMOVED:
+            return self.removed
+        return []
+
+    def add_change(self, change: SubstanceChange) -> None:
+        """Add a change to the appropriate list."""
+        if change.change_type == ChangeType.ADDED:
+            self.added.append(change)
+        elif change.change_type == ChangeType.UPDATED:
+            self.updated.append(change)
+        elif change.change_type == ChangeType.REMOVED:
+            self.removed.append(change)
+
+    def has_changes(self) -> bool:
+        """Check if there are any changes."""
+        return bool(self.added or self.updated or self.removed)
+
+
+@dataclass
+class ParsedChanges:
+    """Container for parsed existing changes by date."""
+    changes_by_date: Dict[str, Dict[str, Set[str]]] = field(default_factory=dict)
+
+    def add_substance(self, date: str, change_type: ChangeType, substance_name: str) -> None:
+        """Add a substance to the parsed changes."""
+        if date not in self.changes_by_date:
+            self.changes_by_date[date] = {
+                "added": set(),
+                "updated": set(),
+                "removed": set(),
+            }
+        self.changes_by_date[date][change_type.value].add(substance_name)
+
+    def has_substance(self, date: str, change_type: ChangeType, substance_name: str) -> bool:
+        """Check if a substance already exists for a given date and type."""
+        return (
+            date in self.changes_by_date and
+            substance_name in self.changes_by_date[date][change_type.value]
+        )
+
+
+def parse_existing_changelog_entries(changelog_content) -> ParsedChanges:
     """Parse existing changelog to extract already recorded changes by date."""
-    existing_changes = {}
+    existing_changes = ParsedChanges()
     lines = changelog_content.split("\n")
     current_date = None
     current_section = None
@@ -25,21 +105,15 @@ def parse_existing_changelog_entries(changelog_content):
             # Skip empty or invalid date headers
             if date_part and not date_part.startswith("#") and not date_part == "":
                 current_date = date_part
-                if current_date not in existing_changes:
-                    existing_changes[current_date] = {
-                        "added": set(),
-                        "updated": set(),
-                        "removed": set(),
-                    }
 
         # Match section headers
         elif line.startswith("### "):
             if "New Substances Added" in line:
-                current_section = "added"
+                current_section = ChangeType.ADDED
             elif "Substances Modified" in line:
-                current_section = "updated"
+                current_section = ChangeType.UPDATED
             elif "Substances Removed" in line:
-                current_section = "removed"
+                current_section = ChangeType.REMOVED
             else:
                 current_section = None
 
@@ -54,27 +128,38 @@ def parse_existing_changelog_entries(changelog_content):
                     # Clean up malformed names (remove extra colons)
                     substance_name = substance_name.rstrip(":").strip()
                     if substance_name:  # Only add non-empty names
-                        existing_changes[current_date][current_section].add(
-                            substance_name
-                        )
+                        existing_changes.add_substance(current_date, current_section, substance_name)
 
     # Debug: log what we parsed
     total_existing = sum(
         len(changes["added"]) + len(changes["updated"]) + len(changes["removed"])
-        for changes in existing_changes.values()
+        for changes in existing_changes.changes_by_date.values()
     )
     logging.debug(
-        f"Parsed {total_existing} existing changelog entries across {len(existing_changes)} dates"
+        f"Parsed {total_existing} existing changelog entries across {len(existing_changes.changes_by_date)} dates"
     )
 
     return existing_changes
+
+
+def create_substance_change_from_dict(change_dict: dict) -> SubstanceChange:
+    """Convert a legacy change dictionary to a SubstanceChange object."""
+    change_type = ChangeType(change_dict["type"])
+    return SubstanceChange(
+        name=change_dict["name"],
+        change_type=change_type,
+        key=change_dict.get("key"),
+        fields=change_dict.get("fields", []),
+        source_date=change_dict.get("source_date"),
+        detection_date=change_dict.get("detection_date"),
+    )
 
 
 def update_persistent_changelog(changes_detected, today, detection_date=None):
     """Update the persistent changelog file that gets committed to git.
 
     Args:
-        changes_detected: List of detected changes
+        changes_detected: List of detected changes (legacy dict format)
         today: Today's date string (YYYY-MM-DD)
         detection_date: Optional date when changes were detected (for computed changes)
     """
@@ -96,74 +181,65 @@ def update_persistent_changelog(changes_detected, today, detection_date=None):
     existing_changes = parse_existing_changelog_entries(existing_content)
 
     # Group changes by their source date
-    changes_by_date = {}
-    computed_changes = []
+    changes_by_date: Dict[str, DateChanges] = {}
+    computed_changes: List[SubstanceChange] = []
 
-    for change in changes_detected:
-        if change["type"] == "added" and "source_date" in change:
+    # Convert legacy dictionaries to SubstanceChange objects
+    for change_dict in changes_detected:
+        change = create_substance_change_from_dict(change_dict)
+        
+        if change.change_type == ChangeType.ADDED and change.source_date:
             # Use self-reported date from the substance data
-            date_key = change["source_date"]
+            date_key = change.source_date
             if date_key not in changes_by_date:
-                changes_by_date[date_key] = {"added": [], "updated": [], "removed": []}
+                changes_by_date[date_key] = DateChanges()
 
             # Check if this substance is already recorded for this date
-            if (
-                date_key in existing_changes
-                and change["name"] in existing_changes[date_key]["added"]
-            ):
+            if existing_changes.has_substance(date_key, ChangeType.ADDED, change.name):
                 logging.debug(
-                    f"Skipping duplicate added entry for {change['name']} on {date_key}"
+                    f"Skipping duplicate added entry for {change.name} on {date_key}"
                 )
                 continue
 
-            changes_by_date[date_key]["added"].append(change)
-        elif change["type"] in ["removed", "updated"]:
+            changes_by_date[date_key].add_change(change)
+        elif change.change_type in [ChangeType.REMOVED, ChangeType.UPDATED]:
             # Use computed detection date for our analysis
             computed_changes.append(change)
         else:
             # Fallback to today's date
             if today not in changes_by_date:
-                changes_by_date[today] = {"added": [], "updated": [], "removed": []}
+                changes_by_date[today] = DateChanges()
 
             # Check for duplicates
-            if (
-                today in existing_changes
-                and change["name"] in existing_changes[today][change["type"]]
-            ):
+            if existing_changes.has_substance(today, change.change_type, change.name):
                 logging.debug(
-                    f"Skipping duplicate {change['type']} entry for {change['name']} on {today}"
+                    f"Skipping duplicate {change.change_type.value} entry for {change.name} on {today}"
                 )
                 continue
 
-            changes_by_date[today][change["type"]].append(change)
+            changes_by_date[today].add_change(change)
 
     # Add computed changes to detection date with duplicate checking
     detection_date = detection_date or today
     if computed_changes:
         if detection_date not in changes_by_date:
-            changes_by_date[detection_date] = {
-                "added": [],
-                "updated": [],
-                "removed": [],
-            }
+            changes_by_date[detection_date] = DateChanges()
+        
         for change in computed_changes:
             # Check for duplicates
-            if (
-                detection_date in existing_changes
-                and change["name"] in existing_changes[detection_date][change["type"]]
-            ):
+            if existing_changes.has_substance(detection_date, change.change_type, change.name):
                 logging.debug(
-                    f"Skipping duplicate {change['type']} entry for {change['name']} on {detection_date}"
+                    f"Skipping duplicate {change.change_type.value} entry for {change.name} on {detection_date}"
                 )
                 continue
 
-            changes_by_date[detection_date][change["type"]].append(change)
+            changes_by_date[detection_date].add_change(change)
 
     # Remove dates that have no new changes
     changes_by_date = {
         date: changes
         for date, changes in changes_by_date.items()
-        if changes["added"] or changes["updated"] or changes["removed"]
+        if changes.has_changes()
     }
 
     if not changes_by_date:
@@ -185,7 +261,7 @@ def update_persistent_changelog(changes_detected, today, detection_date=None):
         i += 1
 
     # Process each date in chronological order (newest first)
-    all_dates = set(changes_by_date.keys()) | set(existing_changes.keys())
+    all_dates = set(changes_by_date.keys()) | set(existing_changes.changes_by_date.keys())
 
     dates_processed = set()
 
@@ -250,71 +326,76 @@ def update_persistent_changelog(changes_detected, today, detection_date=None):
         f.write("\n".join(new_lines))
 
     total_new_changes = sum(
-        len(changes_by_date[d]["added"])
-        + len(changes_by_date[d]["updated"])
-        + len(changes_by_date[d]["removed"])
-        for d in changes_by_date
+        len(changes.added) + len(changes.updated) + len(changes.removed)
+        for changes in changes_by_date.values()
     )
     logging.info(
         f"Updated changelog with {total_new_changes} new changes across {len(changes_by_date)} date(s)."
     )
 
 
-def merge_changes_for_date(date_key, existing_changes, new_changes):
+def merge_changes_for_date(date_key: str, existing_changes: ParsedChanges, new_changes: Dict[str, DateChanges]) -> DateChanges:
     """Merge existing and new changes for a specific date."""
-    merged = {"added": [], "updated": [], "removed": []}
+    merged = DateChanges()
 
     # Start with existing changes
-    if date_key in existing_changes:
-        for change_type in ["added", "updated", "removed"]:
-            for substance_name in existing_changes[date_key][change_type]:
+    if date_key in existing_changes.changes_by_date:
+        for change_type_str, substance_names in existing_changes.changes_by_date[date_key].items():
+            change_type = ChangeType(change_type_str)
+            for substance_name in substance_names:
                 # Create a basic change object for existing entries
-                merged[change_type].append({"name": substance_name, "fields": []})
+                change = SubstanceChange(
+                    name=substance_name,
+                    change_type=change_type,
+                    fields=[]
+                )
+                merged.add_change(change)
 
     # Add new changes (duplicates already filtered out)
     if date_key in new_changes:
-        for change_type in ["added", "updated", "removed"]:
-            merged[change_type].extend(new_changes[date_key][change_type])
+        date_changes = new_changes[date_key]
+        merged.added.extend(date_changes.added)
+        merged.updated.extend(date_changes.updated)
+        merged.removed.extend(date_changes.removed)
 
     return merged
 
 
-def generate_changelog_content_for_date(date_key, date_changes):
+def generate_changelog_content_for_date(date_key: str, date_changes: DateChanges) -> str:
     """Generate changelog content for a specific date."""
     content_parts = []
 
     # New substances (from self-reported dates)
-    if date_changes["added"]:
+    if date_changes.added:
         content_parts.append("### New Substances Added\n")
-        for change in date_changes["added"]:
-            line = f"- **{change['name']}**"
+        for change in date_changes.added:
+            line = f"- **{change.name}**"
             if (
-                isinstance(change, dict)
-                and "source_date" in change
-                and change["source_date"] != date_key
+                change.source_date
+                and change.source_date != date_key
             ):
-                line += f" (source date: {change['source_date']})"
+                line += f" (source date: {change.source_date})"
             content_parts.append(line)
         content_parts.append("")  # Add spacing
 
     # Modified substances (from our detection)
-    if date_changes["updated"]:
+    if date_changes.updated:
         content_parts.append("### Substances Modified\n")
         content_parts.append("*Changes detected through data comparison*\n")
-        for change in date_changes["updated"]:
-            if isinstance(change, dict) and change.get("fields"):
-                field_list = ", ".join(f"`{field}`" for field in change["fields"])
-                content_parts.append(f"- **{change['name']}:** Updated {field_list}")
+        for change in date_changes.updated:
+            if change.fields:
+                field_list = ", ".join(f"`{field}`" for field in change.fields)
+                content_parts.append(f"- **{change.name}:** Updated {field_list}")
             else:
-                content_parts.append(f"- **{change['name']}:** Updated")
+                content_parts.append(f"- **{change.name}:** Updated")
         content_parts.append("")  # Add spacing
 
     # Removed substances (from our detection)
-    if date_changes["removed"]:
+    if date_changes.removed:
         content_parts.append("### Substances Removed\n")
         content_parts.append("*Removals detected through data comparison*\n")
-        for change in date_changes["removed"]:
-            content_parts.append(f"- **{change['name']}**")
+        for change in date_changes.removed:
+            content_parts.append(f"- **{change.name}**")
         content_parts.append("")  # Add spacing
 
     return "\n".join(content_parts).rstrip()
