@@ -5,7 +5,6 @@ Test script for workflow_helper.py
 
 import subprocess
 import sys
-import os
 from pathlib import Path
 
 def test_workflow_helper():

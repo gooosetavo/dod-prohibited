@@ -1,16 +1,13 @@
-import sqlite3
 from pathlib import Path
 import json
-from datetime import datetime, timezone
 import hashlib
 import re
 import unicodedata
-from collections import defaultdict
 from typing import TYPE_CHECKING, List, Dict, Any
 from jinja2 import Environment, FileSystemLoader
 
 if TYPE_CHECKING:
-    from pydantic_settings import BaseSettings
+    pass
 
 def slugify(value):
     value = str(value).strip().lower()
@@ -29,7 +26,6 @@ def get_short_slug(entry):
     return f"substance-{hashval}"
 
 # The rest of the generation logic (writing markdown, changelog, etc.) would be implemented here as functions.
-from typing import List, Dict, Any
 
 def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], substances_dir: Path) -> None:
     """
@@ -205,7 +201,7 @@ def generate_substance_pages(data: List[Dict[str, Any]], columns: List[str], sub
             
             # Navigation at the bottom
             f.write("---\n\n")
-            f.write(f"📊 [Complete Table](table.md) | 🏠 [All Substances](index.md)\n\n")
+            f.write("📊 [Complete Table](table.md) | 🏠 [All Substances](index.md)\n\n")
             f.write(f"*Substance {i+1} of {len(sorted_data)}*\n\n")
 
 

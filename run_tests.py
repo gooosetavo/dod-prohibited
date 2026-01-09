@@ -53,7 +53,7 @@ def run_tests():
                     print(f"FAILED: {e}")
                     failed += 1
         
-        print(f"\n=== Test Summary ===")
+        print("\n=== Test Summary ===")
         print(f"Passed: {passed}")
         print(f"Failed: {failed}")
         

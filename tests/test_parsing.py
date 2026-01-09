@@ -2,7 +2,6 @@
 Tests for parsing.py functions
 """
 
-import pytest
 import pandas as pd
 import sys
 import os

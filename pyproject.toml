@@ -26,6 +26,9 @@ docs = [
 test = ["pytest>=7.0.0", "pytest-mock>=3.10.0", "pytest-cov>=4.0.0"]
 
 [dependency-groups]
+dev = [
+    "ruff>=0.14.11",
+]
 docs = [
     "mkdocs-awesome-pages-plugin>=2.10.1",
     "mkdocs-literate-nav>=0.6.2",

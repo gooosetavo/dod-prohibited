@@ -6,7 +6,6 @@ from parsing import parse_prohibited_list
 import generation
 import sqlite3
 from pathlib import Path
-import os
 import json
 from datetime import datetime, timezone
 from pydantic_settings import BaseSettings
@@ -439,7 +438,7 @@ def main():
 
     columns = list(df.columns)
     col_defs = ", ".join([f'"{col}" TEXT' for col in columns])
-    c.execute(f'''CREATE TABLE IF NOT EXISTS substances (
+    c.execute('''CREATE TABLE IF NOT EXISTS substances (
         id INTEGER PRIMARY KEY AUTOINCREMENT
     )''')
     logging.debug("Ensured substances table exists.")
@@ -456,7 +455,7 @@ def main():
     unique_cols = ", ".join([f'"{col}"' for col in columns])
     # Create unique index only on the actual data columns, not added/updated timestamps
     try:
-        c.execute(f'DROP INDEX IF EXISTS idx_unique_substance')
+        c.execute('DROP INDEX IF EXISTS idx_unique_substance')
         c.execute(f'CREATE UNIQUE INDEX IF NOT EXISTS idx_unique_substance ON substances ({unique_cols})')
         logging.debug("Ensured unique index on substances table.")
     except Exception as e:

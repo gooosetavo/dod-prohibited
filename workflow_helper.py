@@ -10,7 +10,6 @@ import sys
 import logging
 import json
 import glob
-import json
 from pathlib import Path
 from generate_docs import main as generate_docs_main
 

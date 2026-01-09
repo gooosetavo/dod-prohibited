@@ -2,7 +2,6 @@
 Tests for workflow_helper.py functions
 """
 
-import pytest
 import tempfile
 import os
 from pathlib import Path
@@ -17,8 +16,7 @@ from workflow_helper import (
     run_command, 
     get_git_status,
     set_github_output,
-    parse_changelog_counts,
-    check_for_changes
+    parse_changelog_counts
 )
 
 

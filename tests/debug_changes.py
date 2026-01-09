@@ -76,20 +76,20 @@ def compare_data():
     removed_keys = previous_keys - current_keys
     common_keys = current_keys & previous_keys
     
-    print(f"\n🔍 Key Analysis:")
+    print("\n🔍 Key Analysis:")
     print(f"   📈 New substances: {len(new_keys)}")
     print(f"   📉 Removed substances: {len(removed_keys)}")
     print(f"   🔄 Common substances: {len(common_keys)}")
     
     # Show samples
     if new_keys:
-        print(f"\n📈 Sample new keys:")
+        print("\n📈 Sample new keys:")
         for key in list(new_keys)[:3]:
             name = current_dict[key].get('Name', 'Unknown')
             print(f"   - {name} (key: {key[:80]}...)")
     
     if removed_keys:
-        print(f"\n📉 Sample removed keys:")
+        print("\n📉 Sample removed keys:")
         for key in list(removed_keys)[:3]:
             name = previous_dict[key].get('Name', 'Unknown')
             print(f"   - {name} (key: {key[:80]}...)")
@@ -161,7 +161,7 @@ def compare_data():
     
     # Recommendation based on analysis
     if timestamp_based_changes > 0 and meaningful_changes == 0:
-        print(f"\n💡 INSIGHT: All changes appear to be timestamp-only updates.")
+        print("\n💡 INSIGHT: All changes appear to be timestamp-only updates.")
         print("   This suggests the data source updates timestamps without changing content.")
         print("   Consider using timestamp comparison for more accurate change detection.")
     elif meaningful_changes > 0:

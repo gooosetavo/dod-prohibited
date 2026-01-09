@@ -2,7 +2,6 @@
 Tests for generate_docs.py functions
 """
 
-import pytest
 import tempfile
 import os
 from pathlib import Path
