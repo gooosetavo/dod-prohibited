@@ -27,7 +27,7 @@ def load_previous_data():
             check=True,
         )
         return json.loads(result.stdout)
-    except:
+    except (subprocess.CalledProcessError, json.JSONDecodeError):
         return []
 
 
@@ -119,7 +119,7 @@ def compare_data():
                     if isinstance(updated_json, dict) and "_seconds" in updated_json:
                         return updated_json["_seconds"]
                 return 0
-            except:
+            except (json.JSONDecodeError, KeyError, TypeError):
                 return 0
 
         current_timestamp = get_timestamp(current_item)

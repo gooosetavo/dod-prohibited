@@ -326,18 +326,6 @@ def generate_substances_table(
         "Source Updated",
         "Details",
     ]
-    table_header_alignment = [
-        ":-----",
-        ":------------",
-        ":---------------",
-        ":-------------",
-        ":-------",
-        ":----------",
-        ":-----------",
-        ":------",
-        ":------",
-        ":--------",
-    ]
 
     # Column filters are now embedded in the table headers, no separate configuration needed
 
@@ -363,7 +351,7 @@ def generate_substances_table(
 
                 other_names_list = ast.literal_eval(other_names)
                 other_names = ", ".join(other_names_list) if other_names_list else ""
-            except:
+            except (ValueError, SyntaxError):
                 other_names = other_names.strip('[]"')
         elif isinstance(other_names, list):
             other_names = ", ".join(other_names)
@@ -381,7 +369,7 @@ def generate_substances_table(
                 classifications = (
                     ", ".join(classifications_list) if classifications_list else ""
                 )
-            except:
+            except (ValueError, SyntaxError):
                 classifications = classifications.strip('[]"')
         elif isinstance(classifications, list):
             classifications = ", ".join(classifications)
@@ -404,7 +392,7 @@ def generate_substances_table(
 
                 warnings_list = ast.literal_eval(warnings)
                 warnings = ", ".join(warnings_list) if warnings_list else ""
-            except:
+            except (ValueError, SyntaxError):
                 warnings = warnings.strip('[]"')
         elif isinstance(warnings, list):
             warnings = ", ".join(warnings)
@@ -422,7 +410,7 @@ def generate_substances_table(
                     if references_list
                     else "No refs"
                 )
-            except:
+            except (ValueError, SyntaxError):
                 references = "No refs"
         elif isinstance(references, list):
             references = str(len(references)) + " refs" if references else "No refs"
@@ -438,7 +426,7 @@ def generate_substances_table(
                 added_date = datetime.fromisoformat(
                     added_date.replace("Z", "+00:00")
                 ).strftime("%Y-%m-%d")
-            except:
+            except (ValueError, TypeError):
                 added_date = "Unknown"
         else:
             added_date = "Unknown"
@@ -642,7 +630,7 @@ def generate_substances_index(
                         added.replace("Z", "+00:00")
                     ).strftime("%Y-%m-%d")
                     f.write(f"- **[{name}]({slug}.md)** - Added {added_date}\n")
-                except:
+                except (ValueError, TypeError):
                     f.write(f"- **[{name}]({slug}.md)**\n")
             f.write("\n")
 

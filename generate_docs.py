@@ -226,7 +226,6 @@ def update_persistent_changelog(changes_detected, today, detection_date=None):
 
     # Process each date in chronological order (newest first)
     all_dates = set(changes_by_date.keys()) | set(existing_changes.keys())
-    sorted_dates = sorted(all_dates, reverse=True)
 
     dates_processed = set()
 
@@ -518,7 +517,6 @@ def main():
     logging.info("Connected to SQLite database.")
 
     columns = list(df.columns)
-    col_defs = ", ".join([f'"{col}" TEXT' for col in columns])
     c.execute("""CREATE TABLE IF NOT EXISTS substances (
         id INTEGER PRIMARY KEY AUTOINCREMENT
     )""")

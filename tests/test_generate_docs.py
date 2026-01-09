@@ -56,8 +56,8 @@ class TestGenerateDocs:
     def test_has_substance_been_modified_since(self):
         """Test checking if substance was modified since timestamp"""
         substance = {"updated": '{"_seconds": 1640995200, "_nanoseconds": 0}'}
-        assert has_substance_been_modified_since(substance, 1640995100) == True
-        assert has_substance_been_modified_since(substance, 1640995300) == False
+        assert has_substance_been_modified_since(substance, 1640995100)
+        assert not has_substance_been_modified_since(substance, 1640995300)
 
     def test_update_persistent_changelog_with_source_dates(self):
         """Test creating changelog with self-reported dates"""
