@@ -33,7 +33,7 @@ class Settings:
     # Site configuration
     site_title: str = "DoD Prohibited Dietary Supplement Ingredients"
     site_description: str = "A searchable, browsable, and regularly updated list of substances prohibited by the Department of Defense (DoD) for use in dietary supplements."
-
+    db_file: str = "prohibited.db"
     # Environment overrides
     github_ref: Optional[str] = None
     branch: Optional[str] = None
