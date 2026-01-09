@@ -120,7 +120,7 @@ typing-inspection==0.4.2
     #   pydantic-settings
 tzdata==2025.3
     # via pandas
-urllib3==2.6.2
+urllib3==2.6.3
     # via requests
 watchdog==6.0.0
     # via mkdocs
