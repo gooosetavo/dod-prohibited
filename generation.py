@@ -825,4 +825,9 @@ def generate_changelog(
     changelog_path = docs_dir / "changelog.md"
 
     with open(changelog_path, "w", encoding="utf-8") as f:
+        # Add frontmatter to exclude from search
+        f.write("---\n")
+        f.write("search:\n")
+        f.write("  exclude: true\n")
+        f.write("---\n\n")
         f.write('--8<-- "CHANGELOG.md"\n')
