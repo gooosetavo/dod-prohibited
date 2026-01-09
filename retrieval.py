@@ -7,9 +7,10 @@ import logging
 # Configure logging for GitHub Actions (stdout, INFO level by default)
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s %(levelname)s %(message)s',
-    handlers=[logging.StreamHandler()]
+    format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[logging.StreamHandler()],
 )
+
 
 def fetch_drupal_settings(url: str) -> Dict[str, Any]:
     """
@@ -29,11 +30,11 @@ def fetch_drupal_settings(url: str) -> Dict[str, Any]:
     except Exception as e:
         logging.error(f"Failed to fetch URL {url}: {e}")
         raise
-    soup = BeautifulSoup(response.text, 'html.parser')
-    script_tag = soup.find('script', {
-        'type': 'application/json',
-        'data-drupal-selector': 'drupal-settings-json'
-    })
+    soup = BeautifulSoup(response.text, "html.parser")
+    script_tag = soup.find(
+        "script",
+        {"type": "application/json", "data-drupal-selector": "drupal-settings-json"},
+    )
     if not script_tag:
         logging.error("Drupal settings script tag not found")
         raise ValueError("Drupal settings script tag not found")
