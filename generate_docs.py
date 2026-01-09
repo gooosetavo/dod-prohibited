@@ -25,18 +25,34 @@ class Settings:
     source_url: str = (
         "https://www.opss.org/dod-prohibited-dietary-supplement-ingredients"
     )
+    """URL source for DoD prohibited dietary supplement ingredients data."""
 
     # GitHub configuration
     github_owner: str = "gooosetavo"
+    """GitHub repository owner for the project."""
+    
     github_repo: str = "dod-prohibited"
+    """GitHub repository name for the project."""
 
     # Site configuration
     site_title: str = "DoD Prohibited Dietary Supplement Ingredients"
+    """Title displayed on the generated documentation site."""
+    
     site_description: str = "A searchable, browsable, and regularly updated list of substances prohibited by the Department of Defense (DoD) for use in dietary supplements."
+    """Description displayed on the generated documentation site."""
+    
     db_file: str = "prohibited.db"
+    """SQLite database file name for storing substance data."""
+    
     # Environment overrides
     github_ref: Optional[str] = None
+    """GitHub reference (branch/tag) for deployment, typically set via environment."""
+    
     branch: Optional[str] = None
+    """Git branch name, typically set via environment variables."""
+    
+    use_unii_data: bool = False
+    """Whether to include UNII (Unique Ingredient Identifier) data in substance pages."""
 
     @property
     def github_url(self) -> str:
