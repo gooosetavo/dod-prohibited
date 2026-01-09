@@ -34,3 +34,7 @@ docs = [
     "mkdocs-literate-nav>=0.6.2",
     "mkdocs-section-index>=0.3.10",
 ]
+jupyterlab = [
+    "matplotlib>=3.10.8",
+    "seaborn>=0.13.2",
+]

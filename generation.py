@@ -206,7 +206,7 @@ def generate_substance_pages(
             if more_info_url and more_info_url.strip():
                 f.write(f"**More info:** [{more_info_url}]({more_info_url})\n\n")
             else:
-                f.write(f"**More info:** Not specified\n\n")
+                f.write("**More info:** Not specified\n\n")
             
             # Sourceof
             sourceof = entry.get("Sourceof") or entry.get("sourceof")

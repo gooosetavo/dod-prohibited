@@ -4,7 +4,6 @@ Changelog management module for the DoD prohibited substances project.
 
 import logging
 import json
-import subprocess
 from pathlib import Path
 from datetime import datetime
 from dataclasses import dataclass, field

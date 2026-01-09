@@ -7,14 +7,10 @@ import sqlite3
 from pathlib import Path
 import json
 from datetime import datetime, timezone
-from dataclasses import dataclass, field, asdict
+from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Set, Tuple, Union, Any
 from changelog import (
-    parse_existing_changelog_entries,
     update_persistent_changelog,
-    merge_changes_for_date,
-    generate_changelog_content_for_date,
-    find_insert_position,
     get_substance_source_date,
     get_substance_last_modified,
     has_substance_been_modified_since,
