@@ -20,6 +20,7 @@ theme:
     - navigation.sections
     - search.suggest
     - search.highlight
+    - search.share
     - content.code.copy
     - content.action.edit
     - navigation.top
@@ -54,6 +55,8 @@ markdown_extensions:
 plugins:
   - search:
       lang: en
+      separator: '[\s\-\.]+'
+      min_search_length: 2
 
 extra:
   analytics:

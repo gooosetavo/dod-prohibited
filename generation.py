@@ -250,21 +250,41 @@ def generate_substance_pages(
             if reasons:
                 if isinstance(reasons, str):
                     try:
+                        import json
                         import ast
-
-                        reasons = ast.literal_eval(reasons)
-                    except Exception:
-                        reasons = [reasons]
-                f.write("**Reasons for prohibition:**\n\n")
-                for reason in reasons:
-                    if isinstance(reason, dict):
-                        line = f"- {reason.get('reason', '')}"
-                        if reason.get("link"):
-                            line += f" (<a href=\"{reason['link']}\" target=\"_blank\">source</a>)"
-                        f.write(line + "\n")
-                    else:
-                        f.write(f"- {reason}\n")
-                f.write("\n")
+                        
+                        # First try JSON parsing (more reliable)
+                        try:
+                            reasons = json.loads(reasons)
+                        except json.JSONDecodeError:
+                            # Fallback to ast.literal_eval
+                            reasons = ast.literal_eval(reasons)
+                    except Exception as e:
+                        # If both fail, try to detect if it looks like JSON
+                        if reasons.strip().startswith('[') and reasons.strip().endswith(']'):
+                            # This looks like a JSON array that failed to parse
+                            # Don't display the raw JSON, skip this entry or log an error
+                            import logging
+                            logging.warning(f"Failed to parse reasons JSON for substance: {entry.get('Name', 'Unknown')}")
+                            reasons = None
+                        else:
+                            # Treat as a simple string reason
+                            reasons = [reasons]
+                
+                if reasons:  # Only write if we successfully parsed reasons
+                    f.write("**Reasons for prohibition:**\n\n")
+                    for reason in reasons:
+                        if isinstance(reason, dict):
+                            reason_text = reason.get('reason', '').strip()
+                            if reason_text:  # Only display if there's actual reason text
+                                line = f"- {reason_text}"
+                                if reason.get("link"):
+                                    link_title = reason.get("link_title", "source")
+                                    line += f" (<a href=\"{reason['link']}\" target=\"_blank\">{link_title}</a>)"
+                                f.write(line + "\n")
+                        elif isinstance(reason, str) and reason.strip():
+                            f.write(f"- {reason.strip()}\n")
+                    f.write("\n")
             # Warnings
             warnings = entry.get("Warnings") or entry.get("warnings")
             if warnings:
@@ -449,11 +469,26 @@ def extract_dea_schedule(reasons_data):
 
     if isinstance(reasons_data, str):
         try:
+            import json
             import ast
-
-            reasons_data = ast.literal_eval(reasons_data)
+            
+            # First try JSON parsing (more reliable)
+            try:
+                reasons_data = json.loads(reasons_data)
+            except json.JSONDecodeError:
+                # Fallback to ast.literal_eval
+                reasons_data = ast.literal_eval(reasons_data)
         except Exception:
-            reasons_data = [reasons_data]
+            # If parsing fails, check if it looks like JSON
+            if reasons_data.strip().startswith('[') and reasons_data.strip().endswith(']'):
+                # This looks like JSON that failed to parse, don't process
+                return None
+            else:
+                # Treat as simple string
+                reasons_data = [reasons_data]
+
+    if not isinstance(reasons_data, list):
+        reasons_data = [reasons_data]
 
     for reason in reasons_data:
         if isinstance(reason, dict):

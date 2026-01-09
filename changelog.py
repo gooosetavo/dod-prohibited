@@ -248,81 +248,60 @@ def update_persistent_changelog(changes_detected, today, detection_date=None):
     # For dates that already exist in the changelog, we need to update existing entries
     # For new dates, we add completely new entries
     lines = existing_content.split("\n")
-    new_lines = []
+    
+    # Build a completely new changelog by processing dates systematically
+    new_content_lines = []
+    
+    # Copy header until we hit the first date
     i = 0
-
-    # Copy header
     while i < len(lines):
         line = lines[i]
-        new_lines.append(line)
-        if line.startswith("## ") or (line.strip() and not line.startswith("#")):
+        if line.strip().startswith("## ") and len(line.strip()) > 3:
+            # This is a date header, stop copying header
             break
+        new_content_lines.append(line)
         i += 1
-
-    # Process each date in chronological order (newest first)
-    all_dates = set(changes_by_date.keys()) | set(existing_changes.changes_by_date.keys())
-
-    dates_processed = set()
-
-    # Continue processing existing content, updating or inserting as needed
-    while i < len(lines):
-        line = lines[i]
-
-        # Check if this is a date header
-        if line.strip().startswith("## "):
-            date_part = line.strip()[3:].strip()
-
-            if date_part in changes_by_date and date_part not in dates_processed:
-                # This date has new changes - merge with existing entry
-                logging.info(f"Updating existing changelog entry for {date_part}")
-
-                # Add the existing date header
-                new_lines.append(line)
-                i += 1
-
-                # Skip the existing content for this date, we'll regenerate it
-                while i < len(lines) and not lines[i].strip().startswith("## "):
-                    i += 1
-
-                # Generate merged content for this date
-                merged_changes = merge_changes_for_date(
-                    date_part, existing_changes, changes_by_date
-                )
-                date_content = generate_changelog_content_for_date(
-                    date_part, merged_changes
-                )
-                new_lines.extend(date_content.split("\n"))
-                new_lines.append("")  # Add spacing
-
-                dates_processed.add(date_part)
-                continue
-
-        # Copy existing content if no changes for this date
-        new_lines.append(line)
-        i += 1
-
-    # Add completely new dates that weren't in the existing changelog
-    for date_key in sorted(changes_by_date.keys(), reverse=True):
-        if date_key not in dates_processed:
-            logging.info(f"Adding new changelog entry for {date_key}")
-
-            # Insert at the appropriate position (after header, before older dates)
-            insert_position = find_insert_position(new_lines, date_key)
-
+    
+    # Get all dates (both existing and new) and sort them chronologically (newest first)
+    all_dates = set()
+    
+    # Add dates that have new changes
+    all_dates.update(changes_by_date.keys())
+    
+    # Add existing dates that don't have new changes
+    for existing_date in existing_changes.changes_by_date.keys():
+        all_dates.add(existing_date)
+    
+    # Sort dates newest first
+    sorted_dates = sorted(all_dates, reverse=True)
+    
+    # Process each date in order
+    for date_key in sorted_dates:
+        new_content_lines.append(f"## {date_key}")
+        new_content_lines.append("")
+        
+        if date_key in changes_by_date:
+            # This date has new changes, merge with existing
+            logging.info(f"Adding/updating changelog entry for {date_key}")
+            merged_changes = merge_changes_for_date(
+                date_key, existing_changes, changes_by_date
+            )
             date_content = generate_changelog_content_for_date(
-                date_key, changes_by_date[date_key]
+                date_key, merged_changes
             )
-            content_lines = [f"## {date_key}", ""] + date_content.split("\n") + [""]
-
-            new_lines = (
-                new_lines[:insert_position]
-                + content_lines
-                + new_lines[insert_position:]
-            )
+        else:
+            # This date exists but has no new changes, copy existing content
+            date_content = extract_existing_date_content(lines, date_key)
+        
+        # Add the content (without any date headers)
+        if date_content.strip():
+            content_lines = [line for line in date_content.split("\n") if line.strip()]
+            new_content_lines.extend(content_lines)
+            new_content_lines.append("")  # Add spacing after content
 
     # Write back the updated changelog
     with open(changelog_file, "w", encoding="utf-8") as f:
-        f.write("\n".join(new_lines))
+        f.write("\n".join(new_content_lines))
 
     total_new_changes = sum(
         len(changes.added) + len(changes.updated) + len(changes.removed)
@@ -331,6 +310,32 @@ def update_persistent_changelog(changes_detected, today, detection_date=None):
     logging.info(
         f"Updated changelog with {total_new_changes} new changes across {len(changes_by_date)} date(s)."
     )
+
+
+def extract_existing_date_content(lines, date_key):
+    """Extract existing content for a specific date from the changelog lines."""
+    content_parts = []
+    i = 0
+    
+    # Find the date header
+    while i < len(lines):
+        line = lines[i].strip()
+        if line == f"## {date_key}":
+            i += 1  # Skip the date header
+            break
+        i += 1
+    
+    # Extract content until we hit the next date header or end of file
+    while i < len(lines):
+        line = lines[i].strip()
+        if line.startswith("## "):
+            # Hit another date header, stop
+            break
+        if lines[i].rstrip():  # Only include non-empty lines (preserve content)
+            content_parts.append(lines[i].rstrip())
+        i += 1
+    
+    return "\n".join(content_parts)
 
 
 def merge_changes_for_date(date_key: str, existing_changes: ParsedChanges, new_changes: Dict[str, DateChanges]) -> DateChanges:
