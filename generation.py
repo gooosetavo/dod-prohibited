@@ -1,37 +1,21 @@
 from pathlib import Path
+import ast
 import json
 import hashlib
+import logging
 import re
 import unicodedata
 import pandas as pd
 from typing import TYPE_CHECKING, List, Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
 from unii_client import UniiDataClient
+from substance import Substance
 
 if TYPE_CHECKING:
     pass
 
 
-def slugify(value):
-    value = str(value).strip().lower()
-    value = (
-        unicodedata.normalize("NFKD", value).encode("ascii", "ignore").decode("ascii")
-    )
-    value = re.sub(r"[^a-z0-9]+", "-", value)
-    value = value.strip("-")
-    return value or None
-
-
-def get_short_slug(entry):
-    for key in ["Name", "ingredient", "name", "substance", "title"]:
-        if key in entry and isinstance(entry[key], str) and entry[key].strip():
-            slug = slugify(entry[key])
-            if slug:
-                return slug
-    hashval = hashlib.sha1(
-        json.dumps(entry, sort_keys=True).encode("utf-8")
-    ).hexdigest()[:10]
-    return f"substance-{hashval}"
+# slugify and get_short_slug functions moved to substance.py
 
 
 def enhance_unii_data(unii_df: pd.DataFrame) -> pd.DataFrame:
@@ -143,323 +127,233 @@ def generate_substance_pages(
         else:
             print("UNII data not available - substance pages will be generated without UNII information")
     
-    # Sort data alphabetically by name for consistent ordering
-    sorted_data = sorted(
-        data,
-        key=lambda x: (
-            x.get("Name")
-            or x.get("ingredient")
-            or x.get("name")
-            or x.get("substance")
-            or x.get("title")
-            or "(no name)"
-        ).lower(),
-    )
+    # Convert dictionaries to Substance objects
+    substances = []
+    for entry in data:
+        substance = Substance(data=entry)
+        if unii_df is not None:
+            unii_data = find_unii_data_for_substance(substance.name, unii_df)
+            if unii_data:
+                substance.set_unii_info(unii_data)
+        substances.append(substance)
+    
+    # Sort substances alphabetically by name for consistent ordering
+    sorted_substances = sorted(substances, key=lambda x: x.name.lower())
 
     links = []
-    for i, entry in enumerate(sorted_data):
-        # Prefer 'Name' field for display, then fallback
-        name = (
-            entry.get("Name")
-            or entry.get("ingredient")
-            or entry.get("name")
-            or entry.get("substance")
-            or entry.get("title")
-            or "(no name)"
-        )
-        slug = get_short_slug(entry)
-        page_path = substances_dir / f"{slug}.md"
-        links.append((name, f"{slug}.md"))
+    for i, substance in enumerate(sorted_substances):
+        page_path = substances_dir / f"{substance.slug}.md"
+        links.append((substance.name, f"{substance.slug}.md"))
 
         # Determine previous and next substance
         prev_substance = None
         next_substance = None
         if i > 0:
-            prev_entry = sorted_data[i - 1]
-            prev_name = (
-                prev_entry.get("Name")
-                or prev_entry.get("ingredient")
-                or prev_entry.get("name")
-                or prev_entry.get("substance")
-                or prev_entry.get("title")
-                or "(no name)"
-            )
-            prev_slug = get_short_slug(prev_entry)
-            prev_substance = (prev_name, f"{prev_slug}.md")
-        if i < len(sorted_data) - 1:
-            next_entry = sorted_data[i + 1]
-            next_name = (
-                next_entry.get("Name")
-                or next_entry.get("ingredient")
-                or next_entry.get("name")
-                or next_entry.get("substance")
-                or next_entry.get("title")
-                or "(no name)"
-            )
-            next_slug = get_short_slug(next_entry)
-            next_substance = (next_name, f"{next_slug}.md")
+            prev_sub = sorted_substances[i - 1]
+            prev_substance = (prev_sub.name, f"{prev_sub.slug}.md")
+        if i < len(sorted_substances) - 1:
+            next_sub = sorted_substances[i + 1]
+            next_substance = (next_sub.name, f"{next_sub.slug}.md")
 
+        generator = SubstancePageGenerator(substance, i + 1, len(sorted_substances), prev_substance, next_substance)
+        generator.generate_page(page_path)
+
+
+class SubstancePageGenerator:
+    """Handles generation of individual substance pages."""
+    
+    def __init__(self, substance: Substance, current_index: int, total_count: int, 
+                 prev_substance=None, next_substance=None):
+        self.substance = substance
+        self.current_index = current_index
+        self.total_count = total_count
+        self.prev_substance = prev_substance
+        self.next_substance = next_substance
+    
+    def generate_page(self, page_path: Path):
+        """Generate the complete markdown page for this substance."""
         with open(page_path, "w", encoding="utf-8") as f:
-            f.write(f"# {name}\n\n")
-
-            # Navigation at the top
-            f.write("---\n\n")
-            nav_parts = []
-            if prev_substance:
-                nav_parts.append(
-                    f"← [Previous: {prev_substance[0]}]({prev_substance[1]})"
-                )
-            nav_parts.append("[🏠 All Substances](index.md)")
-            nav_parts.append("[📊 Complete Table](table.md)")
-            if next_substance:
-                nav_parts.append(f"[Next: {next_substance[0]}]({next_substance[1]}) →")
-            f.write(" | ".join(nav_parts) + "\n\n")
-            f.write("---\n\n")
-            # Other names
-            other_names = entry.get("Other_names") or entry.get("other_names")
-            if other_names:
-                if isinstance(other_names, str):
-                    try:
-                        import ast
-
-                        other_names = ast.literal_eval(other_names)
-                    except Exception:
-                        other_names = [other_names]
-                f.write("**Other names:**\n\n")
-                for name in other_names:
-                    f.write(f"- {name}\n")
-                f.write("\n")
-            # Classifications
-            classifications = entry.get("Classifications") or entry.get(
-                "classifications"
+            self._write_header(f)
+            self._write_navigation(f)
+            self._write_basic_info(f)
+            self._write_unii_info(f)
+            self._write_footer_navigation(f)
+    
+    def _write_header(self, f):
+        """Write the page header."""
+        f.write(f"# {self.substance.name}\n\n")
+    
+    def _write_navigation(self, f):
+        """Write the top navigation."""
+        f.write("---\n\n")
+        nav_parts = []
+        if self.prev_substance:
+            nav_parts.append(
+                f"← [Previous: {self.prev_substance[0]}]({self.prev_substance[1]})"
             )
-            if classifications:
-                if isinstance(classifications, str):
-                    try:
-                        import ast
-
-                        classifications = ast.literal_eval(classifications)
-                    except Exception:
-                        classifications = [classifications]
-                f.write("**Classifications:**\n\n")
-                for classification in classifications:
-                    f.write(f"- {classification}\n")
-                f.write("\n")
-            # Reasons
-            reasons = entry.get("Reasons") or entry.get("reasons")
-            if reasons:
-                if isinstance(reasons, str):
-                    try:
-                        import json
-                        import ast
-                        
-                        # First try JSON parsing (more reliable)
-                        try:
-                            reasons = json.loads(reasons)
-                        except json.JSONDecodeError:
-                            # Fallback to ast.literal_eval
-                            reasons = ast.literal_eval(reasons)
-                    except Exception as e:
-                        # If both fail, try to detect if it looks like JSON
-                        if reasons.strip().startswith('[') and reasons.strip().endswith(']'):
-                            # This looks like a JSON array that failed to parse
-                            # Don't display the raw JSON, skip this entry or log an error
-                            import logging
-                            logging.warning(f"Failed to parse reasons JSON for substance: {entry.get('Name', 'Unknown')}")
-                            reasons = None
-                        else:
-                            # Treat as a simple string reason
-                            reasons = [reasons]
-                
-                if reasons:  # Only write if we successfully parsed reasons
-                    f.write("**Reasons for prohibition:**\n\n")
-                    for reason in reasons:
-                        if isinstance(reason, dict):
-                            reason_text = reason.get('reason', '').strip()
-                            if reason_text:  # Only display if there's actual reason text
-                                line = f"- {reason_text}"
-                                if reason.get("link"):
-                                    link_title = reason.get("link_title", "source")
-                                    line += f" (<a href=\"{reason['link']}\" target=\"_blank\">{link_title}</a>)"
-                                f.write(line + "\n")
-                        elif isinstance(reason, str) and reason.strip():
-                            f.write(f"- {reason.strip()}\n")
-                    f.write("\n")
-            # Warnings
-            warnings = entry.get("Warnings") or entry.get("warnings")
-            if warnings:
-                if isinstance(warnings, str):
-                    try:
-                        import ast
-
-                        warnings = ast.literal_eval(warnings)
-                    except Exception:
-                        warnings = [warnings]
-                f.write("**Warnings:**\n\n")
-                for warning in warnings:
-                    f.write(f"- {warning}\n")
-                f.write("\n")
-            # References
-            refs = entry.get("References") or entry.get("references")
-            if refs:
-                if isinstance(refs, str):
-                    try:
-                        import ast
-
-                        refs = ast.literal_eval(refs)
-                    except Exception:
-                        refs = [refs]
-                f.write("**References:**\n\n")
-                for ref in refs:
-                    if isinstance(ref, dict):
-                        # Handle dictionary format with title/url
-                        title = ref.get("title", "")
-                        url = ref.get("url", "")
-                        if title and url:
-                            f.write(f"- <a href=\"{url}\" target=\"_blank\">{title}</a>\n")
-                        elif title:
-                            f.write(f"- {title}\n")
-                        elif url:
-                            f.write(f"- <a href=\"{url}\" target=\"_blank\">{url}</a>\n")
-                        else:
-                            # Fallback to string representation
-                            f.write(f"- {ref}\n")
+        nav_parts.append("[🏠 All Substances](index.md)")
+        nav_parts.append("[📊 Complete Table](table.md)")
+        if self.next_substance:
+            nav_parts.append(f"[Next: {self.next_substance[0]}]({self.next_substance[1]}) →")
+        f.write(" | ".join(nav_parts) + "\n\n")
+        f.write("---\n\n")
+    
+    def _write_basic_info(self, f):
+        """Write all basic substance information sections."""
+        self._write_other_names(f)
+        self._write_classifications(f)
+        self._write_reasons_for_prohibition(f)
+        self._write_warnings(f)
+        self._write_references(f)
+        self._write_metadata(f)
+    
+    def _write_other_names(self, f):
+        """Write other names section."""
+        other_names = self.substance.other_names
+        if other_names:
+            f.write("**Other names:**\n\n")
+            for name in other_names:
+                f.write(f"- {name}\n")
+            f.write("\n")
+    
+    def _write_classifications(self, f):
+        """Write classifications section."""
+        classifications = self.substance.classifications
+        if classifications:
+            f.write("**Classifications:**\n\n")
+            for classification in classifications:
+                f.write(f"- {classification}\n")
+            f.write("\n")
+    
+    def _write_reasons_for_prohibition(self, f):
+        """Write reasons for prohibition section."""
+        reasons = self.substance.reasons_for_prohibition
+        if reasons:
+            f.write("**Reasons for prohibition:**\n\n")
+            for reason in reasons:
+                if isinstance(reason, dict):
+                    reason_text = reason.get('reason', '').strip()
+                    if reason_text:
+                        line = f"- {reason_text}"
+                        if reason.get("link"):
+                            link_title = reason.get("link_title", "source")
+                            line += f" (<a href=\"{reason['link']}\" target=\"_blank\">{link_title}</a>)"
+                        f.write(line + "\n")
+                elif isinstance(reason, str) and reason.strip():
+                    f.write(f"- {reason.strip()}\n")
+            f.write("\n")
+    
+    def _write_warnings(self, f):
+        """Write warnings section."""
+        warnings = self.substance.warnings
+        if warnings:
+            f.write("**Warnings:**\n\n")
+            for warning in warnings:
+                f.write(f"- {warning}\n")
+            f.write("\n")
+    
+    def _write_references(self, f):
+        """Write references section."""
+        refs = self.substance.references
+        if refs:
+            f.write("**References:**\n\n")
+            for ref in refs:
+                if isinstance(ref, dict):
+                    title = ref.get("title", "")
+                    url = ref.get("url", "")
+                    if title and url:
+                        f.write(f"- <a href=\"{url}\" target=\"_blank\">{title}</a>\n")
+                    elif title:
+                        f.write(f"- {title}\n")
+                    elif url:
+                        f.write(f"- <a href=\"{url}\" target=\"_blank\">{url}</a>\n")
                     else:
-                        # Handle string format (existing behavior)
                         f.write(f"- {ref}\n")
-                f.write("\n")
-            # More info URL
-            more_info_url = entry.get("More_info_url") or entry.get("more_info_url")
-            if more_info_url and more_info_url.strip():
-                f.write(f"**More info:** <a href=\"{more_info_url}\" target=\"_blank\">{more_info_url}</a>\n\n")
-            else:
-                f.write("**More info:** Not specified\n\n")
+                else:
+                    f.write(f"- {ref}\n")
+            f.write("\n")
+    
+    def _write_metadata(self, f):
+        """Write metadata fields."""
+        # More info URL
+        more_info_url = self.substance.more_info_url
+        if more_info_url and more_info_url.strip():
+            f.write(f"**More info:** <a href=\"{more_info_url}\" target=\"_blank\">{more_info_url}</a>\n\n")
+        else:
+            f.write("**More info:** Not specified\n\n")
+        
+        # Other metadata fields
+        f.write(f"**Source of:** {self.substance.source_of or 'Not specified'}\n\n")
+        f.write(f"**Reason:** {self.substance.reason or 'Not specified'}\n\n")
+        f.write(f"**Label terms:** {self.substance.label_terms or 'Not specified'}\n\n")
+        f.write(f"**Linked ingredients:** {self.substance.linked_ingredients or 'Not specified'}\n\n")
+        f.write(f"**Searchable name:** {self.substance.searchable_name or 'Not specified'}\n\n")
+        f.write(f"**GUID:** {self.substance.guid or 'Not specified'}\n\n")
+        
+        # Date fields
+        if self.substance.added_date:
+            f.write(f"**Added to this Database:** {self.substance.added_date}\n\n")
+        
+        source_date = self.substance.source_updated_date
+        if source_date:
+            f.write(f"**Last updated in source database:** {source_date}\n\n")
+    
+    def _write_unii_info(self, f):
+        """Write UNII information section."""
+        if self.substance.unii_info:
+            unii = self.substance.unii_info
+            f.write("## UNII (Unique Ingredient Identifier) Information\n\n")
             
-            # Sourceof
-            sourceof = entry.get("Sourceof") or entry.get("sourceof")
-            f.write(f"**Source of:** {sourceof or 'Not specified'}\n\n")
+            f.write(f"**UNII ID:** {unii.unii or 'Not available'}\n\n")
             
-            # Reason
-            reason = entry.get("Reason") or entry.get("reason")
-            f.write(f"**Reason:** {reason or 'Not specified'}\n\n")
+            if unii.preferred_term:
+                f.write(f"**Preferred Term:** {unii.preferred_term}\n\n")
             
-            # Label terms
-            label_terms = entry.get("Label_terms") or entry.get("label_terms")
-            f.write(f"**Label terms:** {label_terms or 'Not specified'}\n\n")
+            if unii.cas_rn:
+                f.write(f"**CAS Registry Number:** {unii.cas_rn}\n\n")
             
-            # Linked ingredients
-            linked_ingredients = entry.get("Linked_ingredients") or entry.get(
-                "linked_ingredients"
-            )
-            f.write(f"**Linked ingredients:** {linked_ingredients or 'Not specified'}\n\n")
-            # Searchable name
-            searchable_name = entry.get("Searchable_name") or entry.get(
-                "searchable_name"
-            )
-            f.write(f"**Searchable name:** {searchable_name or 'Not specified'}\n\n")
+            if unii.substance_type:
+                f.write(f"**Substance Type:** {unii.substance_type}\n\n")
             
-            # Guid
-            guid = entry.get("Guid") or entry.get("guid")
-            f.write(f"**GUID:** {guid or 'Not specified'}\n\n")
-            # Added/Updated
-            added = entry.get("added")
-            if added:
-                f.write(f"**Added to this Database:** {added}\n\n")
-            updated = entry.get("updated")
-            if updated:
-                # Try to extract and format the source timestamp
-                try:
-                    import json
-
-                    updated_json = json.loads(updated)
-                    if isinstance(updated_json, dict) and "_seconds" in updated_json:
-                        from datetime import datetime
-
-                        source_timestamp = updated_json["_seconds"]
-                        source_date = datetime.fromtimestamp(
-                            source_timestamp
-                        ).isoformat()
-                        f.write(
-                            f"**Last updated in source database:** {source_date}\n\n"
-                        )
-                    else:
-                        f.write(f"**Updated:** {updated}\n\n")
-                except (json.JSONDecodeError, ValueError, TypeError, OSError):
-                    f.write(f"**Updated:** {updated}\n\n")
-
-            # UNII Data Section
-            if unii_df is not None:
-                unii_data = find_unii_data_for_substance(name, unii_df)
-                if unii_data:
-                    f.write("## UNII (Unique Ingredient Identifier) Information\n\n")
-                    
-                    f.write(f"**UNII ID:** {unii_data.get('UNII', 'Not available')}\n\n")
-                    
-                    # Preferred Term
-                    pt = unii_data.get('PT')
-                    if pt and pd.notna(pt):
-                        f.write(f"**Preferred Term:** {pt}\n\n")
-                    
-                    # Registry Number (CAS)
-                    rn = unii_data.get('RN')
-                    if rn and pd.notna(rn):
-                        f.write(f"**CAS Registry Number:** {rn}\n\n")
-                    
-                    # Substance Type
-                    substance_type = unii_data.get('TYPE')
-                    if substance_type and pd.notna(substance_type):
-                        f.write(f"**Substance Type:** {substance_type}\n\n")
-                    
-                    # External links
-                    f.write("**External Resources:**\n\n")
-                    
-                    links_added = False
-                    
-                    # UNII URL
-                    unii_url = unii_data.get('UNII_URL')
-                    if unii_url:
-                        f.write(f"- <a href=\"{unii_url}\" target=\"_blank\">FDA UNII Search</a>\n")
-                        links_added = True
-                    
-                    # GSRS Full Record
-                    gsrs_url = unii_data.get('GSRS_FULL_RECORD_URL')
-                    if gsrs_url:
-                        f.write(f"- <a href=\"{gsrs_url}\" target=\"_blank\">GSRS Full Record</a>\n")
-                        links_added = True
-                    
-                    # NCATS
-                    ncats_url = unii_data.get('NCATS_URL')
-                    if ncats_url:
-                        f.write(f"- <a href=\"{ncats_url}\" target=\"_blank\">NCATS Inxight Drugs</a>\n")
-                        links_added = True
-                    
-                    # Common Chemistry (CAS)
-                    cc_url = unii_data.get('COMMONCHEMISTRY_URL')
-                    if cc_url and pd.notna(unii_data.get('RN')):
-                        f.write(f"- <a href=\"{cc_url}\" target=\"_blank\">CAS Common Chemistry</a>\n")
-                        links_added = True
-                    
-                    # PubChem
-                    pubchem_url = unii_data.get('PUBCHEM_URL')
-                    if pubchem_url and pd.notna(unii_data.get('PUBCHEM')):
-                        f.write(f"- <a href=\"{pubchem_url}\" target=\"_blank\">PubChem</a>\n")
-                        links_added = True
-                    
-                    # EPA CompTox
-                    epa_url = unii_data.get('EPA_COMPTOX_URL')
-                    if epa_url and pd.notna(unii_data.get('EPA_CompTox')):
-                        f.write(f"- <a href=\"{epa_url}\" target=\"_blank\">EPA CompTox Dashboard</a>\n")
-                        links_added = True
-                    
-                    if not links_added:
-                        f.write("- No external resources available\n")
-                    
-                    f.write("\n")
-
-            # Navigation at the bottom
-            f.write("---\n\n")
-            f.write("📊 [Complete Table](table.md) | 🏠 [All Substances](index.md)\n\n")
-            f.write(f"*Substance {i + 1} of {len(sorted_data)}*\n\n")
+            # External links
+            f.write("**External Resources:**\n\n")
+            
+            links_added = False
+            
+            if unii.fda_unii_url:
+                f.write(f"- <a href=\"{unii.fda_unii_url}\" target=\"_blank\">FDA UNII Search</a>\n")
+                links_added = True
+            
+            if unii.gsrs_record_url:
+                f.write(f"- <a href=\"{unii.gsrs_record_url}\" target=\"_blank\">GSRS Full Record</a>\n")
+                links_added = True
+            
+            if unii.ncats_url:
+                f.write(f"- <a href=\"{unii.ncats_url}\" target=\"_blank\">NCATS Inxight Drugs</a>\n")
+                links_added = True
+            
+            if unii.cas_common_chemistry_url:
+                f.write(f"- <a href=\"{unii.cas_common_chemistry_url}\" target=\"_blank\">CAS Common Chemistry</a>\n")
+                links_added = True
+            
+            if unii.pubchem_url:
+                f.write(f"- <a href=\"{unii.pubchem_url}\" target=\"_blank\">PubChem</a>\n")
+                links_added = True
+            
+            if unii.epa_comptox_url:
+                f.write(f"- <a href=\"{unii.epa_comptox_url}\" target=\"_blank\">EPA CompTox Dashboard</a>\n")
+                links_added = True
+            
+            if not links_added:
+                f.write("- No external resources available\n")
+            
+            f.write("\n")
+    
+    def _write_footer_navigation(self, f):
+        """Write footer navigation."""
+        f.write("---\n\n")
+        f.write("📊 [Complete Table](table.md) | 🏠 [All Substances](index.md)\n\n")
+        f.write(f"*Substance {self.current_index} of {self.total_count}*\n\n")
 
 
 def extract_dea_schedule(reasons_data):
@@ -539,130 +433,64 @@ def generate_substances_table(
         "Details",
     ]
 
-    # Column filters are now embedded in the table headers, no separate configuration needed
+    # Convert data to Substance objects for consistent processing
+    substances = [Substance(data=entry) for entry in data]
 
     # Process table data
     table_data = []
-    for entry in data:
-        # Extract basic info
-        name = (
-            entry.get("Name")
-            or entry.get("ingredient")
-            or entry.get("name")
-            or entry.get("substance")
-            or entry.get("title")
-            or "(no name)"
-        )
-        slug = get_short_slug(entry)
-
+    for substance in substances:
         # Process other names
-        other_names = entry.get("other_names") or entry.get("Other_names") or ""
-        if isinstance(other_names, str) and other_names.startswith("["):
-            try:
-                import ast
-
-                other_names_list = ast.literal_eval(other_names)
-                other_names = ", ".join(other_names_list) if other_names_list else ""
-            except (ValueError, SyntaxError):
-                other_names = other_names.strip('[]"')
-        elif isinstance(other_names, list):
-            other_names = ", ".join(other_names)
-        other_names = other_names or "N/A"
+        other_names_list = substance.other_names
+        other_names = ", ".join(other_names_list) if other_names_list else "N/A"
 
         # Process classifications
-        classifications = (
-            entry.get("classifications") or entry.get("Classifications") or ""
-        )
-        if isinstance(classifications, str) and classifications.startswith("["):
-            try:
-                import ast
+        classifications_list = substance.classifications
+        classifications = ", ".join(classifications_list) if classifications_list else "N/A"
 
-                classifications_list = ast.literal_eval(classifications)
-                classifications = (
-                    ", ".join(classifications_list) if classifications_list else ""
-                )
-            except (ValueError, SyntaxError):
-                classifications = classifications.strip('[]"')
-        elif isinstance(classifications, list):
-            classifications = ", ".join(classifications)
-        classifications = classifications or "N/A"
-
-        # Extract DEA schedule
-        reasons = entry.get("Reasons") or entry.get("reasons")
-        dea_schedule = extract_dea_schedule(reasons) or "N/A"
+        # Get DEA schedule
+        dea_schedule = substance.dea_schedule or "N/A"
 
         # Process primary reason
-        primary_reason = entry.get("Reason") or "N/A"
-        if not primary_reason or primary_reason == "":
-            primary_reason = "N/A"
+        primary_reason = substance.reason or "N/A"
 
         # Process warnings
-        warnings = entry.get("Warnings") or entry.get("warnings") or ""
-        if isinstance(warnings, str) and warnings.startswith("["):
-            try:
-                import ast
-
-                warnings_list = ast.literal_eval(warnings)
-                warnings = ", ".join(warnings_list) if warnings_list else ""
-            except (ValueError, SyntaxError):
-                warnings = warnings.strip('[]"')
-        elif isinstance(warnings, list):
-            warnings = ", ".join(warnings)
-        warnings = warnings or "N/A"
+        warnings_list = substance.warnings
+        warnings = ", ".join(warnings_list) if warnings_list else "N/A"
 
         # Process references
-        references = entry.get("References") or entry.get("references") or ""
-        if isinstance(references, str) and references.startswith("["):
-            try:
-                import ast
+        references_list = substance.references
+        references = (
+            str(len(references_list)) + " refs"
+            if references_list
+            else "No refs"
+        )
 
-                references_list = ast.literal_eval(references)
-                references = (
-                    str(len(references_list)) + " refs"
-                    if references_list
-                    else "No refs"
-                )
-            except (ValueError, SyntaxError):
-                references = "No refs"
-        elif isinstance(references, list):
-            references = str(len(references)) + " refs" if references else "No refs"
-        else:
-            references = "No refs"
-
-        # Process added date (when added to our database)
-        added_date = entry.get("added", "")
-        if added_date:
+        # Process added date
+        added_date = "Unknown"
+        if substance.added_date:
             try:
                 from datetime import datetime
-
                 added_date = datetime.fromisoformat(
-                    added_date.replace("Z", "+00:00")
+                    substance.added_date.replace("Z", "+00:00")
                 ).strftime("%Y-%m-%d")
             except (ValueError, TypeError):
                 added_date = "Unknown"
-        else:
-            added_date = "Unknown"
 
-        # Process source updated date (when last modified in source database)
+        # Process source updated date
         source_updated = "Unknown"
-        try:
-            updated_field = entry.get("updated", "")
-            if isinstance(updated_field, str) and updated_field.strip():
-                import json
-
-                updated_json = json.loads(updated_field)
-                if isinstance(updated_json, dict) and "_seconds" in updated_json:
-                    from datetime import datetime
-
-                    source_timestamp = updated_json["_seconds"]
-                    source_updated = datetime.fromtimestamp(source_timestamp).strftime(
-                        "%Y-%m-%d"
-                    )
-        except (json.JSONDecodeError, ValueError, TypeError, OSError):
-            source_updated = "Unknown"
+        source_date = substance.source_updated_date
+        if source_date:
+            try:
+                from datetime import datetime
+                if isinstance(source_date, str):
+                    # Try to parse and format the date
+                    parsed_date = datetime.fromisoformat(source_date.replace("Z", "+00:00"))
+                    source_updated = parsed_date.strftime("%Y-%m-%d")
+            except (ValueError, TypeError):
+                source_updated = "Unknown"
 
         # Escape pipe characters in content to prevent table breakage
-        name = name.replace("|", "\\|")
+        name = substance.name.replace("|", "\\|")
         other_names = other_names.replace("|", "\\|")
         classifications = classifications.replace("|", "\\|")
         primary_reason = primary_reason.replace("|", "\\|")
@@ -680,7 +508,7 @@ def generate_substances_table(
 
         # Create the correct relative path from table.md to individual substance pages
         # Since table.md is at /substances/table.md, we need to go up one level to reach /substances/
-        substance_link = f"../{slug}"
+        substance_link = f"../{substance.slug}"
 
         # Add row data
         table_data.append(
@@ -726,8 +554,11 @@ def generate_substances_index(
         columns: List of column names to include.
         docs_dir: Path to the docs directory.
     """
+    # Convert data to Substance objects
+    substances = [Substance(data=entry) for entry in data]
+    
     # Calculate metrics
-    total_substances = len(data)
+    total_substances = len(substances)
 
     # DEA Schedule breakdown
     dea_schedules = {
@@ -739,32 +570,18 @@ def generate_substances_index(
     }
     classifications_count = {}
 
-    for entry in data:
+    for substance in substances:
         # Count DEA schedules
-        reasons = entry.get("Reasons") or entry.get("reasons")
-        dea_schedule = extract_dea_schedule(reasons)
+        dea_schedule = substance.dea_schedule
         if dea_schedule:
             dea_schedules[dea_schedule] += 1
 
         # Count classifications
-        classifications = entry.get("Classifications") or entry.get("classifications")
+        classifications = substance.classifications
         if classifications:
-            if isinstance(classifications, str):
-                try:
-                    import ast
-
-                    classifications = ast.literal_eval(classifications)
-                except Exception:
-                    classifications = [classifications]
-
-            if isinstance(classifications, list):
-                for classification in classifications:
-                    classifications_count[classification] = (
-                        classifications_count.get(classification, 0) + 1
-                    )
-            else:
-                classifications_count[str(classifications)] = (
-                    classifications_count.get(str(classifications), 0) + 1
+            for classification in classifications:
+                classifications_count[classification] = (
+                    classifications_count.get(classification, 0) + 1
                 )
 
     # Generate the table page first
@@ -793,6 +610,66 @@ def generate_substances_index(
                         f"- **{schedule}:** {count} substances ({percentage:.1f}%)\n"
                     )
             f.write("\n")
+
+        # Classifications breakdown (top 10)
+        if classifications_count:
+            f.write("### Top Classifications\n\n")
+            sorted_classifications = sorted(
+                classifications_count.items(), key=lambda x: x[1], reverse=True
+            )[:10]
+
+            for classification, count in sorted_classifications:
+                percentage = (count / total_substances) * 100
+                f.write(
+                    f"- **{classification}:** {count} substances ({percentage:.1f}%)\n"
+                )
+            f.write("\n")
+
+        # Navigation links
+        f.write("## Browse Substances\n\n")
+        f.write("- [📊 View Complete Table](table.md) - Sortable and filterable table of all substances\n")
+        f.write("- [🔍 Search](table.md) - Use the search functionality in the table\n\n")
+
+        # A-Z listing (first few letters as an example)
+        f.write("## Browse by Name\n\n")
+        
+        # Group substances by first letter
+        letter_groups = {}
+        for substance in sorted(substances, key=lambda x: x.name.lower()):
+            first_letter = substance.name[0].upper() if substance.name else '#'
+            if first_letter not in letter_groups:
+                letter_groups[first_letter] = []
+            letter_groups[first_letter].append(substance)
+
+        # Create alphabetical navigation
+        f.write("**Quick navigation:**\n\n")
+        letters = sorted(letter_groups.keys())
+        letter_links = []
+        for letter in letters:
+            if letter.isalpha():
+                letter_links.append(f"[{letter}](#{letter.lower()})")
+        
+        f.write(" | ".join(letter_links) + "\n\n")
+
+        # List substances by letter (limit to first 5 per letter for brevity)
+        for letter in letters:
+            if letter.isalpha():
+                f.write(f"### {letter} {{#{letter.lower()}}}\n\n")
+                
+                displayed_count = 0
+                for substance in letter_groups[letter]:
+                    if displayed_count < 5:  # Limit display
+                        f.write(f"- [{substance.name}]({substance.slug}.md)\n")
+                        displayed_count += 1
+                    
+                total_in_group = len(letter_groups[letter])
+                if total_in_group > 5:
+                    f.write(f"- ... and {total_in_group - 5} more substances starting with '{letter}'\n")
+                
+                f.write("\n")
+
+        f.write("---\n\n")
+        f.write("*This database contains information about substances prohibited for use in dietary supplements by the Department of Defense.*\n")
 
         # Top classifications
         f.write("### Most Common Classifications\n\n")
