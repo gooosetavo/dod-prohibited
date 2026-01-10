@@ -671,49 +671,6 @@ def generate_substances_index(
         f.write("---\n\n")
         f.write("*This database contains information about substances prohibited for use in dietary supplements by the Department of Defense.*\n")
 
-        # Top classifications
-        f.write("### Most Common Classifications\n\n")
-        sorted_classifications = sorted(
-            classifications_count.items(), key=lambda x: x[1], reverse=True
-        )
-        for classification, count in sorted_classifications[:10]:  # Top 10
-            if classification and classification.strip():
-                percentage = (count / total_substances) * 100
-                f.write(
-                    f"- **{classification}:** {count} substances ({percentage:.1f}%)\n"
-                )
-        f.write("\n")
-
-        # Navigation links
-        f.write("## Browse Substances\n\n")
-        f.write(
-            "- **[View Complete Table](table.md)** - All substances in a sortable table\n"
-        )
-        f.write("- **[Search substances](#)** - Use the search bar above\n\n")
-
-        # Recent additions (if available)
-        recent_substances = []
-        for substance in substances:
-            added = substance.added_date
-            if added:
-                recent_substances.append((substance.name, substance.slug, added))
-
-        # Sort by added date and show recent ones
-        recent_substances.sort(key=lambda x: x[2], reverse=True)
-        if recent_substances[:5]:  # Show last 5 added
-            f.write("## Recently Added\n\n")
-            for name, slug, added in recent_substances[:5]:
-                try:
-                    from datetime import datetime
-
-                    added_date = datetime.fromisoformat(
-                        added.replace("Z", "+00:00")
-                    ).strftime("%Y-%m-%d")
-                    f.write(f"- **[{name}]({slug}.md)** - Added {added_date}\n")
-                except (ValueError, TypeError):
-                    f.write(f"- **[{name}]({slug}.md)**\n")
-            f.write("\n")
-
 
 def generate_changelog(
     data: List[Dict[str, Any]], columns: List[str], docs_dir: Path
