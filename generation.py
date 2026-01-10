@@ -693,19 +693,10 @@ def generate_substances_index(
 
         # Recent additions (if available)
         recent_substances = []
-        for entry in data:
-            added = entry.get("added")
+        for substance in substances:
+            added = substance.added_date
             if added:
-                name = (
-                    entry.get("Name")
-                    or entry.get("ingredient")
-                    or entry.get("name")
-                    or entry.get("substance")
-                    or entry.get("title")
-                    or "(no name)"
-                )
-                slug = get_short_slug(entry)
-                recent_substances.append((name, slug, added))
+                recent_substances.append((substance.name, substance.slug, added))
 
         # Sort by added date and show recent ones
         recent_substances.sort(key=lambda x: x[2], reverse=True)
