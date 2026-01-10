@@ -371,9 +371,15 @@ def generate_changelog_content_for_date(date_key: str, date_changes: DateChanges
 
     # New substances (from self-reported dates)
     if date_changes.added:
-        content_parts.append("### New Substances Added\n")
+        count = len(date_changes.added)
+        substance_word = "substance" if count == 1 else "substances"
+        content_parts.append("### New Substances Added")
+        content_parts.append("")
+        content_parts.append("???+ info \"Show details\"")
+        content_parts.append(f"    {count} new {substance_word}")
+        content_parts.append("")
         for change in date_changes.added:
-            line = f"- **{change.name}**"
+            line = f"    - **{change.name}**"
             if (
                 change.source_date
                 and change.source_date != date_key
@@ -384,22 +390,36 @@ def generate_changelog_content_for_date(date_key: str, date_changes: DateChanges
 
     # Modified substances (from our detection)
     if date_changes.updated:
-        content_parts.append("### Substances Modified\n")
-        content_parts.append("*Changes detected through data comparison*\n")
+        count = len(date_changes.updated)
+        substance_word = "substance" if count == 1 else "substances"
+        content_parts.append("### Substances Modified")
+        content_parts.append("")
+        content_parts.append("*Changes detected through data comparison*")
+        content_parts.append("")
+        content_parts.append("???+ info \"Show details\"")
+        content_parts.append(f"    {count} {substance_word} modified")
+        content_parts.append("")
         for change in date_changes.updated:
             if change.fields:
                 field_list = ", ".join(f"`{field}`" for field in change.fields)
-                content_parts.append(f"- **{change.name}:** Updated {field_list}")
+                content_parts.append(f"    - **{change.name}:** Updated {field_list}")
             else:
-                content_parts.append(f"- **{change.name}:** Updated")
+                content_parts.append(f"    - **{change.name}:** Updated")
         content_parts.append("")  # Add spacing
 
     # Removed substances (from our detection)
     if date_changes.removed:
-        content_parts.append("### Substances Removed\n")
-        content_parts.append("*Removals detected through data comparison*\n")
+        count = len(date_changes.removed)
+        substance_word = "substance" if count == 1 else "substances"
+        content_parts.append("### Substances Removed")
+        content_parts.append("")
+        content_parts.append("*Removals detected through data comparison*")
+        content_parts.append("")
+        content_parts.append("???+ info \"Show details\"")
+        content_parts.append(f"    {count} {substance_word} removed")
+        content_parts.append("")
         for change in date_changes.removed:
-            content_parts.append(f"- **{change.name}**")
+            content_parts.append(f"    - **{change.name}**")
         content_parts.append("")  # Add spacing
 
     return "\n".join(content_parts).rstrip()
