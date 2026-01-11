@@ -1,18 +1,854 @@
 # Changelog
 
+## 2026-01-11
+
+### Substances Modified
+*833 substances modified, detected through data comparison*
+???+ info "Show details"
+    - **1-(1-phenylcyclohexyl)-pyrrolidine:** Updated `linked_ingredients`, `label_terms`
+    - **1-(5-fluoropentyl)-3-(1-naphthoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-(5-fluoropentyl)-3-(2-iodobenzoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-[1-(2-thienyl)cyclohexyl]piperidine:** Updated `linked_ingredients`, `label_terms`
+    - **1-[1-(2-thienyl)cyclohexyl]pyrrolidine:** Updated `linked_ingredients`, `label_terms`
+    - **1-[2-(4-morpholinyl)ethyl]-3-(1-naphthoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-androstenediol:** Updated `linked_ingredients`, `label_terms`
+    - **1-androstenedione:** Updated `linked_ingredients`, `label_terms`
+    - **1-androsterone:** Updated `linked_ingredients`
+    - **1-butyl-3-(1-naphthoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-hexyl-3-(1-naphthoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-pentyl-3-(1-naphthoyl)indole:** Updated `linked_ingredients`
+    - **1-pentyl-3-(2-chlorophenylacetyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-pentyl-3-(2-methoxyphenylacetyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-pentyl-3-(4-chloro-1-naphthoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-pentyl-3-(4-methyl-1-naphthoyl)indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-pentyl-3-[1-(4-methoxynaphthoyl)]indole:** Updated `linked_ingredients`, `label_terms`
+    - **1-phenylcyclohexylamine:** Updated `linked_ingredients`, `label_terms`
+    - **1-testosterone:** Updated `linked_ingredients`, `label_terms`
+    - **11-keto-testosterone:** Updated `linked_ingredients`
+    - **11β-methyl-19-nortestosterone:** Updated `linked_ingredients`
+    - **13β-ethyl-17β-hydroxygon-4-en-3-one:** Updated `linked_ingredients`, `label_terms`
+    - **17-dihydroexemestane:** Updated `linked_ingredients`
+    - **17alpha-methyl-3alpha,17beta-dihydroxy-5alpha-androstane:** Updated `linked_ingredients`, `label_terms`
+    - **17alpha-methyl-3beta,17beta-dihydroxy-5alpha-androstane:** Updated `linked_ingredients`, `label_terms`
+    - **17alpha-methyl-3beta,17beta-dihydroxyandrost-4-ene:** Updated `linked_ingredients`, `label_terms`
+    - **17alpha-methyl-4-hydroxynandrolone:** Updated `linked_ingredients`, `label_terms`
+    - **17alpha-methyl-5alpha-androstan-17beta-ol:** Updated `linked_ingredients`, `label_terms`
+    - **17alpha-methyl-androst-2-ene-3,17beta-diol:** Updated `linked_ingredients`, `label_terms`
+    - **17alpha-methyl-androsta-1,4-diene-3,17beta-diol:** Updated `linked_ingredients`
+    - **17alpha-methyl-androstan-3-hydroxyimine-17beta-ol:** Updated `linked_ingredients`, `label_terms`
+    - **17beta-hydroxy-androstano[2,3-d]isoxazole:** Updated `linked_ingredients`, `label_terms`
+    - **17beta-hydroxy-androstano[3,2-c]isoxazole:** Updated `linked_ingredients`, `label_terms`
+    - **18a-homo-3-hydroxy-estra-2,5(10)-dien-17-one:** Updated `linked_ingredients`, `label_terms`
+    - **19-nor-4,9(10)-androstadienedione:** Updated `linked_ingredients`
+    - **19-nor-5-androstenediol:** Updated `linked_ingredients`, `label_terms`
+    - **19-nor-5-androstenedione:** Updated `linked_ingredients`, `label_terms`
+    - **19-norandrosterone:** Updated `linked_ingredients`
+    - **2',5'-dimethoxyfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **2,5-dimethoxyamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **2-(ethylamino)-2-(3-methoxyphenyl)cyclohexan-1-one:** Updated `linked_ingredients`, `label_terms`
+    - **2-androstenol:** Updated `linked_ingredients`
+    - **2-androstenone:** Updated `linked_ingredients`
+    - **25B-NBOMe:** Updated `linked_ingredients`, `label_terms`
+    - **25C-NBOMe:** Updated `linked_ingredients`, `label_terms`
+    - **25I-NBOMe:** Updated `linked_ingredients`, `label_terms`
+    - **2C-C:** Updated `linked_ingredients`, `label_terms`
+    - **2C-D:** Updated `linked_ingredients`, `label_terms`
+    - **2C-E:** Updated `linked_ingredients`, `label_terms`
+    - **2C-H:** Updated `linked_ingredients`, `label_terms`
+    - **2C-I:** Updated `linked_ingredients`, `label_terms`
+    - **2C-N:** Updated `linked_ingredients`, `label_terms`
+    - **2C-P:** Updated `linked_ingredients`, `label_terms`
+    - **2C-T-2:** Updated `linked_ingredients`, `label_terms`
+    - **2C-T-4:** Updated `linked_ingredients`, `label_terms`
+    - **2C-T-7:** Updated `linked_ingredients`, `label_terms`
+    - **2alpha,17alpha-dimethyl-17beta-hydroxy-5beta-androstan-3-one:** Updated `linked_ingredients`, `label_terms`
+    - **2′-fluoro ortho-fluorofentanyl:** Updated `linked_ingredients`
+    - **3,4-dimethylmethcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **3-MMC:** Updated `linked_ingredients`, `label_terms`
+    - **3-androstenol:** Updated `linked_ingredients`
+    - **3-androstenone:** Updated `linked_ingredients`
+    - **3-fluoro-N-methylcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **3-furanyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **3-methylethcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **3-methylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **3-methylthiofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **3beta-hydroxy-estra-4,9,11-trien-17-one:** Updated `linked_ingredients`, `label_terms`
+    - **4'-chloro-alpha-PVP:** Updated `linked_ingredients`, `label_terms`
+    - **4,4′-Dimethylaminorex:** Updated `linked_ingredients`, `label_terms`
+    - **4-(2-chlorophenyl)-2-ethyl-9-methyl-6H-thieno[3,2- F][1,2,4]triazolo[4,3-A][1,4]diazepine:** Updated `linked_ingredients`, `label_terms`
+    - **4-MEAP:** Updated `linked_ingredients`, `label_terms`
+    - **4-MePPP:** Updated `linked_ingredients`, `label_terms`
+    - **4-OH-DiPT:** Updated `linked_ingredients`, `label_terms`
+    - **4-androstene-3,6,17 trione:** Updated `linked_ingredients`
+    - **4-androstenediol:** Updated `linked_ingredients`, `label_terms`
+    - **4-anilino-N-phenethylpiperidine:** Updated `linked_ingredients`
+    - **4-bromo-2,5-dimethoxyphenethylamine:** Updated `linked_ingredients`, `label_terms`
+    - **4-fluoro-N-methylcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **4-fluoroisobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **4-fluoromethylphenidate:** Updated `linked_ingredients`
+    - **4-hydroxytestosterone:** Updated `linked_ingredients`, `label_terms`
+    - **4-methoxyamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **4-methyl-N-ethylcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **4-methylaminorex, cis-(+/-)-:** Updated `linked_ingredients`
+    - **4-methylamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **4-methylbuphedrone:** Updated `linked_ingredients`, `label_terms`
+    - **4F-MDMB-BINACA:** Updated `linked_ingredients`
+    - **4F-MDMB-BUTICA:** Updated `linked_ingredients`, `label_terms`
+    - **4′-methyl acetyl fentanyl:** Updated `linked_ingredients`
+    - **5-(1,1-dimethylheptyl)-2-[(1R,3S)-3-hydroxycyclohexyl]-phenol:** Updated `linked_ingredients`, `label_terms`
+    - **5-(1,1-dimethyloctyl)-2-[(1R,3S)-3-hydroxycyclohexyl]-phenol:** Updated `linked_ingredients`, `label_terms`
+    - **5-MeO-AMT:** Updated `linked_ingredients`, `label_terms`
+    - **5-MeO-DET:** Updated `linked_ingredients`, `label_terms`
+    - **5-MeO-DIPT:** Updated `linked_ingredients`, `label_terms`
+    - **5-MeO-DMT:** Updated `linked_ingredients`, `label_terms`
+    - **5-MeO-MiPT:** Updated `linked_ingredients`, `label_terms`
+    - **5-alpha-hydroxy-laxogenin:** Updated `linked_ingredients`
+    - **5-androstenedione:** Updated `linked_ingredients`, `label_terms`
+    - **5-fluoro-PB-22:** Updated `linked_ingredients`, `label_terms`
+    - **5-fluoro-UR-144:** Updated `linked_ingredients`, `label_terms`
+    - **5F-AB-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **5F-ADB:** Updated `linked_ingredients`, `label_terms`
+    - **5F-AMB:** Updated `linked_ingredients`, `label_terms`
+    - **5F-APINACA:** Updated `linked_ingredients`, `label_terms`
+    - **5F-CUMYL-P7AICA:** Updated `linked_ingredients`, `label_terms`
+    - **5F-CUMYL-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **5F-EDMB-PICA:** Updated `linked_ingredients`, `label_terms`
+    - **5F-EDMB-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **5F-MDMB-PICA:** Updated `linked_ingredients`, `label_terms`
+    - **5alpha-androstan-3,6,17-trione:** Updated `linked_ingredients`, `label_terms`
+    - **6-(2-chlorophenyl)-1-methyl-8-nitro-4H-benzo[F][1,2,4]triazolo[4,3-A][1,4]diazepine:** Updated `linked_ingredients`, `label_terms`
+    - **6-bromo-androsta-1,4-diene-3,17-dione:** Updated `linked_ingredients`, `label_terms`
+    - **6-bromo-androstan-3,17-dione:** Updated `linked_ingredients`, `label_terms`
+    - **6-monoacetylmorphine:** Updated `linked_ingredients`, `label_terms`
+    - **6alpha-methyl-androst-4-ene-3,17-dione:** Updated `linked_ingredients`, `label_terms`
+    - **7-chloro-5-(2-chlorophenyl)-1-methyl-1,3-dihydro- 2H-benzo[E][1,4]diazepin-2-one:** Updated `linked_ingredients`, `label_terms`
+    - **7-isopropoxyisoflavone:** Updated `linked_ingredients`
+    - **7alpha-hydroxy-DHEA:** Updated `linked_ingredients`
+    - **7beta-hydroxy-DHEA:** Updated `linked_ingredients`
+    - **8-bromo-6-(2-fluorophenyl)-1-methyl-4H-benzo[F][1,2,4]trazolo[4,3-A][1,4]diazepine:** Updated `linked_ingredients`, `label_terms`
+    - **8-chloro-6-(2-fluorophenyl)-1-methyl-4H-benzo[F][1,2,4]triazolo[4,3-A][1,4]diazepine:** Updated `linked_ingredients`, `label_terms`
+    - **AB-CHMINACA:** Updated `linked_ingredients`, `label_terms`
+    - **AB-FUBINACA:** Updated `linked_ingredients`, `label_terms`
+    - **AB-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **AC-262536:** Updated `linked_ingredients`
+    - **ACE-031:** Updated `linked_ingredients`
+    - **ACP-105:** Updated `linked_ingredients`
+    - **ADB-4en-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **ADB-BUTINACA:** Updated `linked_ingredients`, `label_terms`
+    - **ADB-FUBINACA:** Updated `linked_ingredients`, `label_terms`
+    - **ADB-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **AH-7921:** Updated `linked_ingredients`, `label_terms`
+    - **AICAR:** Updated `linked_ingredients`
+    - **AMB-FUBINACA:** Updated `linked_ingredients`, `label_terms`
+    - **AOD-9604:** Updated `linked_ingredients`
+    - **APINACA:** Updated `linked_ingredients`, `label_terms`
+    - **Acacia rigidula:** Updated `linked_ingredients`, `label_terms`
+    - **Aconitum:** Updated `linked_ingredients`, `label_terms`
+    - **Amanita muscaria:** Updated `linked_ingredients`
+    - **Areca catechu nut:** Updated `linked_ingredients`
+    - **BMPEA:** Updated `linked_ingredients`
+    - **BMS-564929:** Updated `linked_ingredients`
+    - **BPC-157:** Updated `linked_ingredients`
+    - **CJC-1293:** Updated `linked_ingredients`, `label_terms`
+    - **CJC-1295:** Updated `linked_ingredients`
+    - **CNTO-530:** Updated `linked_ingredients`
+    - **CP-47,497:** Updated `linked_ingredients`, `label_terms`
+    - **CUMYL-4CN-BINACA:** Updated `linked_ingredients`, `label_terms`
+    - **CUMYL-PEGACLONE:** Updated `linked_ingredients`, `label_terms`
+    - **DMAA (1,3):** Updated `linked_ingredients`
+    - **DMAA (1,4):** Updated `linked_ingredients`
+    - **DMBA:** Updated `linked_ingredients`, `label_terms`
+    - **DMHA:** Updated `linked_ingredients`, `label_terms`
+    - **DOB:** Updated `linked_ingredients`, `label_terms`
+    - **DOC:** Updated `linked_ingredients`, `label_terms`
+    - **DOET:** Updated `linked_ingredients`, `label_terms`
+    - **DOI:** Updated `linked_ingredients`, `label_terms`
+    - **DOM:** Updated `linked_ingredients`, `label_terms`
+    - **Desidustat:** Updated `linked_ingredients`
+    - **DiPT:** Updated `linked_ingredients`, `label_terms`
+    - **Enarodustat:** Updated `linked_ingredients`
+    - **FG-2216:** Updated `linked_ingredients`
+    - **FP-3:** Updated `linked_ingredients`, `label_terms`
+    - **FUB-144:** Updated `linked_ingredients`
+    - **FUB-APINACA:** Updated `linked_ingredients`, `label_terms`
+    - **GHRP-1:** Updated `linked_ingredients`
+    - **GHRP-6:** Updated `linked_ingredients`, `label_terms`
+    - **GSK2881078:** Updated `linked_ingredients`
+    - **GW-0742:** Updated `linked_ingredients`
+    - **GW-501516:** Updated `linked_ingredients`
+    - **HCG:** Updated `linked_ingredients`
+    - **IOX2:** Updated `linked_ingredients`, `label_terms`
+    - **IOX4:** Updated `linked_ingredients`
+    - **JNJ-28330835:** Updated `linked_ingredients`, `label_terms`
+    - **JNJ-42041935:** Updated `linked_ingredients`
+    - **K-11706:** Updated `linked_ingredients`, `label_terms`
+    - **LGD-2226:** Updated `linked_ingredients`, `label_terms`
+    - **LGD-3303:** Updated `linked_ingredients`, `label_terms`
+    - **LGD-4033:** Updated `linked_ingredients`, `label_terms`
+    - **MAB-CHMINACA:** Updated `linked_ingredients`, `label_terms`
+    - **MDA:** Updated `linked_ingredients`, `label_terms`
+    - **MDEA:** Updated `linked_ingredients`, `label_terms`
+    - **MDMA:** Updated `linked_ingredients`, `label_terms`
+    - **MDMB-4en-PINACA:** Updated `linked_ingredients`, `label_terms`
+    - **MDMB-CHMICA:** Updated `linked_ingredients`, `label_terms`
+    - **MDMB-FUBINACA:** Updated `linked_ingredients`, `label_terms`
+    - **MDPV:** Updated `linked_ingredients`, `label_terms`
+    - **MK-677:** Updated `linked_ingredients`, `label_terms`
+    - **MMB-CHMICA:** Updated `linked_ingredients`, `label_terms`
+    - **MMB-FUBICA:** Updated `linked_ingredients`, `label_terms`
+    - **MMDA:** Updated `linked_ingredients`, `label_terms`
+    - **MPHP:** Updated `linked_ingredients`, `label_terms`
+    - **MPPP:** Updated `linked_ingredients`, `label_terms`
+    - **MT-45:** Updated `linked_ingredients`, `label_terms`
+    - **N,N-dimethylamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **N,N-dimethylethylamine:** Updated `linked_ingredients`, `label_terms`
+    - **N-benzylpiperazine:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethyl-1-phenylcyclohexylamine:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethyl-3-piperidyl benzilate:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethyl-N-methylcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethylamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethylbuphedrone:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethylhexedrone:** Updated `linked_ingredients`, `label_terms`
+    - **N-ethylpentylone:** Updated `linked_ingredients`, `label_terms`
+    - **N-methyl-3-piperidyl benzilate:** Updated `linked_ingredients`, `label_terms`
+    - **N-methyltyramine:** Updated `linked_ingredients`
+    - **N-pyrrolidino etonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **NM2201:** Updated `linked_ingredients`, `label_terms`
+    - **Nymphaea caerulea:** Updated `linked_ingredients`
+    - **PCC:** Updated `linked_ingredients`, `label_terms`
+    - **PEPAP:** Updated `linked_ingredients`, `label_terms`
+    - **PV8:** Updated `linked_ingredients`, `label_terms`
+    - **Piper methysticum:** Updated `linked_ingredients`
+    - **QUPIC:** Updated `linked_ingredients`, `label_terms`
+    - **R3-IGF-1:** Updated `linked_ingredients`
+    - **RAD-150:** Updated `linked_ingredients`, `label_terms`
+    - **S-107:** Updated `linked_ingredients`
+    - **S-23:** Updated `linked_ingredients`, `label_terms`
+    - **S-40503:** Updated `linked_ingredients`, `label_terms`
+    - **S48168 (ARM210):** Updated `linked_ingredients`
+    - **S519:** Updated `linked_ingredients`
+    - **S597:** Updated `linked_ingredients`
+    - **SARM:** Updated `linked_ingredients`, `label_terms`
+    - **SARM S1:** Updated `linked_ingredients`
+    - **SARM S9:** Updated `linked_ingredients`
+    - **SR-18:** Updated `linked_ingredients`, `label_terms`
+    - **SR-19:** Updated `linked_ingredients`, `label_terms`
+    - **SR-9009:** Updated `linked_ingredients`, `label_terms`
+    - **SR-9011:** Updated `linked_ingredients`, `label_terms`
+    - **Salvia divinorum:** Updated `linked_ingredients`, `label_terms`
+    - **THJ-2201:** Updated `linked_ingredients`, `label_terms`
+    - **TMA:** Updated `linked_ingredients`, `label_terms`
+    - **U-47700:** Updated `linked_ingredients`, `label_terms`
+    - **UR-144:** Updated `linked_ingredients`, `label_terms`
+    - **YK-11:** Updated `linked_ingredients`, `label_terms`
+    - **[3,2-c]-furazan-5alpha-androstan-17beta-ol:** Updated `linked_ingredients`, `label_terms`
+    - **[3,2-c]pyrazole-androst-4-en-17beta-ol:** Updated `linked_ingredients`, `label_terms`
+    - **acetazolamide:** Updated `linked_ingredients`
+    - **acetorphine:** Updated `linked_ingredients`, `label_terms`
+    - **acetyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **acetyl-alpha-methylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **acetyldihydrocodeine:** Updated `linked_ingredients`, `label_terms`
+    - **acetylmethadol:** Updated `linked_ingredients`, `label_terms`
+    - **acetylpsilocin:** Updated `linked_ingredients`
+    - **aconitine:** Updated `linked_ingredients`
+    - **acryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **adamantoyl:** Updated `linked_ingredients`
+    - **adrafinil:** Updated `linked_ingredients`, `label_terms`
+    - **adrenosterone:** Updated `linked_ingredients`
+    - **aegeline:** Updated `linked_ingredients`
+    - **alexamorelin:** Updated `linked_ingredients`
+    - **alfaxalone:** Updated `linked_ingredients`, `label_terms`
+    - **alfentanil:** Updated `linked_ingredients`, `label_terms`
+    - **allylprodine:** Updated `linked_ingredients`, `label_terms`
+    - **alpha'-methyl butyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-PHP:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-PiHP:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-ethyltryptamine:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-methylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-methylthiofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-methyltryptamine:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-pyrrolidinobutiophenone:** Updated `linked_ingredients`, `label_terms`
+    - **alpha-pyrrolidinopentiophenone:** Updated `linked_ingredients`, `label_terms`
+    - **alphacetylmethadol:** Updated `linked_ingredients`, `label_terms`
+    - **alphameprodine:** Updated `linked_ingredients`, `label_terms`
+    - **alphamethadol:** Updated `linked_ingredients`, `label_terms`
+    - **alphaprodine:** Updated `linked_ingredients`, `label_terms`
+    - **alprazolam:** Updated `linked_ingredients`, `label_terms`
+    - **amfetaminil:** Updated `linked_ingredients`, `label_terms`
+    - **amiloride:** Updated `linked_ingredients`
+    - **amineptine:** Updated `linked_ingredients`, `label_terms`
+    - **aminoglutethimide:** Updated `linked_ingredients`
+    - **aminorex:** Updated `linked_ingredients`, `label_terms`
+    - **amiphenazole:** Updated `linked_ingredients`, `label_terms`
+    - **amobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **amphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **anamorelin:** Updated `linked_ingredients`, `label_terms`
+    - **anastrozole:** Updated `linked_ingredients`
+    - **andarine:** Updated `linked_ingredients`
+    - **androsta-3,5-diene-7,17-dione:** Updated `linked_ingredients`
+    - **androstadienone:** Updated `linked_ingredients`
+    - **androstanediol:** Updated `linked_ingredients`, `label_terms`
+    - **androstanedione:** Updated `linked_ingredients`, `label_terms`
+    - **androstanolone:** Updated `linked_ingredients`, `label_terms`
+    - **androstatrienedione:** Updated `linked_ingredients`
+    - **androstenediol:** Updated `linked_ingredients`, `label_terms`
+    - **androstenedione:** Updated `linked_ingredients`, `label_terms`
+    - **androsterone:** Updated `linked_ingredients`
+    - **anileridine:** Updated `linked_ingredients`, `label_terms`
+    - **aniracetam:** Updated `linked_ingredients`, `label_terms`
+    - **apitegromab:** Updated `linked_ingredients`, `label_terms`
+    - **aprobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **arformoterol:** Updated `linked_ingredients`, `label_terms`
+    - **asialo EPO:** Updated `linked_ingredients`, `label_terms`
+    - **barbital:** Updated `linked_ingredients`, `label_terms`
+    - **barbituric acid:** Updated `linked_ingredients`, `label_terms`
+    - **bazedoxifene:** Updated `linked_ingredients`
+    - **bendroflumethiazide:** Updated `linked_ingredients`
+    - **benfluorex:** Updated `linked_ingredients`, `label_terms`
+    - **benzethidine:** Updated `linked_ingredients`, `label_terms`
+    - **benzimidazole:** Updated `linked_ingredients`, `label_terms`
+    - **benzoylecgonine:** Updated `linked_ingredients`, `label_terms`
+    - **benzphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **benzylmorphine:** Updated `linked_ingredients`, `label_terms`
+    - **beta'-phenyl fentanyl:** Updated `linked_ingredients`
+    - **beta-hydroxy-3-methylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **beta-hydroxyfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **beta-hydroxythiofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **beta-methyl fentanyl:** Updated `linked_ingredients`
+    - **betacetylmethadol:** Updated `linked_ingredients`, `label_terms`
+    - **betameprodine:** Updated `linked_ingredients`, `label_terms`
+    - **betamethadol:** Updated `linked_ingredients`, `label_terms`
+    - **betaprodine:** Updated `linked_ingredients`, `label_terms`
+    - **bezitramide:** Updated `linked_ingredients`, `label_terms`
+    - **bimagrumab:** Updated `linked_ingredients`
+    - **bolasterone:** Updated `linked_ingredients`, `label_terms`
+    - **boldenone:** Updated `linked_ingredients`, `label_terms`
+    - **boldione:** Updated `linked_ingredients`, `label_terms`
+    - **brexanolone:** Updated `linked_ingredients`, `label_terms`
+    - **brivaracetam:** Updated `linked_ingredients`, `label_terms`
+    - **brolamfetamine:** Updated `linked_ingredients`, `label_terms`
+    - **bromazepam:** Updated `linked_ingredients`, `label_terms`
+    - **brorphine:** Updated `linked_ingredients`, `label_terms`
+    - **bufotenine:** Updated `linked_ingredients`, `label_terms`
+    - **bumetanide:** Updated `linked_ingredients`
+    - **buprenorphine:** Updated `linked_ingredients`, `label_terms`
+    - **buserelin:** Updated `linked_ingredients`, `label_terms`
+    - **butabarbital:** Updated `linked_ingredients`, `label_terms`
+    - **butalbital:** Updated `linked_ingredients`, `label_terms`
+    - **butobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **butonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **butorphanol:** Updated `linked_ingredients`, `label_terms`
+    - **butylone:** Updated `linked_ingredients`, `label_terms`
+    - **butyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **calusterone:** Updated `linked_ingredients`, `label_terms`
+    - **camazepam:** Updated `linked_ingredients`, `label_terms`
+    - **cannabidiol:** Updated `linked_ingredients`, `label_terms`
+    - **cannabigerol:** Updated `linked_ingredients`
+    - **cannabis:** Updated `linked_ingredients`, `label_terms`
+    - **canrenone:** Updated `linked_ingredients`
+    - **capromorelin:** Updated `linked_ingredients`, `label_terms`
+    - **carbamylated EPO:** Updated `linked_ingredients`, `label_terms`
+    - **carbazole:** Updated `linked_ingredients`, `label_terms`
+    - **carfentanil:** Updated `linked_ingredients`, `label_terms`
+    - **carisoprodol:** Updated `linked_ingredients`, `label_terms`
+    - **cathine:** Updated `linked_ingredients`, `label_terms`
+    - **cenobamate:** Updated `linked_ingredients`, `label_terms`
+    - **cesium chloride:** Updated `linked_ingredients`, `label_terms`
+    - **chloral betaine:** Updated `linked_ingredients`, `label_terms`
+    - **chloral hydrate:** Updated `linked_ingredients`, `label_terms`
+    - **chlordiazepoxide:** Updated `linked_ingredients`, `label_terms`
+    - **chlorhexadol:** Updated `linked_ingredients`, `label_terms`
+    - **chlorodehydromethylandrostenediol:** Updated `linked_ingredients`, `label_terms`
+    - **chloromethylandrostenediol:** Updated `linked_ingredients`, `label_terms`
+    - **chlorothiazide:** Updated `linked_ingredients`
+    - **chlorphentermine:** Updated `linked_ingredients`, `label_terms`
+    - **clenbuterol:** Updated `linked_ingredients`, `label_terms`
+    - **clobazam:** Updated `linked_ingredients`, `label_terms`
+    - **clobenzorex:** Updated `linked_ingredients`, `label_terms`
+    - **clonazepam:** Updated `linked_ingredients`, `label_terms`
+    - **clonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **clorazepate:** Updated `linked_ingredients`, `label_terms`
+    - **clortermine:** Updated `linked_ingredients`, `label_terms`
+    - **clostebol:** Updated `linked_ingredients`, `label_terms`
+    - **clotiazepam:** Updated `linked_ingredients`, `label_terms`
+    - **cloxazolam:** Updated `linked_ingredients`, `label_terms`
+    - **cobalt:** Updated `linked_ingredients`
+    - **cocaine:** Updated `linked_ingredients`, `label_terms`
+    - **cocaine metabolites:** Updated `linked_ingredients`, `label_terms`
+    - **codeine:** Updated `linked_ingredients`, `label_terms`
+    - **codeine methylbromide:** Updated `linked_ingredients`, `label_terms`
+    - **codeine-N-oxide:** Updated `linked_ingredients`, `label_terms`
+    - **coluracetam:** Updated `linked_ingredients`, `label_terms`
+    - **conivaptan:** Updated `linked_ingredients`, `label_terms`
+    - **corticorelin:** Updated `linked_ingredients`, `label_terms`
+    - **cropropamide:** Updated `linked_ingredients`, `label_terms`
+    - **crotetamide:** Updated `linked_ingredients`, `label_terms`
+    - **crotonyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **cyanostane:** Updated `linked_ingredients`
+    - **cyclofenil:** Updated `linked_ingredients`
+    - **cyclopentyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **cyclopropyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **cyprenorphine:** Updated `linked_ingredients`, `label_terms`
+    - **danazol:** Updated `linked_ingredients`, `label_terms`
+    - **daprodustat:** Updated `linked_ingredients`, `label_terms`
+    - **daridorexant:** Updated `linked_ingredients`, `label_terms`
+    - **dehydrochlormethyltestosterone:** Updated `linked_ingredients`, `label_terms`
+    - **dehydroepiandrosterone:** Updated `linked_ingredients`, `label_terms`
+    - **delorazepam:** Updated `linked_ingredients`, `label_terms`
+    - **demelverine:** Updated `linked_ingredients`
+    - **des(1-3)IGF-1:** Updated `linked_ingredients`
+    - **deslorelin:** Updated `linked_ingredients`, `label_terms`
+    - **desmopressin:** Updated `linked_ingredients`
+    - **desomorphine:** Updated `linked_ingredients`, `label_terms`
+    - **desoxymethyltestosterone:** Updated `linked_ingredients`, `label_terms`
+    - **desoxytestosterone:** Updated `linked_ingredients`
+    - **dexfenfluramine:** Updated `linked_ingredients`, `label_terms`
+    - **dextromoramide:** Updated `linked_ingredients`, `label_terms`
+    - **dextropropoxyphene:** Updated `linked_ingredients`, `label_terms`
+    - **diampromide:** Updated `linked_ingredients`, `label_terms`
+    - **diazepam:** Updated `linked_ingredients`, `label_terms`
+    - **dichloralphenazone:** Updated `linked_ingredients`, `label_terms`
+    - **dienolone:** Updated `linked_ingredients`
+    - **diethylpropion:** Updated `linked_ingredients`, `label_terms`
+    - **diethylthiambutene:** Updated `linked_ingredients`, `label_terms`
+    - **diethyltryptamine:** Updated `linked_ingredients`, `label_terms`
+    - **difenoxin:** Updated `linked_ingredients`, `label_terms`
+    - **dihydrocodeine:** Updated `linked_ingredients`, `label_terms`
+    - **dihydroetorphine:** Updated `linked_ingredients`, `label_terms`
+    - **dihydromorphine:** Updated `linked_ingredients`, `label_terms`
+    - **dimenoxadol:** Updated `linked_ingredients`, `label_terms`
+    - **dimepheptanol:** Updated `linked_ingredients`, `label_terms`
+    - **dimethandrolone:** Updated `linked_ingredients`, `label_terms`
+    - **dimethoxymethamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **dimethylthiambutene:** Updated `linked_ingredients`, `label_terms`
+    - **dimethyltrienolone:** Updated `linked_ingredients`
+    - **dimethyltryptamine:** Updated `linked_ingredients`, `label_terms`
+    - **dinitrophenol:** Updated `linked_ingredients`
+    - **dioxaphetyl butyrate:** Updated `linked_ingredients`, `label_terms`
+    - **diphenoxylate:** Updated `linked_ingredients`, `label_terms`
+    - **dipipanone:** Updated `linked_ingredients`, `label_terms`
+    - **domagrozumab:** Updated `linked_ingredients`
+    - **dronabinol:** Updated `linked_ingredients`, `label_terms`
+    - **drostanolone:** Updated `linked_ingredients`, `label_terms`
+    - **drotebanol:** Updated `linked_ingredients`, `label_terms`
+    - **ecgonine:** Updated `linked_ingredients`, `label_terms`
+    - **ecgonine methyl ester:** Updated `linked_ingredients`, `label_terms`
+    - **elacestrant:** Updated `linked_ingredients`
+    - **eluxadoline:** Updated `linked_ingredients`, `label_terms`
+    - **embutramide:** Updated `linked_ingredients`, `label_terms`
+    - **enobosarm:** Updated `linked_ingredients`
+    - **ephedra:** Updated `linked_ingredients`
+    - **ephedrine alkaloids:** Updated `linked_ingredients`, `label_terms`
+    - **epi-dihydrotestosterone:** Updated `linked_ingredients`
+    - **epiandrosterone:** Updated `linked_ingredients`
+    - **epistane:** Updated `linked_ingredients`
+    - **epitestosterone:** Updated `linked_ingredients`
+    - **epitrenbolone:** Updated `linked_ingredients`
+    - **epthiostane:** Updated `linked_ingredients`
+    - **erythropoietin Fc:** Updated `linked_ingredients`, `label_terms`
+    - **estazolam:** Updated `linked_ingredients`, `label_terms`
+    - **estra-4,9,11-triene-3,17-dione:** Updated `linked_ingredients`, `label_terms`
+    - **etamivan:** Updated `linked_ingredients`, `label_terms`
+    - **ethacrynic acid:** Updated `linked_ingredients`
+    - **ethchlorvynol:** Updated `linked_ingredients`, `label_terms`
+    - **ethinamate:** Updated `linked_ingredients`, `label_terms`
+    - **ethyl loflazepate:** Updated `linked_ingredients`, `label_terms`
+    - **ethylestrenol:** Updated `linked_ingredients`
+    - **ethylmethylthiambutene:** Updated `linked_ingredients`, `label_terms`
+    - **ethylmorphine:** Updated `linked_ingredients`, `label_terms`
+    - **ethylone:** Updated `linked_ingredients`, `label_terms`
+    - **ethylphenidate:** Updated `linked_ingredients`
+    - **etilefrine:** Updated `linked_ingredients`, `label_terms`
+    - **etiocholanolone:** Updated `linked_ingredients`
+    - **etodesnitazene:** Updated `linked_ingredients`, `label_terms`
+    - **etonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **etorphine:** Updated `linked_ingredients`, `label_terms`
+    - **etorphine hydrochloride:** Updated `linked_ingredients`, `label_terms`
+    - **etoxeridine:** Updated `linked_ingredients`, `label_terms`
+    - **eutylone:** Updated `linked_ingredients`, `label_terms`
+    - **examorelin:** Updated `linked_ingredients`, `label_terms`
+    - **ezogabine:** Updated `linked_ingredients`, `label_terms`
+    - **famprofazone:** Updated `linked_ingredients`, `label_terms`
+    - **fenbutrazate:** Updated `linked_ingredients`, `label_terms`
+    - **fencamfamin:** Updated `linked_ingredients`, `label_terms`
+    - **fencamine:** Updated `linked_ingredients`, `label_terms`
+    - **fenethylline:** Updated `linked_ingredients`, `label_terms`
+    - **fenoterol:** Updated `linked_ingredients`, `label_terms`
+    - **fenproporex:** Updated `linked_ingredients`, `label_terms`
+    - **fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **fentanyl carbamate:** Updated `linked_ingredients`
+    - **fludiazepam:** Updated `linked_ingredients`, `label_terms`
+    - **flunitazene:** Updated `linked_ingredients`, `label_terms`
+    - **flunitrazepam:** Updated `linked_ingredients`, `label_terms`
+    - **fluoxymesterone:** Updated `linked_ingredients`, `label_terms`
+    - **flurazepam:** Updated `linked_ingredients`, `label_terms`
+    - **follistatin:** Updated `linked_ingredients`
+    - **fonturacetam:** Updated `linked_ingredients`, `label_terms`
+    - **formebolone:** Updated `linked_ingredients`
+    - **formestane:** Updated `linked_ingredients`
+    - **fospropofol:** Updated `linked_ingredients`, `label_terms`
+    - **fulvestrant:** Updated `linked_ingredients`
+    - **furanyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **furazabol:** Updated `linked_ingredients`
+    - **furethidine:** Updated `linked_ingredients`, `label_terms`
+    - **furfenorex:** Updated `linked_ingredients`, `label_terms`
+    - **furosemide:** Updated `linked_ingredients`
+    - **galantamine:** Updated `linked_ingredients`
+    - **gamma hydroxybutyric acid:** Updated `linked_ingredients`, `label_terms`
+    - **gamma-butyrolactone:** Updated `linked_ingredients`, `label_terms`
+    - **ganaxolone:** Updated `linked_ingredients`, `label_terms`
+    - **gestrinone:** Updated `linked_ingredients`
+    - **glutethimide:** Updated `linked_ingredients`, `label_terms`
+    - **gonadorelin:** Updated `linked_ingredients`, `label_terms`
+    - **goralatide:** Updated `linked_ingredients`
+    - **goserelin:** Updated `linked_ingredients`, `label_terms`
+    - **growth hormone-releasing peptide:** Updated `linked_ingredients`
+    - **halazepam:** Updated `linked_ingredients`, `label_terms`
+    - **haloxazolam:** Updated `linked_ingredients`, `label_terms`
+    - **hemp:** Updated `linked_ingredients`
+    - **heptaminol:** Updated `linked_ingredients`, `label_terms`
+    - **heroin:** Updated `linked_ingredients`, `label_terms`
+    - **hexadrone:** Updated `linked_ingredients`
+    - **hexedrone:** Updated `linked_ingredients`
+    - **higenamine:** Updated `linked_ingredients`
+    - **histrelin:** Updated `linked_ingredients`, `label_terms`
+    - **hordenine:** Updated `linked_ingredients`
+    - **hydrochlorothiazide:** Updated `linked_ingredients`, `label_terms`
+    - **hydrocodone:** Updated `linked_ingredients`, `label_terms`
+    - **hydromorphinol:** Updated `linked_ingredients`, `label_terms`
+    - **hydromorphone:** Updated `linked_ingredients`, `label_terms`
+    - **hydroxyamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **hydroxypethidine:** Updated `linked_ingredients`, `label_terms`
+    - **hydroxypropyl betadex:** Updated `linked_ingredients`
+    - **ibogaine:** Updated `linked_ingredients`, `label_terms`
+    - **indacaterol:** Updated `linked_ingredients`, `label_terms`
+    - **indapamide:** Updated `linked_ingredients`, `label_terms`
+    - **indene:** Updated `linked_ingredients`, `label_terms`
+    - **ipamorelin:** Updated `linked_ingredients`, `label_terms`
+    - **isobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **isomethadone:** Updated `linked_ingredients`, `label_terms`
+    - **isometheptene:** Updated `linked_ingredients`, `label_terms`
+    - **isopropylnorsynephrine:** Updated `linked_ingredients`, `label_terms`
+    - **isotonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **isovaleryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ketamine:** Updated `linked_ingredients`, `label_terms`
+    - **ketazolam:** Updated `linked_ingredients`, `label_terms`
+    - **ketobemidone:** Updated `linked_ingredients`, `label_terms`
+    - **kisspeptin:** Updated `linked_ingredients`, `label_terms`
+    - **lacosamide:** Updated `linked_ingredients`, `label_terms`
+    - **landogrozumab:** Updated `linked_ingredients`, `label_terms`
+    - **lasmiditan:** Updated `linked_ingredients`, `label_terms`
+    - **lefetamine:** Updated `linked_ingredients`, `label_terms`
+    - **lemborexant:** Updated `linked_ingredients`, `label_terms`
+    - **lenomorelin:** Updated `linked_ingredients`, `label_terms`
+    - **letrozole:** Updated `linked_ingredients`
+    - **leuprorelin:** Updated `linked_ingredients`, `label_terms`
+    - **levo-alphacetylmethadol:** Updated `linked_ingredients`, `label_terms`
+    - **levomethorphan:** Updated `linked_ingredients`, `label_terms`
+    - **levomoramide:** Updated `linked_ingredients`, `label_terms`
+    - **levophenacylmorphan:** Updated `linked_ingredients`, `label_terms`
+    - **levorphanol:** Updated `linked_ingredients`, `label_terms`
+    - **levosalbutamol:** Updated `linked_ingredients`, `label_terms`
+    - **lisdexamfetamine:** Updated `linked_ingredients`, `label_terms`
+    - **long R3-IGF-1:** Updated `linked_ingredients`
+    - **loprazolam:** Updated `linked_ingredients`, `label_terms`
+    - **lorazepam:** Updated `linked_ingredients`, `label_terms`
+    - **lorcaserin:** Updated `linked_ingredients`, `label_terms`
+    - **lormetazepam:** Updated `linked_ingredients`, `label_terms`
+    - **luspatercept:** Updated `linked_ingredients`, `label_terms`
+    - **luteinizing hormone:** Updated `linked_ingredients`
+    - **lysergic acid:** Updated `linked_ingredients`, `label_terms`
+    - **lysergic acid amide:** Updated `linked_ingredients`, `label_terms`
+    - **lysergic acid diethylamide:** Updated `linked_ingredients`, `label_terms`
+    - **m-hydroxybenzoylecgonine:** Updated `linked_ingredients`, `label_terms`
+    - **m-hydroxycocaine:** Updated `linked_ingredients`, `label_terms`
+    - **macimorelin:** Updated `linked_ingredients`, `label_terms`
+    - **marihuana:** Updated `linked_ingredients`, `label_terms`
+    - **mazindol:** Updated `linked_ingredients`, `label_terms`
+    - **mebolazine:** Updated `linked_ingredients`
+    - **mebutamate:** Updated `linked_ingredients`, `label_terms`
+    - **meclofenoxate:** Updated `linked_ingredients`, `label_terms`
+    - **mecloqualone:** Updated `linked_ingredients`, `label_terms`
+    - **medazepam:** Updated `linked_ingredients`, `label_terms`
+    - **mefenorex:** Updated `linked_ingredients`, `label_terms`
+    - **meldonium:** Updated `linked_ingredients`, `label_terms`
+    - **mentabolan:** Updated `linked_ingredients`, `label_terms`
+    - **mephedrone:** Updated `linked_ingredients`, `label_terms`
+    - **mephentermine:** Updated `linked_ingredients`, `label_terms`
+    - **meprobamate:** Updated `linked_ingredients`, `label_terms`
+    - **mescaline:** Updated `linked_ingredients`, `label_terms`
+    - **mesocarb:** Updated `linked_ingredients`, `label_terms`
+    - **mestanolone:** Updated `linked_ingredients`, `label_terms`
+    - **mesterolone:** Updated `linked_ingredients`, `label_terms`
+    - **meta-fluorofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **meta-fluoroisobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **metazocine:** Updated `linked_ingredients`, `label_terms`
+    - **methadone:** Updated `linked_ingredients`, `label_terms`
+    - **methadone-intermediate:** Updated `linked_ingredients`, `label_terms`
+    - **methamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **methandienone:** Updated `linked_ingredients`, `label_terms`
+    - **methandriol:** Updated `linked_ingredients`, `label_terms`
+    - **methaqualone:** Updated `linked_ingredients`, `label_terms`
+    - **methasterone:** Updated `linked_ingredients`, `label_terms`
+    - **methcathinone:** Updated `linked_ingredients`, `label_terms`
+    - **methenolone:** Updated `linked_ingredients`, `label_terms`
+    - **methiopropamine:** Updated `linked_ingredients`, `label_terms`
+    - **methohexital:** Updated `linked_ingredients`, `label_terms`
+    - **methoxyacetyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **methoxydienone:** Updated `linked_ingredients`, `label_terms`
+    - **methoxyphedrine:** Updated `linked_ingredients`, `label_terms`
+    - **methyl-1-testosterone:** Updated `linked_ingredients`, `label_terms`
+    - **methylclostebol:** Updated `linked_ingredients`
+    - **methyldesorphine:** Updated `linked_ingredients`, `label_terms`
+    - **methyldienolone:** Updated `linked_ingredients`, `label_terms`
+    - **methyldihydromorphine:** Updated `linked_ingredients`, `label_terms`
+    - **methylephedrine:** Updated `linked_ingredients`, `label_terms`
+    - **methylnaphthidate:** Updated `linked_ingredients`, `label_terms`
+    - **methylone:** Updated `linked_ingredients`, `label_terms`
+    - **methylphenidate:** Updated `linked_ingredients`, `label_terms`
+    - **methylphenobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **methylstenbolone:** Updated `linked_ingredients`, `label_terms`
+    - **methylsynephrine:** Updated `linked_ingredients`, `label_terms`
+    - **methyltestosterone:** Updated `linked_ingredients`, `label_terms`
+    - **methyltrienolone:** Updated `linked_ingredients`, `label_terms`
+    - **methyprylon:** Updated `linked_ingredients`, `label_terms`
+    - **metodesnitazene:** Updated `linked_ingredients`, `label_terms`
+    - **metolazone:** Updated `linked_ingredients`, `label_terms`
+    - **metonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **metopon:** Updated `linked_ingredients`, `label_terms`
+    - **mibolerone:** Updated `linked_ingredients`
+    - **midazolam:** Updated `linked_ingredients`, `label_terms`
+    - **mitochondrial open reading frame of the 12S rRNA-c:** Updated `linked_ingredients`
+    - **modafinil:** Updated `linked_ingredients`, `label_terms`
+    - **molidustat:** Updated `linked_ingredients`, `label_terms`
+    - **moramide-intermediate:** Updated `linked_ingredients`, `label_terms`
+    - **morpheridine:** Updated `linked_ingredients`, `label_terms`
+    - **morphine:** Updated `linked_ingredients`, `label_terms`
+    - **mozavaptan:** Updated `linked_ingredients`, `label_terms`
+    - **myostatin propeptide:** Updated `linked_ingredients`
+    - **myrophine:** Updated `linked_ingredients`, `label_terms`
+    - **nabilone:** Updated `linked_ingredients`, `label_terms`
+    - **nafarelin:** Updated `linked_ingredients`, `label_terms`
+    - **nalorphine:** Updated `linked_ingredients`, `label_terms`
+    - **nandrolone:** Updated `linked_ingredients`
+    - **naphthalene:** Updated `linked_ingredients`, `label_terms`
+    - **naphyrone:** Updated `linked_ingredients`, `label_terms`
+    - **nefiracetam:** Updated `linked_ingredients`
+    - **nicocodeine:** Updated `linked_ingredients`, `label_terms`
+    - **nicomorphine:** Updated `linked_ingredients`, `label_terms`
+    - **nimetazepam:** Updated `linked_ingredients`, `label_terms`
+    - **nitrazepam:** Updated `linked_ingredients`, `label_terms`
+    - **nor-NOHA:** Updated `linked_ingredients`, `label_terms`
+    - **noracymethadol:** Updated `linked_ingredients`, `label_terms`
+    - **norandrostenediol:** Updated `linked_ingredients`, `label_terms`
+    - **norandrostenedione:** Updated `linked_ingredients`
+    - **norbenzoylecgonine:** Updated `linked_ingredients`, `label_terms`
+    - **norbolethone:** Updated `linked_ingredients`
+    - **norclostebol:** Updated `linked_ingredients`, `label_terms`
+    - **norcocaine:** Updated `linked_ingredients`, `label_terms`
+    - **nordiazepam:** Updated `linked_ingredients`, `label_terms`
+    - **norethandrolone:** Updated `linked_ingredients`, `label_terms`
+    - **norfenfluramine:** Updated `linked_ingredients`, `label_terms`
+    - **norfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **norlevorphanol:** Updated `linked_ingredients`, `label_terms`
+    - **normethadone:** Updated `linked_ingredients`, `label_terms`
+    - **normethandrolone:** Updated `linked_ingredients`
+    - **normorphine:** Updated `linked_ingredients`, `label_terms`
+    - **noroxymorphone:** Updated `linked_ingredients`, `label_terms`
+    - **norpipanone:** Updated `linked_ingredients`, `label_terms`
+    - **nortadalafil:** Updated `linked_ingredients`, `label_terms`
+    - **ocfentanil:** Updated `linked_ingredients`, `label_terms`
+    - **octopamine:** Updated `linked_ingredients`, `label_terms`
+    - **oliceridine:** Updated `linked_ingredients`, `label_terms`
+    - **olodaterol:** Updated `linked_ingredients`, `label_terms`
+    - **omberacetam:** Updated `linked_ingredients`, `label_terms`
+    - **opium:** Updated `linked_ingredients`, `label_terms`
+    - **oripavine:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-fluoroacryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-fluorobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-fluorofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-fluorofuranyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-fluoroisobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-methyl acetylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **ortho-methyl methoxyacetylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **osilodrostat:** Updated `linked_ingredients`, `label_terms`
+    - **oxabolone:** Updated `linked_ingredients`, `label_terms`
+    - **oxandrolone:** Updated `linked_ingredients`, `label_terms`
+    - **oxazepam:** Updated `linked_ingredients`, `label_terms`
+    - **oxazolam:** Updated `linked_ingredients`, `label_terms`
+    - **oxiracetam:** Updated `linked_ingredients`, `label_terms`
+    - **oxycodone:** Updated `linked_ingredients`, `label_terms`
+    - **oxyguno:** Updated `linked_ingredients`, `label_terms`
+    - **oxymesterone:** Updated `linked_ingredients`, `label_terms`
+    - **oxymetholone:** Updated `linked_ingredients`, `label_terms`
+    - **oxymorphone:** Updated `linked_ingredients`, `label_terms`
+    - **p-hydroxybenzoylecgonine:** Updated `linked_ingredients`, `label_terms`
+    - **p-hydroxycocaine:** Updated `linked_ingredients`, `label_terms`
+    - **para-chloroisobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-fluoro furanyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-fluorobutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-fluorofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-methoxybutyryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-methoxyfuranyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-methoxymethamphetamine:** Updated `linked_ingredients`, `label_terms`
+    - **para-methylcyclopropyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **para-methylfentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **parahexyl:** Updated `linked_ingredients`, `label_terms`
+    - **paraldehyde:** Updated `linked_ingredients`, `label_terms`
+    - **peginesatide:** Updated `linked_ingredients`, `label_terms`
+    - **pemoline:** Updated `linked_ingredients`, `label_terms`
+    - **pentazocine:** Updated `linked_ingredients`, `label_terms`
+    - **pentedrone:** Updated `linked_ingredients`, `label_terms`
+    - **pentobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **pentylone:** Updated `linked_ingredients`, `label_terms`
+    - **perampanel:** Updated `linked_ingredients`, `label_terms`
+    - **pethidine:** Updated `linked_ingredients`, `label_terms`
+    - **pethidine-intermediate-A:** Updated `linked_ingredients`, `label_terms`
+    - **pethidine-intermediate-B:** Updated `linked_ingredients`, `label_terms`
+    - **pethidine-intermediate-C:** Updated `linked_ingredients`, `label_terms`
+    - **petrichloral:** Updated `linked_ingredients`, `label_terms`
+    - **peyote:** Updated `linked_ingredients`, `label_terms`
+    - **phenadoxone:** Updated `linked_ingredients`, `label_terms`
+    - **phenampromide:** Updated `linked_ingredients`, `label_terms`
+    - **phenazocine:** Updated `linked_ingredients`, `label_terms`
+    - **phencyclidine:** Updated `linked_ingredients`, `label_terms`
+    - **phendimetrazine:** Updated `linked_ingredients`, `label_terms`
+    - **phenibut:** Updated `linked_ingredients`, `label_terms`
+    - **phenmetrazine:** Updated `linked_ingredients`, `label_terms`
+    - **phenobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **phenomorphan:** Updated `linked_ingredients`, `label_terms`
+    - **phenoperidine:** Updated `linked_ingredients`, `label_terms`
+    - **phenpromethamine:** Updated `linked_ingredients`
+    - **phentermine:** Updated `linked_ingredients`
+    - **phenyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **phenylacetone:** Updated `linked_ingredients`, `label_terms`
+    - **pholcodine:** Updated `linked_ingredients`, `label_terms`
+    - **picamilon:** Updated `linked_ingredients`, `label_terms`
+    - **piminodine:** Updated `linked_ingredients`, `label_terms`
+    - **pinazepam:** Updated `linked_ingredients`, `label_terms`
+    - **pipradrol:** Updated `linked_ingredients`, `label_terms`
+    - **piritramide:** Updated `linked_ingredients`, `label_terms`
+    - **poppy straw:** Updated `linked_ingredients`, `label_terms`
+    - **pralmorelin:** Updated `linked_ingredients`, `label_terms`
+    - **pramiracetam:** Updated `linked_ingredients`, `label_terms`
+    - **prazepam:** Updated `linked_ingredients`, `label_terms`
+    - **pregabalin:** Updated `linked_ingredients`, `label_terms`
+    - **pregnenolone:** Updated `linked_ingredients`, `label_terms`
+    - **prenylamine:** Updated `linked_ingredients`, `label_terms`
+    - **probenecid:** Updated `linked_ingredients`, `label_terms`
+    - **procaterol:** Updated `linked_ingredients`, `label_terms`
+    - **proheptazine:** Updated `linked_ingredients`, `label_terms`
+    - **prolintane:** Updated `linked_ingredients`, `label_terms`
+    - **properidine:** Updated `linked_ingredients`, `label_terms`
+    - **propiram:** Updated `linked_ingredients`, `label_terms`
+    - **prostanozol:** Updated `linked_ingredients`
+    - **protonitazene:** Updated `linked_ingredients`, `label_terms`
+    - **psilocybin:** Updated `linked_ingredients`, `label_terms`
+    - **pyrovalerone:** Updated `linked_ingredients`, `label_terms`
+    - **pyrrole:** Updated `linked_ingredients`, `label_terms`
+    - **quazepam:** Updated `linked_ingredients`, `label_terms`
+    - **racemethorphan:** Updated `linked_ingredients`, `label_terms`
+    - **racemoramide:** Updated `linked_ingredients`, `label_terms`
+    - **racemorphan:** Updated `linked_ingredients`, `label_terms`
+    - **ractopamine:** Updated `linked_ingredients`, `label_terms`
+    - **reldesemtiv:** Updated `linked_ingredients`, `label_terms`
+    - **remifentanil:** Updated `linked_ingredients`, `label_terms`
+    - **remimazolam:** Updated `linked_ingredients`, `label_terms`
+    - **reproterol:** Updated `linked_ingredients`, `label_terms`
+    - **rismorelin:** Updated `linked_ingredients`
+    - **roxadustat:** Updated `linked_ingredients`, `label_terms`
+    - **salbutamol:** Updated `linked_ingredients`, `label_terms`
+    - **salmeterol:** Updated `linked_ingredients`, `label_terms`
+    - **secobarbital:** Updated `linked_ingredients`, `label_terms`
+    - **sermorelin:** Updated `linked_ingredients`, `label_terms`
+    - **sibutramine:** Updated `linked_ingredients`, `label_terms`
+    - **sildenafil:** Updated `linked_ingredients`
+    - **sodium tetrachloroaurate:** Updated `linked_ingredients`, `label_terms`
+    - **solriamfetol:** Updated `linked_ingredients`, `label_terms`
+    - **somapacitan:** Updated `linked_ingredients`, `label_terms`
+    - **somatorelin:** Updated `linked_ingredients`
+    - **sotatercept:** Updated `linked_ingredients`, `label_terms`
+    - **spironolactone:** Updated `linked_ingredients`, `label_terms`
+    - **stamulumab:** Updated `linked_ingredients`, `label_terms`
+    - **stanozolol:** Updated `linked_ingredients`
+    - **stenbolone:** Updated `linked_ingredients`, `label_terms`
+    - **strychnine:** Updated `linked_ingredients`
+    - **sufentanil:** Updated `linked_ingredients`, `label_terms`
+    - **sulfondiethylmethane:** Updated `linked_ingredients`, `label_terms`
+    - **sulfonethylmethane:** Updated `linked_ingredients`, `label_terms`
+    - **sulfonmethane:** Updated `linked_ingredients`, `label_terms`
+    - **sunifiram:** Updated `linked_ingredients`
+    - **suvorexant:** Updated `linked_ingredients`, `label_terms`
+    - **synthetic cannabinoids:** Updated `linked_ingredients`, `label_terms`
+    - **tabimorelin:** Updated `linked_ingredients`, `label_terms`
+    - **tadalafil:** Updated `linked_ingredients`
+    - **talbutal:** Updated `linked_ingredients`, `label_terms`
+    - **tapentadol:** Updated `linked_ingredients`, `label_terms`
+    - **tauroursodeoxycholic acid:** Updated `linked_ingredients`
+    - **temazepam:** Updated `linked_ingredients`, `label_terms`
+    - **terbutaline:** Updated `linked_ingredients`, `label_terms`
+    - **tesamorelin:** Updated `linked_ingredients`, `label_terms`
+    - **tesofensine:** Updated `linked_ingredients`, `label_terms`
+    - **testolactone:** Updated `linked_ingredients`, `label_terms`
+    - **testosterone:** Updated `linked_ingredients`, `label_terms`
+    - **tetrahydrocannabinols:** Updated `linked_ingredients`, `label_terms`
+    - **tetrahydrofuranyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **tetrahydrogestrinone:** Updated `linked_ingredients`
+    - **tetrazepam:** Updated `linked_ingredients`, `label_terms`
+    - **thebacon:** Updated `linked_ingredients`, `label_terms`
+    - **thebaine:** Updated `linked_ingredients`, `label_terms`
+    - **thiafentanil:** Updated `linked_ingredients`, `label_terms`
+    - **thiamylal:** Updated `linked_ingredients`, `label_terms`
+    - **thiazolidene:** Updated `linked_ingredients`, `label_terms`
+    - **thiofentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **thiofuranyl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **thiomesterone:** Updated `linked_ingredients`
+    - **thiopental:** Updated `linked_ingredients`, `label_terms`
+    - **thymosin beta 4:** Updated `linked_ingredients`, `label_terms`
+    - **tianeptine:** Updated `linked_ingredients`
+    - **tibolone:** Updated `linked_ingredients`, `label_terms`
+    - **tiletamine:** Updated `linked_ingredients`, `label_terms`
+    - **tilidine:** Updated `linked_ingredients`, `label_terms`
+    - **tirasemtiv:** Updated `linked_ingredients`, `label_terms`
+    - **tolvaptan:** Updated `linked_ingredients`, `label_terms`
+    - **torasemide:** Updated `linked_ingredients`, `label_terms`
+    - **tramadol:** Updated `linked_ingredients`, `label_terms`
+    - **trenbolone:** Updated `linked_ingredients`
+    - **trestolone:** Updated `linked_ingredients`, `label_terms`
+    - **tretoquinol:** Updated `linked_ingredients`, `label_terms`
+    - **triacetyluridine:** Updated `linked_ingredients`
+    - **triamterene:** Updated `linked_ingredients`, `label_terms`
+    - **triazolam:** Updated `linked_ingredients`, `label_terms`
+    - **trimeperidine:** Updated `linked_ingredients`, `label_terms`
+    - **tuaminoheptane:** Updated `linked_ingredients`
+    - **tulobuterol:** Updated `linked_ingredients`, `label_terms`
+    - **unifiram:** Updated `linked_ingredients`
+    - **vadadustat:** Updated `linked_ingredients`, `label_terms`
+    - **valeryl fentanyl:** Updated `linked_ingredients`, `label_terms`
+    - **vilanterol:** Updated `linked_ingredients`, `label_terms`
+    - **vinbarbital:** Updated `linked_ingredients`, `label_terms`
+    - **vosilasarm:** Updated `linked_ingredients`
+    - **xenon:** Updated `linked_ingredients`
+    - **xipamide:** Updated `linked_ingredients`
+    - **zaleplon:** Updated `linked_ingredients`, `label_terms`
+    - **zeranol:** Updated `linked_ingredients`, `label_terms`
+    - **zilpaterol:** Updated `linked_ingredients`, `label_terms`
+    - **zipeprol:** Updated `linked_ingredients`, `label_terms`
+    - **zolazepam:** Updated `linked_ingredients`, `label_terms`
+    - **zolpidem:** Updated `linked_ingredients`, `label_terms`
+    - **zopiclone:** Updated `linked_ingredients`, `label_terms`
+    - **zuranolone:** Updated `linked_ingredients`, `label_terms`
+
 ## 2026-01-02
 
 ### Substances Modified
-
 *Changes detected through data comparison*
-
 - **dihexa:** Updated `other_names`
 - **nikethamide:** Updated `other_names`, `label_terms`, `linked_ingredients`
 
 ## 2025-12-30
 
 ### New Substances Added
-
 ???+ info "Show details"
     - **17-dihydroexemestane**
     - **19-norandrosterone**
@@ -274,9 +1110,7 @@
     - **vosilasarm**
     - **zeranol**
     - **zilpaterol**
-
 ### Substances Modified
-
 ???+ info "Show details"
     - **1-(1-phenylcyclohexyl)-pyrrolidine:** Updated `Reason`, `Name`, `guid`, `searchable_name`, `Reasons`, `other_names`, `updated`, `label_terms`, `linked_ingredients`
     - **1-(5-fluoropentyl)-3-(1-naphthoyl)indole:** Updated `Reason`, `Name`, `guid`, `searchable_name`, `Reasons`, `other_names`, `updated`, `label_terms`, `linked_ingredients`
@@ -895,7 +1729,6 @@
     - **zolpidem:** Updated `Reason`, `Name`, `guid`, `searchable_name`, `other_names`, `updated`, `label_terms`, `linked_ingredients`
     - **zopiclone:** Updated `Reason`, `Name`, `guid`, `searchable_name`, `other_names`, `updated`, `label_terms`, `linked_ingredients`
     - **zuranolone:** Updated `label_terms`, `linked_ingredients`
-
 All notable changes to the DoD prohibited substances list will be documented in this file.
 
 ## 2025-12-23
