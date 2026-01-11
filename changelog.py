@@ -376,6 +376,7 @@ def generate_changelog_content_for_date(date_key: str, date_changes: DateChanges
         content_parts.append("### New Substances Added")
         content_parts.append("")
         content_parts.append("???+ info \"Show details\"")
+        content_parts.append("")
         content_parts.append(f"    {count} new {substance_word}")
         content_parts.append("")
         for change in date_changes.added:
@@ -397,6 +398,7 @@ def generate_changelog_content_for_date(date_key: str, date_changes: DateChanges
         content_parts.append("*Changes detected through data comparison*")
         content_parts.append("")
         content_parts.append("???+ info \"Show details\"")
+        content_parts.append("")
         content_parts.append(f"    {count} {substance_word} modified")
         content_parts.append("")
         for change in date_changes.updated:
@@ -414,6 +416,7 @@ def generate_changelog_content_for_date(date_key: str, date_changes: DateChanges
         content_parts.append("### Substances Removed")
         content_parts.append("")
         content_parts.append("*Removals detected through data comparison*")
+        content_parts.append("")
         content_parts.append("")
         content_parts.append("???+ info \"Show details\"")
         content_parts.append(f"    {count} {substance_word} removed")
