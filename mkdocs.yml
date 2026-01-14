@@ -33,6 +33,10 @@ theme:
     - navigation.footer
     - content.tabs.link
     - content.tabs.sticky
+    # Enhanced search features for better fuzzy matching
+    - search.suggest
+    - search.highlight
+    - search.share
   # Table of contents permalink
   toc:
     permalink: true
@@ -42,8 +46,10 @@ extra_javascript:
   - js/table-filter.js
   - js/table-init.js
 
+
 extra_css:
   - css/table-styles.css
+
 
 markdown_extensions:
   - tables
@@ -56,8 +62,11 @@ markdown_extensions:
 plugins:
   - search:
       lang: en
-      separator: '[\s\-\.]+'
-      min_search_length: 2
+      separator: '[\s\-\._]+' 
+  - meta
+  - awesome-pages
+  - literate-nav:
+      nav_file: SUMMARY.md
 
 extra:
   analytics:

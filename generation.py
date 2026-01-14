@@ -184,8 +184,221 @@ class SubstancePageGenerator:
             self._write_unii_info(f)
             self._write_footer_navigation(f)
     
+    def _generate_search_keywords(self):
+        """Generate search keywords including common misspellings and variations."""
+        keywords = set()
+        name = self.substance.name.lower()
+        
+        # Add the main name
+        keywords.add(self.substance.name)
+        keywords.add(name)
+        
+        # Add other names if available
+        if self.substance.other_names:
+            for other_name in self.substance.other_names:
+                keywords.add(other_name)
+                keywords.add(other_name.lower())
+        
+        # Generate dynamic misspellings
+        keywords.update(self._generate_misspellings(name))
+        keywords.update(self._generate_abbreviations(name))
+        keywords.update(self._generate_chemical_variations(name))
+        keywords.update(self._generate_phonetic_variations(name))
+        
+        # Add partial matches (useful for partial typing)
+        if len(name) > 4:
+            for i in range(3, min(len(name), 8)):
+                keywords.add(name[:i])
+        
+        # Remove duplicates and very short keywords
+        keywords = {k for k in keywords if len(k) >= 3}
+        
+        return sorted(list(keywords))
+    
+    def _generate_misspellings(self, name):
+        """Generate common misspellings using edit distance and typing errors."""
+        variations = set()
+        
+        # 1. Single character deletions (missing letters)
+        for i in range(len(name)):
+            variation = name[:i] + name[i+1:]
+            if len(variation) >= 3:
+                variations.add(variation)
+        
+        # 2. Single character substitutions (wrong letters)
+        # Focus on common letter confusions
+        substitutions = {
+            'c': ['k', 's'], 'k': ['c'], 's': ['c', 'z'], 'z': ['s'],
+            'ph': ['f'], 'f': ['ph'], 'i': ['y'], 'y': ['i'],
+            'e': ['a'], 'a': ['e'], 'o': ['u'], 'u': ['o'],
+            'th': ['t'], 'ine': ['ene', 'ane'], 'ene': ['ine', 'ane']
+        }
+        
+        for original, replacements in substitutions.items():
+            if original in name:
+                for replacement in replacements:
+                    variations.add(name.replace(original, replacement))
+        
+        # 3. Character transpositions (swapped letters)
+        for i in range(len(name) - 1):
+            swapped = name[:i] + name[i+1] + name[i] + name[i+2:]
+            variations.add(swapped)
+        
+        # 4. Double letter variations (adding/removing doubled letters)
+        # Remove doubled letters
+        import re
+        no_doubles = re.sub(r'(.)\1+', r'\1', name)
+        if no_doubles != name:
+            variations.add(no_doubles)
+        
+        # Add doubled letters at common positions
+        for i, char in enumerate(name):
+            if char.isalpha() and (i == 0 or name[i-1] != char):
+                doubled = name[:i] + char + name[i:]
+                variations.add(doubled)
+        
+        return variations
+    
+    def _generate_abbreviations(self, name):
+        """Generate abbreviations and shortened forms."""
+        abbreviations = set()
+        
+        # Extract abbreviations from compound names with hyphens/numbers
+        parts = re.split(r'[-\s\d]+', name)
+        if len(parts) > 1:
+            # Take first letters of each part
+            abbrev = ''.join(part[0] for part in parts if part and part[0].isalpha())
+            if len(abbrev) >= 2:
+                abbreviations.add(abbrev)
+                # Also add with numbers/hyphens
+                number_parts = re.findall(r'\d+', name)
+                if number_parts:
+                    for num in number_parts:
+                        abbreviations.add(f"{abbrev}-{num}")
+                        abbreviations.add(f"{abbrev}{num}")
+        
+        # Common chemical abbreviations
+        if 'testosterone' in name:
+            abbreviations.update(['test', 'testo'])
+        if 'androstenedione' in name:
+            abbreviations.update(['andro', 'dione'])
+        if 'methyltestosterone' in name:
+            abbreviations.update(['mtest', 'mt'])
+        if 'nandrolone' in name:
+            abbreviations.update(['nandro', 'nan'])
+        
+        # Extract from patterns like "mk-677", "lgd-4033"
+        pattern_matches = re.findall(r'([a-z]+)[-\s]*(\d+)', name)
+        for letter_part, number_part in pattern_matches:
+            abbreviations.add(letter_part)
+            abbreviations.add(f"{letter_part}{number_part}")
+            abbreviations.add(f"{letter_part}-{number_part}")
+        
+        return abbreviations
+    
+    def _generate_chemical_variations(self, name):
+        """Generate variations based on chemical nomenclature patterns."""
+        variations = set()
+        
+        # Common chemical name transformations
+        transformations = {
+            'ine': ['in', 'ene', 'ane'],
+            'ene': ['ine', 'ane', 'en'],
+            'ane': ['ine', 'ene', 'an'],
+            'one': ['on', 'ane'],
+            'ol': ['ol', 'anol', 'enol'],
+            'yl': ['il', 'al'],
+            'methyl': ['meth', 'methil'],
+            'ethyl': ['eth', 'ethil'],
+            'hydroxy': ['hydrox', 'hydroxi', 'oh'],
+            'oxy': ['ox', 'oxi'],
+            'amino': ['amin', 'amina'],
+            'nitro': ['nitr', 'nitru'],
+            'chloro': ['chlor', 'cloro'],
+            'fluoro': ['fluor', 'fluro', 'flour'],
+            'bromo': ['brom', 'bromo'],
+            'iodo': ['iod', 'ioda'],
+            'phenyl': ['phen', 'fenil'],
+            'benzyl': ['benz', 'benzil'],
+            'cyclo': ['ciclo', 'cycl'],
+            'steroid': ['sterod', 'esteroid'],
+            'androst': ['androst', 'androste'],
+            'estro': ['estro', 'estra'],
+            'diol': ['diol', 'di-ol'],
+            'dione': ['dion', 'di-one'],
+            'triol': ['triol', 'tri-ol'],
+            'trione': ['trion', 'tri-one']
+        }
+        
+        for original, variants in transformations.items():
+            if original in name:
+                for variant in variants:
+                    if variant != original:
+                        variations.add(name.replace(original, variant))
+        
+        # Handle number variations (with/without hyphens)
+        # e.g., "lgd-4033" -> "lgd4033", "mk-677" -> "mk677"
+        no_hyphens = re.sub(r'-', '', name)
+        if no_hyphens != name:
+            variations.add(no_hyphens)
+        
+        # Add hyphens where there might be numbers
+        with_hyphens = re.sub(r'([a-z])(\d)', r'\1-\2', name)
+        if with_hyphens != name:
+            variations.add(with_hyphens)
+        
+        return variations
+    
+    def _generate_phonetic_variations(self, name):
+        """Generate phonetically similar variations."""
+        variations = set()
+        
+        # Common phonetic substitutions
+        phonetic_substitutions = {
+            'ph': 'f', 'f': 'ph',
+            'c': 'k', 'k': 'c',
+            'z': 's', 's': 'z',
+            'i': 'y', 'y': 'i',
+            'tion': 'shun', 'sion': 'shun',
+            'ch': 'k', 'ck': 'k',
+            'qu': 'kw', 'x': 'ks',
+            'j': 'g', 'g': 'j'
+        }
+        
+        for original, replacement in phonetic_substitutions.items():
+            if original in name:
+                variations.add(name.replace(original, replacement))
+        
+        # Vowel variations (people often mix up vowels)
+        vowel_groups = [
+            ['a', 'e'], ['i', 'y'], ['o', 'u'], ['ei', 'ai', 'ay'], ['ou', 'ow']
+        ]
+        
+        for group in vowel_groups:
+            for vowel in group:
+                if vowel in name:
+                    for replacement in group:
+                        if replacement != vowel:
+                            variations.add(name.replace(vowel, replacement))
+        
+        return variations
+
     def _write_header(self, f):
-        """Write the page header."""
+        """Write the page header with metadata front matter."""
+        # Generate search keywords including common misspellings
+        search_keywords = self._generate_search_keywords()
+        
+        # Write YAML front matter
+        f.write("---\n")
+        f.write(f"title: {self.substance.name}\n")
+        f.write(f"description: Information about {self.substance.name}, a substance prohibited by the Department of Defense\n")
+        f.write(f"keywords: {', '.join(search_keywords)}\n")
+        f.write(f"tags: {search_keywords}\n")  # Alternative format for search indexing
+        f.write("---\n\n")
+        
+        # Also add the keywords as hidden text content for search indexing
+        f.write("<!-- Search Keywords: " + " ".join(search_keywords) + " -->\n\n")
+        
         f.write(f"# {self.substance.name}\n\n")
     
     def _write_navigation(self, f):
