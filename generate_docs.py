@@ -177,7 +177,17 @@ class Substance:
     
     def get_last_modified_timestamp(self) -> int:
         """Get the last modified timestamp from substance data."""
-        return get_substance_last_modified(self.data)
+        # First try the updated field in the data dict
+        timestamp = get_substance_last_modified(self.data)
+        if timestamp > 0:
+            return timestamp
+        
+        # Fallback: check if updated data is stored in updated_date attribute
+        if hasattr(self, 'updated_date') and self.updated_date:
+            temp_data = {'updated': self.updated_date}
+            return get_substance_last_modified(temp_data)
+        
+        return 0
     
     def was_modified_since(self, timestamp_threshold: int) -> bool:
         """Check if this substance was modified after a given timestamp."""
@@ -577,7 +587,14 @@ def main():
                 current_timestamp = substance.get_last_modified_timestamp()
                 prev_timestamp = prev_substance.get_last_modified_timestamp()
 
-                if current_timestamp > prev_timestamp:
+                # Log timestamp parsing results for debugging
+                logging.debug(f"Timestamp check for {substance.name}: current={current_timestamp}, previous={prev_timestamp}")
+
+                # Only consider a substance modified if we have valid timestamps AND current > previous
+                # If either timestamp is 0 (parsing failed), err on the side of "not modified"
+                if (current_timestamp > 0 and prev_timestamp > 0 and 
+                    current_timestamp > prev_timestamp):
+                    
                     # Substance was modified - check what fields actually changed
                     ignore_fields = {
                         "added",
@@ -601,6 +618,10 @@ def main():
                         logging.debug(
                             f"UPDATED SUBSTANCE: {substance.name} (timestamp: {current_timestamp} > {prev_timestamp}, fields: {changed_fields}, detected: {today})"
                         )
+                elif current_timestamp == 0 or prev_timestamp == 0:
+                    logging.debug(f"Skipping modification check for {substance.name} due to unparseable timestamp (current={current_timestamp}, previous={prev_timestamp})")
+                else:
+                    logging.debug(f"No modification detected for {substance.name} (timestamp {current_timestamp} <= {prev_timestamp})")
 
     # Check for removed substances
     if previous_data is not None:

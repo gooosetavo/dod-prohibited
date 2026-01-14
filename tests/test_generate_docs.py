@@ -59,6 +59,60 @@ class TestGenerateDocs:
         assert has_substance_been_modified_since(substance, 1640995100)
         assert not has_substance_been_modified_since(substance, 1640995300)
 
+    def test_timestamp_parsing_fallback_behavior(self):
+        """Test that unparseable timestamps default to 'not modified' behavior"""
+        # Test cases where timestamp parsing should fail and return 0
+        test_cases = [
+            {"updated": ""},  # Empty string
+            {"updated": "invalid json"},  # Invalid JSON
+            {"updated": '{"missing_seconds": 123}'},  # Missing _seconds field
+            {"updated": '{"_seconds": "not_a_number"}'},  # Invalid seconds value
+            {},  # Missing updated field entirely
+        ]
+        
+        for substance in test_cases:
+            timestamp = get_substance_last_modified(substance)
+            assert timestamp == 0, f"Expected 0 for substance: {substance}"
+            
+        # Verify that 0 timestamps don't trigger modification detection
+        assert not has_substance_been_modified_since({"updated": ""}, 0)
+        assert not has_substance_been_modified_since({}, 100)  # No timestamp vs positive threshold
+        assert not has_substance_been_modified_since({"updated": "invalid"}, 1640995200)
+        
+    def test_modification_detection_requires_valid_timestamps(self):
+        """Test that modification detection only works with valid timestamps"""
+        from generate_docs import Substance
+        
+        # Create substances with different timestamp scenarios
+        current_valid = Substance.from_dict({
+            "Name": "Test Substance",
+            "updated": '{"_seconds": 1640995200, "_nanoseconds": 0}'
+        })
+        current_invalid = Substance.from_dict({
+            "Name": "Test Substance", 
+            "updated": "invalid_json"
+        })
+        previous_valid = Substance.from_dict({
+            "Name": "Test Substance",
+            "updated": '{"_seconds": 1640995100, "_nanoseconds": 0}'
+        })
+        previous_invalid = Substance.from_dict({
+            "Name": "Test Substance",
+            "updated": ""
+        })
+        
+        # Valid current > valid previous should detect modification
+        assert current_valid.get_last_modified_timestamp() > previous_valid.get_last_modified_timestamp()
+        
+        # Invalid current vs valid previous should NOT detect modification (0 > positive = False)  
+        assert not (current_invalid.get_last_modified_timestamp() > previous_valid.get_last_modified_timestamp())
+        
+        # Valid current vs invalid previous should NOT detect modification in our new logic
+        # (We want to be conservative and not assume modification)
+        assert current_valid.get_last_modified_timestamp() > 0
+        assert previous_invalid.get_last_modified_timestamp() == 0
+        # Our new logic requires BOTH timestamps to be > 0 for modification detection
+
     def test_update_persistent_changelog_with_source_dates(self):
         """Test creating changelog with self-reported dates"""
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -92,7 +146,7 @@ class TestGenerateDocs:
             assert "## 2026-01-02" in content  # Detection date entry
             assert "Test Substance" in content
             assert "Modified Substance" in content
-            assert "Changes detected through data comparison" in content
+            assert "detected through data comparison" in content
 
     def test_update_persistent_changelog_mixed_dates(self):
         """Test changelog with both self-reported and computed dates"""

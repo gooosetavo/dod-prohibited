@@ -470,15 +470,29 @@ def get_substance_source_date(substance_data):
 
 
 def get_substance_last_modified(substance_data):
-    """Extract the last modified timestamp from substance data."""
+    """Extract the last modified timestamp from substance data.
+    
+    Returns 0 if the timestamp cannot be parsed, which ensures that
+    unparseable timestamps are treated as "not modified" rather than "modified".
+    """
     try:
         updated_field = substance_data.get("updated", "")
         if isinstance(updated_field, str) and updated_field.strip():
             updated_json = json.loads(updated_field)
             if isinstance(updated_json, dict) and "_seconds" in updated_json:
-                return updated_json["_seconds"]
+                seconds = updated_json["_seconds"]
+                # Ensure _seconds is a valid integer/number
+                if isinstance(seconds, (int, float)) and seconds > 0:
+                    return int(seconds)
+        # Log when timestamp field is missing or empty
+        substance_name = substance_data.get("Name", "Unknown")
+        logging.debug(f"No valid timestamp found for substance: {substance_name}")
         return 0
-    except (json.JSONDecodeError, ValueError, TypeError):
+    except (json.JSONDecodeError, ValueError, TypeError) as e:
+        # Log parsing failures to help debug issues
+        substance_name = substance_data.get("Name", "Unknown")
+        logging.debug(f"Failed to parse timestamp for substance {substance_name}: {e}")
+        # Return 0 to err on the side of "not modified" when parsing fails
         return 0
 
 
