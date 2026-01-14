@@ -26,6 +26,7 @@ class UniiDataConfig:
     cache_dir: Optional[str] = None
     chunk_size: int = 8192
     timeout: int = 300  # 5 minutes
+    settings: Optional[Any] = None  # Settings object for authentication and user-agent
 
 
 class UniiDataClient:
@@ -39,7 +40,34 @@ class UniiDataClient:
     def __init__(self, config: Optional[UniiDataConfig] = None):
         self.config = config or UniiDataConfig()
         self._cache_dir = None
+        self._session = None
         
+    @property
+    def session(self) -> requests.Session:
+        """Get or create configured requests session."""
+        if self._session is None:
+            self._session = requests.Session()
+            
+            # Configure user-agent if specified in settings
+            if self.config.settings and hasattr(self.config.settings, 'user_agent') and self.config.settings.user_agent:
+                self._session.headers.update({'User-Agent': self.config.settings.user_agent})
+                logger.debug(f"Using custom User-Agent: {self.config.settings.user_agent}")
+            
+            # Configure authentication if specified in settings
+            if self.config.settings:
+                # Bearer token authentication
+                if hasattr(self.config.settings, 'auth_token') and self.config.settings.auth_token:
+                    self._session.headers.update({'Authorization': f'Bearer {self.config.settings.auth_token}'})
+                    logger.debug("Using Bearer token authentication")
+                # Basic authentication
+                elif (hasattr(self.config.settings, 'auth_username') and self.config.settings.auth_username and 
+                      hasattr(self.config.settings, 'auth_password') and self.config.settings.auth_password):
+                    from requests.auth import HTTPBasicAuth
+                    self._session.auth = HTTPBasicAuth(self.config.settings.auth_username, self.config.settings.auth_password)
+                    logger.debug(f"Using Basic authentication for user: {self.config.settings.auth_username}")
+        
+        return self._session
+    
     @property
     def cache_dir(self) -> Path:
         """Get or create cache directory."""
@@ -67,7 +95,7 @@ class UniiDataClient:
         """
         try:
             # First try HEAD request
-            response = requests.head(self.config.url, timeout=30, allow_redirects=True)
+            response = self.session.head(self.config.url, timeout=30, allow_redirects=True)
             response.raise_for_status()
             
             content_length = response.headers.get('content-length')
@@ -85,7 +113,7 @@ class UniiDataClient:
             
             # If HEAD doesn't work, try a partial GET request to get content-length
             logger.debug("Trying partial GET request to determine file size")
-            response = requests.get(
+            response = self.session.get(
                 self.config.url, 
                 headers={'Range': 'bytes=0-0'}, 
                 timeout=30, 
@@ -105,7 +133,7 @@ class UniiDataClient:
             
             # Last resort: try a regular GET with stream=True and get content-length
             logger.debug("Trying streamed GET request to determine file size")
-            response = requests.get(self.config.url, stream=True, timeout=30, allow_redirects=True)
+            response = self.session.get(self.config.url, stream=True, timeout=30, allow_redirects=True)
             response.raise_for_status()
             
             content_length = response.headers.get('content-length')
@@ -123,10 +151,38 @@ class UniiDataClient:
             return None
                 
         except requests.RequestException as e:
-            logger.warning(f"Could not get remote file size: {e}")
+            # Provide detailed error information for HTTP issues
+            error_details = {
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "url": self.config.url,
+            }
+            
+            # Add response details if available
+            if hasattr(e, 'response') and e.response is not None:
+                error_details.update({
+                    "status_code": e.response.status_code,
+                    "reason": e.response.reason,
+                    "headers": dict(e.response.headers),
+                    "response_text": e.response.text[:500] if hasattr(e.response, 'text') else "N/A"
+                })
+                
+            # Log detailed error information
+            logger.warning(f"Could not get remote file size: {error_details['error_message']}")
+            logger.debug(f"HTTP Error Details: {error_details}")
+            
+            # For 403 errors, provide specific guidance
+            if hasattr(e, 'response') and e.response is not None and e.response.status_code == 403:
+                logger.warning("403 Forbidden: The server is denying access. This could be due to:")
+                logger.warning("  - Rate limiting or anti-bot protection")
+                logger.warning("  - User-Agent restrictions")
+                logger.warning("  - Geographic restrictions")
+                logger.warning("  - API access permissions changed")
+                
             return None
         except (ValueError, IndexError) as e:
             logger.warning(f"Error parsing remote file size: {e}")
+            logger.debug(f"URL attempted: {self.config.url}")
             return None
     
     def archive_old_file(self, file_path: Path) -> Path:
@@ -198,7 +254,7 @@ class UniiDataClient:
         logger.info(f"Downloading UNII data from {self.config.url}")
         
         try:
-            response = requests.get(
+            response = self.session.get(
                 self.config.url, 
                 stream=True, 
                 timeout=self.config.timeout
@@ -226,7 +282,37 @@ class UniiDataClient:
             return zip_path
             
         except requests.RequestException as e:
-            logger.error(f"Failed to download UNII data: {e}")
+            # Provide detailed error information for download failures
+            error_details = {
+                "error_type": type(e).__name__,
+                "error_message": str(e),
+                "url": self.config.url,
+            }
+            
+            # Add response details if available
+            if hasattr(e, 'response') and e.response is not None:
+                error_details.update({
+                    "status_code": e.response.status_code,
+                    "reason": e.response.reason,
+                    "headers": dict(e.response.headers),
+                    "response_text": e.response.text[:500] if hasattr(e.response, 'text') else "N/A"
+                })
+                
+            # Log detailed error information
+            logger.error(f"Failed to download UNII data: {error_details['error_message']}")
+            logger.debug(f"HTTP Error Details: {error_details}")
+            
+            # Provide specific guidance for common errors
+            if hasattr(e, 'response') and e.response is not None:
+                if e.response.status_code == 403:
+                    logger.error("403 Forbidden: Download access denied. The UNII data URL may have changed or requires authentication.")
+                elif e.response.status_code == 404:
+                    logger.error("404 Not Found: UNII data file not found. The download URL may have changed.")
+                elif e.response.status_code == 429:
+                    logger.error("429 Too Many Requests: Download rate limited. Wait before retrying.")
+                elif e.response.status_code >= 500:
+                    logger.error("Server Error: UNII data server is experiencing issues. Try again later.")
+                    
             raise
         except Exception as e:
             logger.error(f"Unexpected error during download: {e}")
@@ -443,9 +529,9 @@ class UniiDataClient:
 
 
 # Convenience functions for quick access
-def download_unii_data(cache_dir: Optional[str] = None, force_refresh: bool = False) -> Path:
+def download_unii_data(cache_dir: Optional[str] = None, force_refresh: bool = False, settings: Optional[Any] = None) -> Path:
     """Convenience function to download UNII data."""
-    config = UniiDataConfig(cache_dir=cache_dir)
+    config = UniiDataConfig(cache_dir=cache_dir, settings=settings)
     client = UniiDataClient(config)
     return client.download_zip(force_refresh=force_refresh)
 
@@ -477,9 +563,9 @@ def load_unii_csv(filename: str, cache_dir: Optional[str] = None, **pandas_kwarg
     return client.load_csv_data(filename, **pandas_kwargs)
 
 
-def get_unii_info(cache_dir: Optional[str] = None) -> Dict[str, Any]:
+def get_unii_info(cache_dir: Optional[str] = None, settings: Optional[Any] = None) -> Dict[str, Any]:
     """Convenience function to get UNII data info."""
-    config = UniiDataConfig(cache_dir=cache_dir)
+    config = UniiDataConfig(cache_dir=cache_dir, settings=settings)
     client = UniiDataClient(config)
     return client.get_data_info()
 

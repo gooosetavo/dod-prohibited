@@ -53,10 +53,39 @@ class Settings:
     
     use_unii_data: bool = True
     """Whether to include UNII (Unique Ingredient Identifier) data in substance pages."""
+    
+    log_level: str = "INFO"
+    """Logging level (DEBUG, INFO, WARNING, ERROR). Can be overridden with DOD_LOG_LEVEL environment variable."""
+    
+    # HTTP configuration
+    user_agent: Optional[str] = None
+    """Custom User-Agent header for HTTP requests. If None, uses default requests User-Agent."""
+    
+    # Authentication configuration
+    auth_token: Optional[str] = None
+    """Bearer token for API authentication. Can be overridden with DOD_AUTH_TOKEN environment variable."""
+    
+    auth_username: Optional[str] = None
+    """Username for basic authentication. Can be overridden with DOD_AUTH_USERNAME environment variable."""
+    
+    auth_password: Optional[str] = None
+    """Password for basic authentication. Can be overridden with DOD_AUTH_PASSWORD environment variable."""
 
     @property
     def github_url(self) -> str:
         return f"https://github.com/{self.github_owner}/{self.github_repo}"
+    
+    @property
+    def logging_level(self) -> int:
+        """Convert string log level to logging module constant."""
+        level_map = {
+            "DEBUG": logging.DEBUG,
+            "INFO": logging.INFO, 
+            "WARNING": logging.WARNING,
+            "ERROR": logging.ERROR,
+            "CRITICAL": logging.CRITICAL
+        }
+        return level_map.get(self.log_level.upper(), logging.INFO)
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -386,14 +415,17 @@ class SubstanceDatabase:
         logging.info("Closed SQLite connection.")
 
 
-# Configure logging for GitHub Actions (stdout, INFO level by default)
+settings = Settings.from_env()
+
+# Configure logging with level from settings (can be controlled via DOD_LOG_LEVEL env var)
 logging.basicConfig(
-    level=logging.INFO,
+    level=settings.logging_level,
     format="%(asctime)s %(levelname)s %(message)s",
     handlers=[logging.StreamHandler()],
+    force=True  # Override any existing configuration
 )
 
-settings = Settings.from_env()
+logging.info(f"Logging level set to: {settings.log_level}")
 
 
 

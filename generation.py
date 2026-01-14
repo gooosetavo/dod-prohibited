@@ -52,15 +52,20 @@ def enhance_unii_data(unii_df: pd.DataFrame) -> pd.DataFrame:
     return enhanced_df
 
 
-def load_unii_data() -> Optional[pd.DataFrame]:
+def load_unii_data(settings=None) -> Optional[pd.DataFrame]:
     """
     Load and enhance UNII data from the FDA database.
+    
+    Args:
+        settings: Settings object containing configuration options for authentication and user-agent
     
     Returns:
         Enhanced UNII DataFrame or None if data cannot be loaded
     """
     try:
-        client = UniiDataClient()
+        from unii_client import UniiDataConfig
+        config = UniiDataConfig(settings=settings)
+        client = UniiDataClient(config)
         # Download ZIP if needed
         client.download_zip()
         
@@ -121,7 +126,7 @@ def generate_substance_pages(
     # Load UNII data if enabled in settings
     unii_df = None
     if settings and getattr(settings, 'use_unii_data', False):
-        unii_df = load_unii_data()
+        unii_df = load_unii_data(settings)
         if unii_df is not None:
             print(f"Loaded UNII data with {len(unii_df)} records")
         else:
