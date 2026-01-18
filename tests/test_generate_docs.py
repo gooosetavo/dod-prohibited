@@ -187,22 +187,16 @@ class TestGenerateDocs:
             assert "Removed Substance" in content
 
     @patch("generate_docs.settings")
-    @patch("generate_docs.Path")
-    @patch("subprocess.run")
-    def test_load_previous_data_from_git_success(self, mock_run, mock_path, mock_settings):
+    @patch("generate_docs.JsonFileDataLoader")
+    def test_load_previous_data_from_git_success(self, mock_loader_class, mock_settings):
         """Test loading previous data from git successfully"""
         # Mock settings to enable git history
         mock_settings.use_git_history = True
 
-        mock_result = MagicMock()
-        mock_result.returncode = 0
-        mock_result.stdout = (
-            '[{"Name": "Test", "updated": "{\\"_seconds\\": 1640995200}"}]'
-        )
-        mock_run.return_value = mock_result
-
-        # Mock Path.cwd() to return a valid path
-        mock_path.cwd.return_value = Path("/fake/path")
+        # Mock the loader instance and its load method
+        mock_loader = MagicMock()
+        mock_loader.load.return_value = [{"Name": "Test", "updated": "{\"_seconds\": 1640995200}"}]
+        mock_loader_class.return_value = mock_loader
 
         result = load_previous_data_from_git()
 

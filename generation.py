@@ -46,6 +46,7 @@ def enhance_unii_data(unii_df: pd.DataFrame) -> pd.DataFrame:
     enhanced_df["COMMONCHEMISTRY_URL"] = enhanced_df["RN"].apply(lambda x: f"https://commonchemistry.cas.org/detail?cas_rn={x}" if not pd.isna(x) else None)
     enhanced_df["NCATS_URL"] = enhanced_df["UNII"].apply(lambda x: f"https://drugs.ncats.io/substance/{x}")
     enhanced_df["GSRS_FULL_RECORD_URL"] = enhanced_df["UNII"].apply(lambda x: f"https://precision.fda.gov/ginas/app/ui/substances/{x}")
+    enhanced_df["DRUGSFDA_PRODUCTS_QUERY"] = enhanced_df["UNII"].apply(lambda x: f"https://api.fda.gov/drug/drugsfda.json?search=products.unii={x}&limit=99")
     enhanced_df["PUBCHEM_URL"] = enhanced_df["PUBCHEM"].apply(to_pubchem_url)
     enhanced_df["EPA_COMPTOX_URL"] = enhanced_df["EPA_CompTox"].apply(to_comptox_url)
     

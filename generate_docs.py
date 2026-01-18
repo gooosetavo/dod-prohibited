@@ -1,7 +1,4 @@
-import subprocess
 import logging
-from retrieval import fetch_drupal_settings
-from parsing import parse_prohibited_list
 import generation
 import sqlite3
 from pathlib import Path
@@ -16,6 +13,7 @@ from changelog import (
     has_substance_been_modified_since,
 )
 from ua import RandomUserAgent
+from data_loader import RemoteDataLoader, JsonFileDataLoader
 
 @dataclass
 class Settings:
@@ -293,10 +291,133 @@ class Substance:
         if self.updated_date:
             result["updated"] = self.updated_date
         return result
-    
+
+    def is_new_compared_to(self, previous_substances: Dict[str, Dict[str, Any]]) -> bool:
+        """
+        Check if this substance is new compared to a dictionary of previous substances.
+
+        Args:
+            previous_substances: Dictionary mapping substance keys to their data
+
+        Returns:
+            True if this is a new substance, False if it existed before
+        """
+        return self.key not in previous_substances
+
+    def get_change_info(
+        self,
+        previous_substances: Dict[str, Dict[str, Any]],
+        detection_date: str,
+        ignore_fields: Set[str] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get change information for this substance compared to previous version.
+
+        Args:
+            previous_substances: Dictionary mapping substance keys to their data
+            detection_date: Date when changes were detected (YYYY-MM-DD format)
+            ignore_fields: Fields to ignore when comparing (defaults to metadata fields)
+
+        Returns:
+            Dictionary with change information, or None if no changes detected:
+            - For new substances: {'type': 'added', 'key': ..., 'name': ..., 'source_date': ...}
+            - For modified substances: {'type': 'updated', 'key': ..., 'name': ..., 'fields': [...], 'detection_date': ...}
+            - For unchanged substances: None
+        """
+        if ignore_fields is None:
+            ignore_fields = {"added", "updated", "guid", "More_info_URL", "SourceOf"}
+
+        prev_substance_data = previous_substances.get(self.key)
+
+        # Case 1: New substance
+        if prev_substance_data is None:
+            change_data = {
+                "type": "added",
+                "key": self.key,
+                "name": self.name,
+                "fields": [],
+            }
+
+            # Include self-reported source date if available
+            source_date = self.get_source_date()
+            if source_date:
+                change_data["source_date"] = source_date
+                logging.debug(f"NEW SUBSTANCE: {self.name} (source date: {source_date})")
+            else:
+                logging.debug(f"NEW SUBSTANCE: {self.name} (detection date: {detection_date})")
+
+            return change_data
+
+        # Case 2: Check if existing substance was modified
+        prev_substance = Substance.from_dict(prev_substance_data)
+        current_timestamp = self.get_last_modified_timestamp()
+        prev_timestamp = prev_substance.get_last_modified_timestamp()
+
+        logging.debug(
+            f"Timestamp check for {self.name}: current={current_timestamp}, previous={prev_timestamp}"
+        )
+
+        # Only consider modified if we have valid timestamps AND current > previous
+        if current_timestamp > 0 and prev_timestamp > 0 and current_timestamp > prev_timestamp:
+            # Check what fields actually changed
+            changed_fields = self.compare_with(prev_substance, ignore_fields)
+
+            if changed_fields:
+                logging.debug(
+                    f"UPDATED SUBSTANCE: {self.name} "
+                    f"(timestamp: {current_timestamp} > {prev_timestamp}, "
+                    f"fields: {changed_fields}, detected: {detection_date})"
+                )
+                return {
+                    "type": "updated",
+                    "key": self.key,
+                    "name": self.name,
+                    "fields": changed_fields,
+                    "detection_date": detection_date,
+                }
+        elif current_timestamp == 0 or prev_timestamp == 0:
+            logging.debug(
+                f"Skipping modification check for {self.name} due to unparseable timestamp "
+                f"(current={current_timestamp}, previous={prev_timestamp})"
+            )
+        else:
+            logging.debug(
+                f"No modification detected for {self.name} "
+                f"(timestamp {current_timestamp} <= {prev_timestamp})"
+            )
+
+        # No changes detected
+        return None
+
+    def get_preserved_added_date(
+        self,
+        previous_substances: Dict[str, Dict[str, Any]],
+        default_date: str
+    ) -> str:
+        """
+        Get the added date for this substance, preserving the original date if it existed before.
+
+        Args:
+            previous_substances: Dictionary mapping substance keys to their data
+            default_date: Default date to use for new substances
+
+        Returns:
+            The added date (either preserved from previous version or the default)
+        """
+        prev_substance_data = previous_substances.get(self.key)
+
+        if prev_substance_data is not None:
+            # Preserve original added date
+            existing_added = prev_substance_data.get("added")
+            if existing_added:
+                return existing_added
+
+        # New substance - use default date
+        return default_date
+
     def __str__(self) -> str:
         return f"Substance(name='{self.name}', key='{self.key}')"
-    
+
     def __repr__(self) -> str:
         return f"Substance(name='{self.name}', key='{self.key}', data_fields={list(self.data.keys())})"
 
@@ -312,8 +433,10 @@ class SubstanceDatabase:
         self.columns: List[str] = []
         logging.info(f"Connected to SQLite database: {self.db_path}")
     
-    def setup_tables(self, columns: List[str]) -> None:
+    def setup_tables(self, columns: List[str] = None) -> None:
         """Create and configure database tables with dynamic columns."""
+        if columns is None:
+            columns = self.cursor.execute("PRAGMA table_info(substances)").fetchall()
         self.columns = columns
         
         # Create main substances table
@@ -406,7 +529,7 @@ class SubstanceDatabase:
     def get_all_substances(self) -> List[Dict]:
         """Retrieve all substances from the database."""
         if not self.columns:
-            raise ValueError("Columns not set. Call setup_tables() first.")
+            self.setup_tables()
         
         unique_cols = ", ".join([f'"{col}"' for col in self.columns])
         self.cursor.execute(f"SELECT {unique_cols}, added, updated FROM substances")
@@ -437,89 +560,84 @@ logging.basicConfig(
 logging.info(f"Logging level set to: {settings.log_level}")
 
 
+def detect_removed_substances(
+    current_substances: Dict[str, Substance],
+    previous_substances: Dict[str, Dict[str, Any]],
+    detection_date: str
+) -> List[Dict[str, Any]]:
+    """
+    Detect substances that were removed (present in previous but not in current).
+
+    Args:
+        current_substances: Dictionary mapping current substance keys to Substance objects
+        previous_substances: Dictionary mapping previous substance keys to their data
+        detection_date: Date when removal was detected (YYYY-MM-DD format)
+
+    Returns:
+        List of change dictionaries for removed substances
+    """
+    removed_changes = []
+    current_keys = set(current_substances.keys())
+    previous_keys = set(previous_substances.keys())
+
+    removed_keys = previous_keys - current_keys
+
+    for removed_key in removed_keys:
+        removed_substance_data = previous_substances[removed_key]
+        removed_substance = Substance.from_dict(removed_substance_data)
+        removed_changes.append({
+            "type": "removed",
+            "key": removed_substance.key,
+            "name": removed_substance.name,
+            "fields": [],
+            "detection_date": detection_date,
+        })
+        logging.debug(f"REMOVED SUBSTANCE: {removed_substance.name} (detected: {detection_date})")
+
+    return removed_changes
+
+
 def load_previous_data_from_git():
     """Load the previous version of data.json from git history for comparison."""
-    if settings.use_git_history is False:
-        logging.info("Skipping loading previous data from git as per settings.")
+    # Use the new JsonFileDataLoader with git_revision parameter
+    loader = JsonFileDataLoader(
+        file_path='docs/data.json',
+        git_revision='HEAD~1',
+        settings=settings
+    )
+
+    data = loader.load()
+
+    if not data:
         return None
-    try:
-        # Try to get the previous version of docs/data.json
-        result = subprocess.run(
-            ["git", "show", "HEAD~1:docs/data.json"],
-            capture_output=True,
-            text=True,
-            cwd=Path.cwd(),
-        )
 
-        if result.returncode == 0:
-            data = json.loads(result.stdout)
-            previous_dict = {}
-            previous_count = len(data)
+    # Build dictionary using substance keys for comparison
+    # Use the Substance class to generate keys consistently
+    previous_dict = {}
+    previous_count = len(data)
 
-            for item in data:
-                # Use the same key logic as current data processing
-                substance_key = None
+    for item in data:
+        # Create a temporary Substance object to generate the key
+        temp_substance = Substance(data=item)
+        previous_dict[temp_substance.key] = item
 
-                # Try guid first (most unique)
-                guid = item.get("guid") or item.get("Guid")
-                if guid and str(guid).strip():
-                    substance_key = f"guid:{guid}"
-                # Try Name second
-                elif item.get("Name") and str(item["Name"]).strip():
-                    substance_key = f"name:{item['Name']}"
-                # Try searchable_name third
-                elif (
-                    item.get("searchable_name") and str(item["searchable_name"]).strip()
-                ):
-                    substance_key = f"search:{item['searchable_name']}"
-                else:
-                    # Fallback: use meaningful columns that are more likely to have unique values
-                    meaningful_cols = ["Name", "searchable_name", "Reason", "guid"]
-                    available_cols = [
-                        col
-                        for col in meaningful_cols
-                        if col in item and str(item[col]).strip()
-                    ]
-                    if available_cols:
-                        substance_key = "|".join(
-                            str(item.get(col, "")) for col in available_cols[:2]
-                        )
-                    else:
-                        # Last resort: use all non-empty values from the item
-                        non_empty_vals = [
-                            str(val)
-                            for val in item.values()
-                            if val
-                            and str(val).strip()
-                            and str(val) not in ["[]", "{}", "nan"]
-                        ]
-                        substance_key = (
-                            "|".join(non_empty_vals[:3])
-                            if non_empty_vals
-                            else str(hash(str(item)))
-                        )
-
-                previous_dict[substance_key] = item
-
-            logging.info(
-                f"Loaded previous data.json from git history: {previous_count} substances"
-            )
-            return previous_dict, previous_count
-    except (
-        subprocess.CalledProcessError,
-        json.JSONDecodeError,
-        FileNotFoundError,
-    ) as e:
-        logging.warning(f"Could not load previous data.json from git: {e}")
-
-    return None
+    logging.info(
+        f"Loaded previous data.json from git history: {previous_count} substances"
+    )
+    return previous_dict, previous_count
 
 
 def main():
     logging.info("Starting generate_docs.py script.")
-    drupal_settings = fetch_drupal_settings(settings.source_url)
-    logging.info("Fetched Drupal settings.")
-    current_prohibited_substance_df = parse_prohibited_list(drupal_settings)
+
+    # Use the new RemoteDataLoader to fetch and parse data
+    remote_loader = RemoteDataLoader(settings=settings)
+    current_data = remote_loader.load()
+    logging.info(f"Loaded {len(current_data)} substances from remote source.")
+
+    # Convert to DataFrame for compatibility with existing code
+    import pandas as pd  # noqa: E402
+    current_prohibited_substance_df = pd.DataFrame(current_data)
     logging.info(f"Parsed prohibited list. {len(current_prohibited_substance_df)} substances found.")
 
     # Setup database
@@ -560,22 +678,21 @@ def main():
         logging.info(f"Sample previous keys: {[k[:100] for k in sample_prev_keys]}")
 
     changes_detected = []
-    current_keys = set()
+    current_substances = {}  # Track current substances by key
+
+    # Define fields to ignore when comparing substances
+    ignore_fields = {"added", "updated", "guid", "More_info_URL", "SourceOf"}
 
     for _, row in current_prohibited_substance_df.iterrows():
         # Create substance object from row data
-        substance = Substance.from_row(dict(row), columns)  # Don't set updated_date yet
-        current_keys.add(substance.key)
+        substance = Substance.from_row(dict(row), columns)
+        current_substances[substance.key] = substance
 
-        # Check if this substance is new or changed compared to git history
-        added_date = now  # Default for new substances
+        # Preserve the original added date if substance existed before
         if last_git_commit_data is not None:
-            prev_substance_data = last_git_commit_data.get(substance.key)
-            if prev_substance_data is not None:
-                # Existing substance - preserve original added date
-                existing_added = prev_substance_data.get("added")
-                if existing_added:
-                    added_date = existing_added
+            added_date = substance.get_preserved_added_date(last_git_commit_data, now)
+        else:
+            added_date = now
 
         # Set the added date and updated timestamp, then insert into database
         substance.added_date = added_date
@@ -583,90 +700,23 @@ def main():
         substance_db.insert_substance(substance)
 
         # Check if this substance is new or changed compared to git history
-        prev_substance_data = last_git_commit_data.get(substance.key)
-        if prev_substance_data is None:
-            # New substance - use self-reported date if available
-            source_date = substance.get_source_date()
-
-            change_data = {
-                "type": "added",
-                "key": substance.key,
-                "name": substance.name,
-                "fields": [],
-            }
-
-            if source_date:
-                change_data["source_date"] = source_date
-                logging.debug(
-                    f"NEW SUBSTANCE: {substance.name} (source date: {source_date})"
-                )
-            else:
-                logging.debug(
-                    f"NEW SUBSTANCE: {substance.name} (detection date: {today})"
-                )
-
-            changes_detected.append(change_data)
-        else:
-            # Check if substance was modified using timestamp
-            prev_substance = Substance.from_dict(prev_substance_data)
-            current_timestamp = substance.get_last_modified_timestamp()
-            prev_timestamp = prev_substance.get_last_modified_timestamp()
-
-            # Log timestamp parsing results for debugging
-            logging.debug(f"Timestamp check for {substance.name}: current={current_timestamp}, previous={prev_timestamp}")
-
-            # Only consider a substance modified if we have valid timestamps AND current > previous
-            # If either timestamp is 0 (parsing failed), err on the side of "not modified"
-            if (current_timestamp > 0 and prev_timestamp > 0 and 
-                current_timestamp > prev_timestamp):
-                
-                # Substance was modified - check what fields actually changed
-                ignore_fields = {
-                    "added",
-                    "updated",
-                    "guid",
-                    "More_info_URL",
-                    "SourceOf",
-                }
-                changed_fields = substance.compare_with(prev_substance, ignore_fields)
-
-                if changed_fields:
-                    changes_detected.append(
-                        {
-                            "type": "updated",
-                            "key": substance.key,
-                            "name": substance.name,
-                            "fields": changed_fields,
-                            "detection_date": today,
-                        }
-                    )
-                    logging.debug(
-                        f"UPDATED SUBSTANCE: {substance.name} (timestamp: {current_timestamp} > {prev_timestamp}, fields: {changed_fields}, detected: {today})"
-                    )
-            elif current_timestamp == 0 or prev_timestamp == 0:
-                logging.debug(f"Skipping modification check for {substance.name} due to unparseable timestamp (current={current_timestamp}, previous={prev_timestamp})")
-            else:
-                logging.debug(f"No modification detected for {substance.name} (timestamp {current_timestamp} <= {prev_timestamp})")
+        if last_git_commit_data is not None:
+            change_info = substance.get_change_info(
+                last_git_commit_data,
+                detection_date=today,
+                ignore_fields=ignore_fields
+            )
+            if change_info:
+                changes_detected.append(change_info)
 
     # Check for removed substances
     if last_git_commit_data is not None:
-        previous_keys = set(last_git_commit_data.keys())
-        removed_keys = previous_keys - current_keys
-        for removed_key in removed_keys:
-            removed_substance_data = last_git_commit_data[removed_key]
-            removed_substance = Substance.from_dict(removed_substance_data)
-            changes_detected.append(
-                {
-                    "type": "removed",
-                    "key": removed_substance.key,
-                    "name": removed_substance.name,
-                    "fields": [],
-                    "detection_date": today,
-                }
-            )
-            logging.debug(
-                f"REMOVED SUBSTANCE: {removed_substance.name} (key: {removed_substance.key[:50]}...)"
-            )
+        removed_changes = detect_removed_substances(
+            current_substances,
+            last_git_commit_data,
+            detection_date=today
+        )
+        changes_detected.extend(removed_changes)
 
         # Log summary of changes
         new_count = len([c for c in changes_detected if c["type"] == "added"])

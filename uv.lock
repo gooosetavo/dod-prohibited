@@ -499,6 +499,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/f1/2a/8c3ac3d8bc94e6de8d7ae270bb5bc437b210bb9d6d9e46630c98f4abd20c/csscompressor-0.9.5.tar.gz", hash = "sha256:afa22badbcf3120a4f392e4d22f9fff485c044a1feda4a950ecc5eba9dd31a05", size = 237808 }
 
 [[package]]
+name = "ctx-python"
+version = "0.0.1a10"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pandas" },
+    { name = "python-dotenv" },
+    { name = "requests" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/cb/de/4312783d82fb608c4c95074b62a9e52cef6c13733d4a67d6a932a827f612/ctx_python-0.0.1a10.tar.gz", hash = "sha256:162cc507e8b21b79950d30396369c5bae9b0dfd333baefc4abfa8e9d75f20489", size = 34769 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c8/5c/3dc2404114b3083b82278c3524a0fea2f628ab12e3681241e0c91331504a/ctx_python-0.0.1a10-py3-none-any.whl", hash = "sha256:d4bcb3cb7e79282caeac7695757d1c94ad6f7ca591731b0e63d4c19d1cc54ce7", size = 40079 },
+]
+
+[[package]]
 name = "cycler"
 version = "0.12.1"
 source = { registry = "https://pypi.org/simple" }
@@ -552,6 +566,7 @@ version = "0.1.0"
 source = { virtual = "." }
 dependencies = [
     { name = "beautifulsoup4" },
+    { name = "ctx-python" },
     { name = "pandas" },
     { name = "pydantic-settings" },
     { name = "requests" },
@@ -591,6 +606,7 @@ jupyterlab = [
 [package.metadata]
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
+    { name = "ctx-python", specifier = ">=0.0.1a10" },
     { name = "jupyterlab", marker = "extra == 'jupyterlab'", specifier = ">=4.5.1" },
     { name = "mkdocs-awesome-pages-plugin", marker = "extra == 'docs'", specifier = ">=2.10.1" },
     { name = "mkdocs-glightbox", marker = "extra == 'docs'", specifier = ">=0.5.2" },
