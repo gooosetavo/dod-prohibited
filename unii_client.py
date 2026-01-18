@@ -46,12 +46,15 @@ class UniiDataClient:
     def session(self) -> requests.Session:
         """Get or create configured requests session."""
         if self._session is None:
+            logger.debug("Creating new session object")
             self._session = requests.Session()
             
             # Configure user-agent if specified in settings
             if self.config.settings and hasattr(self.config.settings, 'user_agent') and self.config.settings.user_agent:
                 self._session.headers.update({'User-Agent': self.config.settings.user_agent})
                 logger.debug(f"Using custom User-Agent: {self.config.settings.user_agent}")
+            else:
+                logger.debug(f"Using User-Agent: {self._session.headers.get('User-Agent')}")
             
             # Configure authentication if specified in settings
             if self.config.settings:
@@ -65,7 +68,7 @@ class UniiDataClient:
                     from requests.auth import HTTPBasicAuth
                     self._session.auth = HTTPBasicAuth(self.config.settings.auth_username, self.config.settings.auth_password)
                     logger.debug(f"Using Basic authentication for user: {self.config.settings.auth_username}")
-        
+        logger.debug(f"Session object configured with headers: {self._session.headers}")
         return self._session
     
     @property
@@ -568,33 +571,3 @@ def get_unii_info(cache_dir: Optional[str] = None, settings: Optional[Any] = Non
     config = UniiDataConfig(cache_dir=cache_dir, settings=settings)
     client = UniiDataClient(config)
     return client.get_data_info()
-
-
-if __name__ == "__main__":
-    # Example usage
-    client = UniiDataClient()
-    
-    # Get info about the archive
-    info = client.get_data_info()
-    print("UNII Data Archive Info:")
-    print(f"  Size: {info['zip_size_mb']} MB")
-    print(f"  Files: {info['file_count']}")
-    print(f"  CSV files: {len(info['csv_files'])}")
-    
-    if info['csv_files']:
-        print("\nAvailable CSV files:")
-        for csv_file in info['csv_files']:
-            print(f"  - {csv_file}")
-        
-        # Load the first CSV file as an example
-        first_csv = info['csv_files'][0]
-        print(f"\nLoading sample data from {first_csv}...")
-        try:
-            df = client.load_csv_data(first_csv)
-            print(f"  Loaded {len(df)} rows, {len(df.columns)} columns")
-            print(f"  Columns: {list(df.columns)}")
-            if len(df) > 0:
-                print("  First few rows:")
-                print(df.head())
-        except Exception as e:
-            print(f"  Error loading CSV: {e}")

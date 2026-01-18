@@ -15,7 +15,7 @@ from changelog import (
     get_substance_last_modified,
     has_substance_been_modified_since,
 )
-
+from ua import RandomUserAgent
 
 @dataclass
 class Settings:
@@ -58,8 +58,8 @@ class Settings:
     """Logging level (DEBUG, INFO, WARNING, ERROR). Can be overridden with DOD_LOG_LEVEL environment variable."""
     
     # HTTP configuration
-    user_agent: Optional[str] = None
-    """Custom User-Agent header for HTTP requests. If None, uses default requests User-Agent."""
+    user_agent: Optional[str] = str(RandomUserAgent())
+    """Custom User-Agent header for HTTP requests."""
     
     # Authentication configuration
     auth_token: Optional[str] = None
@@ -701,6 +701,7 @@ def main():
     if changes_detected:
         # Filter out changes that are only metadata/timestamp changes
         meaningful_changes = []
+        logging.info("Filtering meaningful changes for persistent changelog...")
         for change in changes_detected:
             if change["type"] in ["added", "removed"]:
                 meaningful_changes.append(change)
@@ -717,7 +718,7 @@ def main():
                         meaningful_fields  # Update to show only meaningful fields
                     )
                     meaningful_changes.append(change)
-
+        logging.info("Found {} meaningful changes after filtering.".format(len(meaningful_changes)))
         if meaningful_changes:
             update_persistent_changelog(meaningful_changes, today, detection_date=today)
             logging.info(
@@ -728,7 +729,7 @@ def main():
                 "No meaningful changes detected (only metadata/timestamp changes)."
             )
     else:
-        logging.info("No changes detected.")
+        logging.info("No meaningful changes detected.")
 
     db.commit()
 

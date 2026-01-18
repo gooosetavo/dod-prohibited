@@ -160,8 +160,9 @@ cython_debug/
 
 .idea/
 
-# VS Code
-.vscode/
+# VS Code - ignore personal settings but keep shared debug configs
+.vscode/*
+!.vscode/launch.json
 *.code-workspace
 
 # Local History for Visual Studio Code
