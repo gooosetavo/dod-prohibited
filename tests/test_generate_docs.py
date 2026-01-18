@@ -186,10 +186,14 @@ class TestGenerateDocs:
             assert "New Substance 2" in content
             assert "Removed Substance" in content
 
+    @patch("generate_docs.settings")
     @patch("generate_docs.Path")
     @patch("subprocess.run")
-    def test_load_previous_data_from_git_success(self, mock_run, mock_path):
+    def test_load_previous_data_from_git_success(self, mock_run, mock_path, mock_settings):
         """Test loading previous data from git successfully"""
+        # Mock settings to enable git history
+        mock_settings.use_git_history = True
+
         mock_result = MagicMock()
         mock_result.returncode = 0
         mock_result.stdout = (
@@ -200,23 +204,25 @@ class TestGenerateDocs:
         # Mock Path.cwd() to return a valid path
         mock_path.cwd.return_value = Path("/fake/path")
 
-        columns = ["Name", "Reason"]
-        result = load_previous_data_from_git(columns)
+        result = load_previous_data_from_git()
 
         assert result is not None
         data, count = result
         assert count == 1
         assert "name:Test" in data
 
+    @patch("generate_docs.settings")
     @patch("subprocess.run")
-    def test_load_previous_data_from_git_failure(self, mock_run):
+    def test_load_previous_data_from_git_failure(self, mock_run, mock_settings):
         """Test loading previous data when git command fails"""
+        # Mock settings to enable git history
+        mock_settings.use_git_history = True
+
         mock_result = MagicMock()
         mock_result.returncode = 1
         mock_run.return_value = mock_result
 
-        columns = ["Name", "Reason"]
-        result = load_previous_data_from_git(columns)
+        result = load_previous_data_from_git()
 
         assert result is None
 
