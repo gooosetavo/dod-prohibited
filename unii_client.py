@@ -1,4 +1,3 @@
-import requests
 import zipfile
 import io
 import pandas as pd
@@ -7,6 +6,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
+from http_client import StreamingHttpClient
 
 # Configure logging
 logging.basicConfig(
@@ -29,47 +29,42 @@ class UniiDataConfig:
     settings: Optional[Any] = None  # Settings object for authentication and user-agent
 
 
-class UniiDataClient:
+class UniiDataClient(StreamingHttpClient):
     """
     Simple client to download and load data from FDA UNII Data ZIP archive.
-    
+
     The UNII (Unique Ingredient Identifier) database contains substance information
     from the FDA's Global Substance Registration System (GSRS).
+
+    Extends StreamingHttpClient to provide streaming downloads and UNII-specific
+    functionality like ZIP extraction, CSV parsing, and caching.
     """
-    
+
     def __init__(self, config: Optional[UniiDataConfig] = None):
         self.config = config or UniiDataConfig()
+
+        # Extract authentication settings
+        user_agent = None
+        auth_token = None
+        auth_username = None
+        auth_password = None
+
+        if self.config.settings:
+            user_agent = getattr(self.config.settings, 'user_agent', None)
+            auth_token = getattr(self.config.settings, 'auth_token', None)
+            auth_username = getattr(self.config.settings, 'auth_username', None)
+            auth_password = getattr(self.config.settings, 'auth_password', None)
+
+        # Initialize parent StreamingHttpClient with configuration
+        super().__init__(
+            user_agent=user_agent,
+            timeout=self.config.timeout,
+            auth_token=auth_token,
+            auth_username=auth_username,
+            auth_password=auth_password,
+        )
+
         self._cache_dir = None
-        self._session = None
-        
-    @property
-    def session(self) -> requests.Session:
-        """Get or create configured requests session."""
-        if self._session is None:
-            logger.debug("Creating new session object")
-            self._session = requests.Session()
-            
-            # Configure user-agent if specified in settings
-            if self.config.settings and hasattr(self.config.settings, 'user_agent') and self.config.settings.user_agent:
-                self._session.headers.update({'User-Agent': self.config.settings.user_agent})
-                logger.debug(f"Using custom User-Agent: {self.config.settings.user_agent}")
-            else:
-                logger.debug(f"Using User-Agent: {self._session.headers.get('User-Agent')}")
-            
-            # Configure authentication if specified in settings
-            if self.config.settings:
-                # Bearer token authentication
-                if hasattr(self.config.settings, 'auth_token') and self.config.settings.auth_token:
-                    self._session.headers.update({'Authorization': f'Bearer {self.config.settings.auth_token}'})
-                    logger.debug("Using Bearer token authentication")
-                # Basic authentication
-                elif (hasattr(self.config.settings, 'auth_username') and self.config.settings.auth_username and 
-                      hasattr(self.config.settings, 'auth_password') and self.config.settings.auth_password):
-                    from requests.auth import HTTPBasicAuth
-                    self._session.auth = HTTPBasicAuth(self.config.settings.auth_username, self.config.settings.auth_password)
-                    logger.debug(f"Using Basic authentication for user: {self.config.settings.auth_username}")
-        logger.debug(f"Session object configured with headers: {self._session.headers}")
-        return self._session
     
     @property
     def cache_dir(self) -> Path:
@@ -92,101 +87,13 @@ class UniiDataClient:
     def get_remote_file_size(self) -> Optional[int]:
         """
         Get the size of the remote ZIP file without downloading it.
-        
+
+        Uses the parent class's get_remote_file_size method.
+
         Returns:
             File size in bytes, or None if unable to determine
         """
-        try:
-            # First try HEAD request
-            response = self.session.head(self.config.url, timeout=30, allow_redirects=True)
-            response.raise_for_status()
-            
-            content_length = response.headers.get('content-length')
-            logger.debug(f"HEAD request headers: {dict(response.headers)}")
-            
-            if content_length and content_length.strip():
-                size = int(content_length)
-                if size > 0:
-                    logger.debug(f"Remote file size from HEAD: {size} bytes")
-                    return size
-                else:
-                    logger.warning("Remote server returned content-length of 0")
-            else:
-                logger.warning("Remote server did not provide content-length header in HEAD response")
-            
-            # If HEAD doesn't work, try a partial GET request to get content-length
-            logger.debug("Trying partial GET request to determine file size")
-            response = self.session.get(
-                self.config.url, 
-                headers={'Range': 'bytes=0-0'}, 
-                timeout=30, 
-                allow_redirects=True
-            )
-            
-            # Check if server supports range requests
-            if response.status_code == 206:  # Partial content
-                content_range = response.headers.get('content-range')
-                if content_range:
-                    # Format: "bytes 0-0/total_size"
-                    total_size = content_range.split('/')[-1]
-                    if total_size.isdigit():
-                        size = int(total_size)
-                        logger.debug(f"Remote file size from range request: {size} bytes")
-                        return size
-            
-            # Last resort: try a regular GET with stream=True and get content-length
-            logger.debug("Trying streamed GET request to determine file size")
-            response = self.session.get(self.config.url, stream=True, timeout=30, allow_redirects=True)
-            response.raise_for_status()
-            
-            content_length = response.headers.get('content-length')
-            if content_length and content_length.strip():
-                size = int(content_length)
-                if size > 0:
-                    logger.debug(f"Remote file size from GET: {size} bytes")
-                    # Close the stream since we only wanted the headers
-                    response.close()
-                    return size
-                    
-            # Close the stream
-            response.close()
-            logger.warning("Could not determine remote file size using any method")
-            return None
-                
-        except requests.RequestException as e:
-            # Provide detailed error information for HTTP issues
-            error_details = {
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "url": self.config.url,
-            }
-            
-            # Add response details if available
-            if hasattr(e, 'response') and e.response is not None:
-                error_details.update({
-                    "status_code": e.response.status_code,
-                    "reason": e.response.reason,
-                    "headers": dict(e.response.headers),
-                    "response_text": e.response.text[:500] if hasattr(e.response, 'text') else "N/A"
-                })
-                
-            # Log detailed error information
-            logger.warning(f"Could not get remote file size: {error_details['error_message']}")
-            logger.debug(f"HTTP Error Details: {error_details}")
-            
-            # For 403 errors, provide specific guidance
-            if hasattr(e, 'response') and e.response is not None and e.response.status_code == 403:
-                logger.warning("403 Forbidden: The server is denying access. This could be due to:")
-                logger.warning("  - Rate limiting or anti-bot protection")
-                logger.warning("  - User-Agent restrictions")
-                logger.warning("  - Geographic restrictions")
-                logger.warning("  - API access permissions changed")
-                
-            return None
-        except (ValueError, IndexError) as e:
-            logger.warning(f"Error parsing remote file size: {e}")
-            logger.debug(f"URL attempted: {self.config.url}")
-            return None
+        return super().get_remote_file_size(self.config.url, timeout=30)
     
     def archive_old_file(self, file_path: Path) -> Path:
         """
@@ -221,24 +128,24 @@ class UniiDataClient:
     def download_zip(self, force_refresh: bool = False) -> Path:
         """
         Download the UNII data ZIP file.
-        
+
         Args:
             force_refresh: If True, re-download even if cached file exists
-            
+
         Returns:
             Path to the downloaded ZIP file
         """
         zip_path = self.cache_dir / "UNII_Data.zip"
-        
+
         # Check if file exists and if we should check for updates
         if zip_path.exists() and not force_refresh:
             # Get remote file size to compare
             logger.debug(f"Checking if cached file needs update: {zip_path}")
             remote_size = self.get_remote_file_size()
             local_size = zip_path.stat().st_size
-            
+
             logger.debug(f"Remote size: {remote_size}, Local size: {local_size}")
-            
+
             if remote_size is not None:
                 if remote_size == local_size:
                     logger.info(f"Using cached ZIP file (size unchanged): {zip_path}")
@@ -252,74 +159,17 @@ class UniiDataClient:
                 # If we can't get remote size, use cached file unless force_refresh
                 logger.info(f"Using cached ZIP file (unable to check remote size): {zip_path}")
                 return zip_path
-        
-        # Download the file (either first time, force_refresh, or size changed)        
+
+        # Download the file using parent class's streaming download method
         logger.info(f"Downloading UNII data from {self.config.url}")
-        
-        try:
-            response = self.session.get(
-                self.config.url, 
-                stream=True, 
-                timeout=self.config.timeout
-            )
-            response.raise_for_status()
-            
-            # Get file size for progress tracking
-            total_size = int(response.headers.get('content-length', 0))
-            downloaded_size = 0
-            last_progress_log = 0
-            
-            with open(zip_path, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=self.config.chunk_size):
-                    if chunk:
-                        f.write(chunk)
-                        downloaded_size += len(chunk)
-                        if total_size > 0:
-                            percent = (downloaded_size / total_size) * 100
-                            # Log progress every 10% to avoid spam
-                            if percent - last_progress_log >= 10:
-                                logger.info(f"Download progress: {percent:.1f}%")
-                                last_progress_log = percent
-            
-            logger.info(f"Successfully downloaded {downloaded_size} bytes to {zip_path}")
-            return zip_path
-            
-        except requests.RequestException as e:
-            # Provide detailed error information for download failures
-            error_details = {
-                "error_type": type(e).__name__,
-                "error_message": str(e),
-                "url": self.config.url,
-            }
-            
-            # Add response details if available
-            if hasattr(e, 'response') and e.response is not None:
-                error_details.update({
-                    "status_code": e.response.status_code,
-                    "reason": e.response.reason,
-                    "headers": dict(e.response.headers),
-                    "response_text": e.response.text[:500] if hasattr(e.response, 'text') else "N/A"
-                })
-                
-            # Log detailed error information
-            logger.error(f"Failed to download UNII data: {error_details['error_message']}")
-            logger.debug(f"HTTP Error Details: {error_details}")
-            
-            # Provide specific guidance for common errors
-            if hasattr(e, 'response') and e.response is not None:
-                if e.response.status_code == 403:
-                    logger.error("403 Forbidden: Download access denied. The UNII data URL may have changed or requires authentication.")
-                elif e.response.status_code == 404:
-                    logger.error("404 Not Found: UNII data file not found. The download URL may have changed.")
-                elif e.response.status_code == 429:
-                    logger.error("429 Too Many Requests: Download rate limited. Wait before retrying.")
-                elif e.response.status_code >= 500:
-                    logger.error("Server Error: UNII data server is experiencing issues. Try again later.")
-                    
-            raise
-        except Exception as e:
-            logger.error(f"Unexpected error during download: {e}")
-            raise
+        self.download_file(
+            url=self.config.url,
+            destination=zip_path,
+            chunk_size=self.config.chunk_size,
+            timeout=self.config.timeout
+        )
+
+        return zip_path
     
     def list_zip_contents(self, zip_path: Optional[Path] = None) -> List[str]:
         """

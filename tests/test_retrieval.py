@@ -33,7 +33,7 @@ class TestRetrieval:
         assert get_nested({}, "a.b.c") is None
         assert get_nested(None, "a.b.c", "default") == "default"
 
-    @patch("retrieval.requests.get")
+    @patch("http_client.HttpClient.get")
     def test_fetch_drupal_settings_success(self, mock_get):
         """Test successful Drupal settings fetch"""
         mock_response = MagicMock()
@@ -44,25 +44,23 @@ class TestRetrieval:
             </script>
         </html>
         """
-        mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
 
         result = fetch_drupal_settings("http://test.com")
         assert "dodProhibited" in result
         assert result["dodProhibited"] == [{"name": "test"}]
 
-    @patch("retrieval.requests.get")
+    @patch("http_client.HttpClient.get")
     def test_fetch_drupal_settings_no_script_tag(self, mock_get):
         """Test fetch when script tag is missing"""
         mock_response = MagicMock()
         mock_response.text = "<html></html>"
-        mock_response.raise_for_status = MagicMock()
         mock_get.return_value = mock_response
 
         with pytest.raises(ValueError, match="Drupal settings script tag not found"):
             fetch_drupal_settings("http://test.com")
 
-    @patch("retrieval.requests.get")
+    @patch("http_client.HttpClient.get")
     def test_fetch_drupal_settings_request_error(self, mock_get):
         """Test fetch when request fails"""
         mock_get.side_effect = Exception("Network error")
