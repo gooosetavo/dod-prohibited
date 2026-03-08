@@ -32,7 +32,12 @@ def enhance_unii_data(unii_df: pd.DataFrame) -> pd.DataFrame:
     
     # Helper functions for URL generation
     def to_pubchem_url(pubchem_id):
-        return f"https://pubchem.ncbi.nlm.nih.gov/compound/{int(pubchem_id)}" if not pd.isna(pubchem_id) else None
+        if pd.isna(pubchem_id):
+            return None
+        try:
+            return f"https://pubchem.ncbi.nlm.nih.gov/compound/{int(float(pubchem_id))}"
+        except (ValueError, TypeError):
+            return None
     
     def to_comptox_url(comptox_id):
         return f"https://comptox.epa.gov/dashboard/chemical/details/{comptox_id}" if not pd.isna(comptox_id) else None
@@ -77,8 +82,8 @@ def load_unii_data(settings=None) -> Optional[pd.DataFrame]:
             raise FileNotFoundError(f"No UNII_Records*.txt file found in ZIP. Contents: {zip_contents}")
         records_filename = records_files[0]
 
-        # Load the UNII records
-        unii_df = client.load_csv_data(records_filename, sep='\t')
+        # Load the UNII records (PUBCHEM column has mixed types, load as str to avoid warnings)
+        unii_df = client.load_csv_data(records_filename, sep='\t', dtype={'PUBCHEM': str})
         
         # Enhance with URLs
         enhanced_df = enhance_unii_data(unii_df)
