@@ -54,6 +54,11 @@ class Settings:
     
     use_unii_data: bool = True
     """Whether to include UNII (Unique Ingredient Identifier) data in substance pages."""
+
+    include_search_metadata: bool = False
+    """Whether to include generated search keywords/tags in substance page frontmatter.
+    Disabled by default because the tags: field renders as visible tag chips in Zensical/MkDocs Material.
+    Enable with DOD_INCLUDE_SEARCH_METADATA=true."""
     
     log_level: str = "INFO"
     """Logging level (DEBUG, INFO, WARNING, ERROR). Can be overridden with DOD_LOG_LEVEL environment variable."""

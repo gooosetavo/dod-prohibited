@@ -161,20 +161,21 @@ def generate_substance_pages(
             next_sub = sorted_substances[i + 1]
             next_substance = (next_sub.name, f"{next_sub.slug}.md")
 
-        generator = SubstancePageGenerator(substance, i + 1, len(sorted_substances), prev_substance, next_substance)
+        generator = SubstancePageGenerator(substance, i + 1, len(sorted_substances), prev_substance, next_substance, settings=settings)
         generator.generate_page(page_path)
 
 
 class SubstancePageGenerator:
     """Handles generation of individual substance pages."""
     
-    def __init__(self, substance: Substance, current_index: int, total_count: int, 
-                 prev_substance=None, next_substance=None):
+    def __init__(self, substance: Substance, current_index: int, total_count: int,
+                 prev_substance=None, next_substance=None, settings=None):
         self.substance = substance
         self.current_index = current_index
         self.total_count = total_count
         self.prev_substance = prev_substance
         self.next_substance = next_substance
+        self.settings = settings
     
     def generate_page(self, page_path: Path):
         """Generate the complete markdown page for this substance."""
@@ -386,20 +387,20 @@ class SubstancePageGenerator:
 
     def _write_header(self, f):
         """Write the page header with metadata front matter."""
-        # Generate search keywords including common misspellings
-        search_keywords = self._generate_search_keywords()
-        
-        # Write YAML front matter
+        include_search_metadata = self.settings and getattr(self.settings, 'include_search_metadata', False)
+
         f.write("---\n")
         f.write(f"title: {self.substance.name}\n")
         f.write(f"description: Information about {self.substance.name}, a substance prohibited by the Department of Defense\n")
-        f.write(f"keywords: {', '.join(search_keywords)}\n")
-        f.write(f"tags: {search_keywords}\n")  # Alternative format for search indexing
+        if include_search_metadata:
+            search_keywords = self._generate_search_keywords()
+            f.write(f"keywords: {', '.join(search_keywords)}\n")
+            f.write(f"tags: {search_keywords}\n")
         f.write("---\n\n")
-        
-        # Also add the keywords as hidden text content for search indexing
-        f.write("<!-- Search Keywords: " + " ".join(search_keywords) + " -->\n\n")
-        
+
+        if include_search_metadata:
+            f.write("<!-- Search Keywords: " + " ".join(search_keywords) + " -->\n\n")
+
         f.write(f"# {self.substance.name}\n\n")
     
     def _write_navigation(self, f):
@@ -902,6 +903,7 @@ def generate_changelog(
         docs_dir: Path to the docs directory.
     """
     changelog_path = docs_dir / "changelog.md"
+    source_changelog = Path(__file__).parent / "CHANGELOG.md"
 
     with open(changelog_path, "w", encoding="utf-8") as f:
         # Add frontmatter to exclude from search
@@ -909,4 +911,7 @@ def generate_changelog(
         f.write("search:\n")
         f.write("  exclude: true\n")
         f.write("---\n\n")
-        f.write('--8<-- "CHANGELOG.md"\n')
+        if source_changelog.exists():
+            f.write(source_changelog.read_text(encoding="utf-8"))
+        else:
+            f.write("# Changelog\n\nNo changelog available.\n")
