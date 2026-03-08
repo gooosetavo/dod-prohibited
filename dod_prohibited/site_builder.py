@@ -132,6 +132,9 @@ def find_unii_data_by_code(unii_code: str, unii_df: pd.DataFrame) -> Optional[Di
     """
     Find UNII data for a specific UNII code (used for override lookups).
 
+    The DataFrame must already be enhanced (via enhance_unii_data) so that
+    the returned dict includes URL fields.
+
     Args:
         unii_code: The UNII code to look up (e.g. "754HG7WK00").
         unii_df: Enhanced UNII DataFrame.
@@ -147,6 +150,29 @@ def find_unii_data_by_code(unii_code: str, unii_df: pd.DataFrame) -> Optional[Di
         return match.iloc[0].to_dict()
 
     return None
+
+
+def build_minimal_unii_data(unii_code: str) -> Dict[str, Any]:
+    """
+    Build a minimal UNII data dict from a UNII code alone, generating the URL
+    fields that can be derived without the full FDA UNII database record.
+
+    Used as a fallback when the enhanced UNII DataFrame is unavailable or does
+    not contain a row for the given code.
+
+    Args:
+        unii_code: The UNII code (e.g. "754HG7WK00").
+
+    Returns:
+        Dict with UNII code and all URL fields derivable from the code.
+    """
+    return {
+        "UNII": unii_code,
+        "UNII_URL": f"https://precision.fda.gov/uniisearch/srs/unii/{unii_code}",
+        "NCATS_URL": f"https://drugs.ncats.io/substance/{unii_code}",
+        "GSRS_FULL_RECORD_URL": f"https://precision.fda.gov/ginas/app/ui/substances/{unii_code}",
+        "DRUGSFDA_PRODUCTS_QUERY": f"https://api.fda.gov/drug/drugsfda.json?search=products.unii={unii_code}&limit=99",
+    }
 
 
 def generate_substance_pages(
@@ -181,15 +207,21 @@ def generate_substance_pages(
     substances = []
     for entry in data:
         substance = Substance(data=entry)
-        if unii_df is not None:
-            # Check for a manual UNII override first, then fall back to name matching
-            unii_override = get_unii_override(overrides, substance.slug)
-            if unii_override:
-                unii_data = find_unii_data_by_code(unii_override, unii_df)
-                if unii_data:
-                    print(f"Applied UNII override {unii_override} for '{substance.name}'")
+        unii_override = get_unii_override(overrides, substance.slug)
+        if unii_override:
+            # Manual UNII code specified: look up the full row in the enhanced df
+            # first (to get PT, RN, PubChem, etc.), then fall back to a minimal
+            # dict built from the code alone so URLs are always populated.
+            unii_data = find_unii_data_by_code(unii_override, unii_df)
+            if unii_data:
+                print(f"Applied UNII override {unii_override} for '{substance.name}' (full record)")
             else:
-                unii_data = find_unii_data_for_substance(substance.name, unii_df)
+                unii_data = build_minimal_unii_data(unii_override)
+                print(f"Applied UNII override {unii_override} for '{substance.name}' (minimal — full record not found)")
+            substance.set_unii_info(unii_data)
+        elif unii_df is not None:
+            # No override — fall back to name-based lookup in the enhanced df
+            unii_data = find_unii_data_for_substance(substance.name, unii_df)
             if unii_data:
                 substance.set_unii_info(unii_data)
         substances.append(substance)

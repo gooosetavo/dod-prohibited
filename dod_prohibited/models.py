@@ -66,17 +66,29 @@ class UniiInfo:
     def unii(self) -> Optional[str]:
         return self.data.get("UNII")
 
+    def _str_or_none(self, key: str) -> Optional[str]:
+        """Return the string value for key, or None if missing/NaN."""
+        val = self.data.get(key)
+        if val is None:
+            return None
+        try:
+            if pd.isna(val):
+                return None
+        except (TypeError, ValueError):
+            pass
+        return str(val)
+
     @property
     def preferred_term(self) -> Optional[str]:
-        return self.data.get("PT")
+        return self._str_or_none("PT")
 
     @property
     def cas_rn(self) -> Optional[str]:
-        return self.data.get("RN")
+        return self._str_or_none("RN")
 
     @property
     def substance_type(self) -> Optional[str]:
-        return self.data.get("TYPE")
+        return self._str_or_none("TYPE")
 
     @property
     def pubchem_cid(self) -> Optional[int]:

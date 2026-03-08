@@ -8,7 +8,7 @@ from unittest.mock import patch, mock_open
 import pandas as pd
 
 from dod_prohibited.overrides import load_overrides, get_unii_override
-from dod_prohibited.site_builder import find_unii_data_by_code
+from dod_prohibited.site_builder import find_unii_data_by_code, build_minimal_unii_data
 
 
 SAMPLE_YAML = """\
@@ -58,6 +58,25 @@ class TestGetUniiOverride:
 
     def test_returns_none_for_empty_overrides(self):
         assert get_unii_override({}, "kratom") is None
+
+
+class TestBuildMinimalUniiData:
+    def test_contains_unii_code(self):
+        data = build_minimal_unii_data("754HG7WK00")
+        assert data["UNII"] == "754HG7WK00"
+
+    def test_contains_expected_url_fields(self):
+        data = build_minimal_unii_data("754HG7WK00")
+        assert "754HG7WK00" in data["UNII_URL"]
+        assert "754HG7WK00" in data["NCATS_URL"]
+        assert "754HG7WK00" in data["GSRS_FULL_RECORD_URL"]
+        assert "754HG7WK00" in data["DRUGSFDA_PRODUCTS_QUERY"]
+
+    def test_does_not_contain_name_dependent_fields(self):
+        data = build_minimal_unii_data("754HG7WK00")
+        assert "PT" not in data
+        assert "RN" not in data
+        assert "PUBCHEM" not in data
 
 
 class TestFindUniiDataByCode:
