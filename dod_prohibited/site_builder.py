@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, List, Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
 from dod_prohibited.unii import UniiDataClient
 from dod_prohibited.models import Substance
+from dod_prohibited.overrides import load_overrides, get_unii_override
 
 if TYPE_CHECKING:
     pass
@@ -127,6 +128,27 @@ def find_unii_data_for_substance(substance_name: str, unii_df: pd.DataFrame) -> 
     return None
 
 
+def find_unii_data_by_code(unii_code: str, unii_df: pd.DataFrame) -> Optional[Dict[str, Any]]:
+    """
+    Find UNII data for a specific UNII code (used for override lookups).
+
+    Args:
+        unii_code: The UNII code to look up (e.g. "754HG7WK00").
+        unii_df: Enhanced UNII DataFrame.
+
+    Returns:
+        Dictionary containing UNII data if found, None otherwise.
+    """
+    if unii_df is None or not unii_code:
+        return None
+
+    match = unii_df[unii_df['UNII'] == unii_code]
+    if not match.empty:
+        return match.iloc[0].to_dict()
+
+    return None
+
+
 def generate_substance_pages(
     data: List[Dict[str, Any]], columns: List[str], substances_dir: Path, settings=None
 ) -> None:
@@ -146,13 +168,28 @@ def generate_substance_pages(
             print(f"Loaded UNII data with {len(unii_df)} records")
         else:
             print("UNII data not available - substance pages will be generated without UNII information")
-    
+
+    # Load substance overrides (e.g. manual UNII codes for substances that
+    # don't match by name in the FDA database)
+    overrides_path = getattr(settings, 'overrides_file', None)
+    from pathlib import Path as _Path
+    overrides = load_overrides(_Path(overrides_path) if overrides_path else _Path("overrides.yaml"))
+    if overrides:
+        print(f"Loaded {len(overrides)} substance override(s)")
+
     # Convert dictionaries to Substance objects
     substances = []
     for entry in data:
         substance = Substance(data=entry)
         if unii_df is not None:
-            unii_data = find_unii_data_for_substance(substance.name, unii_df)
+            # Check for a manual UNII override first, then fall back to name matching
+            unii_override = get_unii_override(overrides, substance.slug)
+            if unii_override:
+                unii_data = find_unii_data_by_code(unii_override, unii_df)
+                if unii_data:
+                    print(f"Applied UNII override {unii_override} for '{substance.name}'")
+            else:
+                unii_data = find_unii_data_for_substance(substance.name, unii_df)
             if unii_data:
                 substance.set_unii_info(unii_data)
         substances.append(substance)

@@ -1,0 +1,13 @@
+# Substance overrides for the DoD Prohibited Substances Database.
+#
+# Use this file to manually specify data for substances that cannot be
+# matched automatically (e.g., name mismatches between OPSS and FDA UNII).
+#
+# Structure:
+#   substances:
+#     <substance-slug>:       # slug is the URL-safe version of the substance name
+#       unii: <UNII code>     # Override UNII lookup to use this specific UNII code
+
+substances:
+  kratom:
+    unii: 754HG7WK00

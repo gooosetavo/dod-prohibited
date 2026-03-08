@@ -533,6 +533,7 @@ dependencies = [
     { name = "jinja2" },
     { name = "pandas" },
     { name = "pydantic-settings" },
+    { name = "pyyaml" },
     { name = "requests" },
 ]
 
@@ -573,6 +574,7 @@ requires-dist = [
     { name = "pytest", marker = "extra == 'test'", specifier = ">=7.0.0" },
     { name = "pytest-cov", marker = "extra == 'test'", specifier = ">=4.0.0" },
     { name = "pytest-mock", marker = "extra == 'test'", specifier = ">=3.10.0" },
+    { name = "pyyaml", specifier = ">=6.0" },
     { name = "requests", specifier = ">=2.32.5" },
     { name = "zensical", marker = "extra == 'docs'" },
 ]
