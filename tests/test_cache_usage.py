@@ -5,7 +5,7 @@ Test to verify that load_csv_data and other methods use cached files properly.
 
 import logging
 import time
-from unii_client import UniiDataClient
+from dod_prohibited.unii import UniiDataClient
 
 # Enable info logging to see what's happening
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')

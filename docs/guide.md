@@ -1,3 +1,8 @@
+---
+search:
+  exclude: true
+---
+
 # User Guide
 
 ## How to use this site

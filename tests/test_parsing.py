@@ -9,7 +9,7 @@ import os
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from parsing import parse_prohibited_list
+from dod_prohibited.parser import parse_prohibited_list
 
 
 class TestParsing:

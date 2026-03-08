@@ -8,8 +8,8 @@ import unicodedata
 import pandas as pd
 from typing import TYPE_CHECKING, List, Dict, Any, Optional
 from jinja2 import Environment, FileSystemLoader
-from unii_client import UniiDataClient
-from substance import Substance
+from dod_prohibited.unii import UniiDataClient
+from dod_prohibited.models import Substance
 
 if TYPE_CHECKING:
     pass
@@ -71,7 +71,7 @@ def load_unii_data(settings=None) -> Optional[pd.DataFrame]:
         Enhanced UNII DataFrame or None if data cannot be loaded
     """
     try:
-        from unii_client import UniiDataConfig
+        from dod_prohibited.unii import UniiDataConfig
         config = UniiDataConfig(settings=settings)
         client = UniiDataClient(config)
         # Download ZIP if needed

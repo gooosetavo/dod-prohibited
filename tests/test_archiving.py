@@ -7,7 +7,7 @@ This script will simulate file changes and show how archiving works.
 
 import tempfile
 from pathlib import Path
-from unii_client import UniiDataClient, UniiDataConfig
+from dod_prohibited.unii import UniiDataClient, UniiDataConfig
 import logging
 
 # Set up logging

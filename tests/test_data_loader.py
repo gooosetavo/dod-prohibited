@@ -8,7 +8,7 @@ from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
 import pandas as pd
 
-from data_loader import (
+from dod_prohibited.loaders import (
     DataLoader,
     RemoteDataLoader,
     SqliteDataLoader,
