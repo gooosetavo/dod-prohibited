@@ -55,7 +55,7 @@ All source code lives in the `dod_prohibited/` package. Root-level files are scr
 
 ### File Structure
 
-```
+```text
 dod-prohibited/
 ├── generate_docs.py          # Main orchestration script + Settings dataclass
 ├── workflow_helper.py        # Git/GitHub Actions utilities
@@ -119,6 +119,7 @@ dod-prohibited/
 4. **Tests**: Update relevant test files in `tests/`
 
 ### Testing
+
 ```bash
 # Run all tests
 uv run pytest tests/ -v
@@ -130,6 +131,7 @@ uv run pytest tests/test_overrides.py -v
 ```
 
 ### Adding New Fields
+
 1. Add property to `Substance` dataclass in `dod_prohibited/models.py`
 2. Update `SubstancePageGenerator` in `dod_prohibited/site_builder.py`
 3. Add tests
@@ -138,6 +140,7 @@ uv run pytest tests/test_overrides.py -v
 ## Common Tasks
 
 ### Debugging Substance Data
+
 ```python
 from dod_prohibited.models import Substance
 
@@ -162,6 +165,7 @@ substances:
 The slug is the lowercase, hyphenated version of the substance name (same as the URL path).
 
 ### Running Generation
+
 ```bash
 # Full document generation
 uv run python generate_docs.py
