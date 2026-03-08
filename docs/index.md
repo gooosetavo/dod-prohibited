@@ -1,3 +1,8 @@
+---
+search:
+  exclude: true
+---
+
 !!! tip "New to this site?"
     Check out our **[User Guide](guide.md)** for complete instructions on how to search, browse, and understand the prohibited substances data.
 

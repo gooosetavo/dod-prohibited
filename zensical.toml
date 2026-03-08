@@ -1,0 +1,94 @@
+[project]
+site_name = "DoD Prohibited Ingredients"
+extra_css = ["css/table-styles.css"]
+extra_javascript = [
+    "https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js",
+    "js/table-filter.js",
+    "js/table-init.js",
+]
+
+nav = [
+    {Home = "index.md"},
+    {"User Guide" = "guide.md"},
+    {Substances = ["substances/index.md", {"Complete Table" = "substances/table.md"}]},
+    {Changelog = "changelog.md"},
+]
+
+[project.theme]
+variant = "classic"
+palette = [
+    {scheme = "slate", primary = "indigo", accent = "indigo", toggle = {icon = "material/weather-night", name = "Switch to light mode"}},
+    {scheme = "default", primary = "indigo", accent = "indigo", toggle = {icon = "material/weather-sunny", name = "Switch to dark mode"}},
+]
+features = [
+    "navigation.tabs",
+    "navigation.sections",
+    "search.suggest",
+    "search.highlight",
+    "search.share",
+    "content.code.copy",
+    "content.action.edit",
+    "navigation.top",
+    "navigation.instant",
+    "toc.integrate",
+    "navigation.tracking",
+    "navigation.expand",
+    "navigation.indexes",
+    "navigation.path",
+    "navigation.footer",
+    "content.tabs.link",
+    "content.tabs.sticky",
+]
+
+[project.theme.toc]
+permalink = true
+
+[project.markdown_extensions]
+# Zensical defaults (all 23 must be listed when customizing)
+admonition = {}
+abbr = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+toc = {}
+"pymdownx.betterem" = {}
+"pymdownx.caret" = {}
+"pymdownx.details" = {}
+"pymdownx.emoji" = {}
+"pymdownx.highlight" = {}
+"pymdownx.inlinehilite" = {}
+"pymdownx.keys" = {}
+"pymdownx.magiclink" = {}
+"pymdownx.mark" = {}
+"pymdownx.smartsymbols" = {}
+"pymdownx.superfences" = {}
+"pymdownx.tabbed" = {}
+"pymdownx.tasklist" = {}
+"pymdownx.tilde" = {}
+"pymdownx.arithmatex" = {}
+# Added for --8<-- snippet includes (README.md, LICENSE.md)
+"pymdownx.snippets" = {base_path = ["."]}
+
+[project.extra]
+instructions = """
+## How to Use This Site
+- Use the search bar or navigation to find a substance.
+- Click on a substance to view detailed information, including:
+  - Name and other known names
+  - Classifications and legal status
+  - Reasons for prohibition (with links)
+  - Warnings and references
+  - Source and more info links
+  - When the entry was added/updated
+- Use the dark/light mode toggle in the top right for your preferred viewing mode.
+"""
+
+[project.extra.analytics]
+provider = "google"
+property = "G-8BSH5K4NKY"
+
+[[project.extra.social]]
+icon = "fontawesome/brands/github"
+link = "https://github.com/gooosetavo/dod-prohibited"

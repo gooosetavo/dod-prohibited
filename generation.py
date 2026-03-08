@@ -69,9 +69,16 @@ def load_unii_data(settings=None) -> Optional[pd.DataFrame]:
         client = UniiDataClient(config)
         # Download ZIP if needed
         client.download_zip()
-        
-        # Load the UNII records (assuming this is the main file)
-        unii_df = client.load_csv_data('UNII_Records_18Aug2025.txt', sep='\t')
+
+        # Find the UNII Records file dynamically (filename changes with each release)
+        zip_contents = client.list_zip_contents()
+        records_files = [f for f in zip_contents if f.startswith('UNII_Records') and f.endswith('.txt')]
+        if not records_files:
+            raise FileNotFoundError(f"No UNII_Records*.txt file found in ZIP. Contents: {zip_contents}")
+        records_filename = records_files[0]
+
+        # Load the UNII records
+        unii_df = client.load_csv_data(records_filename, sep='\t')
         
         # Enhance with URLs
         enhanced_df = enhance_unii_data(unii_df)
@@ -161,20 +168,21 @@ def generate_substance_pages(
             next_sub = sorted_substances[i + 1]
             next_substance = (next_sub.name, f"{next_sub.slug}.md")
 
-        generator = SubstancePageGenerator(substance, i + 1, len(sorted_substances), prev_substance, next_substance)
+        generator = SubstancePageGenerator(substance, i + 1, len(sorted_substances), prev_substance, next_substance, settings=settings)
         generator.generate_page(page_path)
 
 
 class SubstancePageGenerator:
     """Handles generation of individual substance pages."""
     
-    def __init__(self, substance: Substance, current_index: int, total_count: int, 
-                 prev_substance=None, next_substance=None):
+    def __init__(self, substance: Substance, current_index: int, total_count: int,
+                 prev_substance=None, next_substance=None, settings=None):
         self.substance = substance
         self.current_index = current_index
         self.total_count = total_count
         self.prev_substance = prev_substance
         self.next_substance = next_substance
+        self.settings = settings
     
     def generate_page(self, page_path: Path):
         """Generate the complete markdown page for this substance."""
@@ -386,20 +394,20 @@ class SubstancePageGenerator:
 
     def _write_header(self, f):
         """Write the page header with metadata front matter."""
-        # Generate search keywords including common misspellings
-        search_keywords = self._generate_search_keywords()
-        
-        # Write YAML front matter
+        include_search_metadata = self.settings and getattr(self.settings, 'include_search_metadata', False)
+
         f.write("---\n")
         f.write(f"title: {self.substance.name}\n")
         f.write(f"description: Information about {self.substance.name}, a substance prohibited by the Department of Defense\n")
-        f.write(f"keywords: {', '.join(search_keywords)}\n")
-        f.write(f"tags: {search_keywords}\n")  # Alternative format for search indexing
+        if include_search_metadata:
+            search_keywords = self._generate_search_keywords()
+            f.write(f"keywords: {', '.join(search_keywords)}\n")
+            f.write(f"tags: {search_keywords}\n")
         f.write("---\n\n")
-        
-        # Also add the keywords as hidden text content for search indexing
-        f.write("<!-- Search Keywords: " + " ".join(search_keywords) + " -->\n\n")
-        
+
+        if include_search_metadata:
+            f.write("<!-- Search Keywords: " + " ".join(search_keywords) + " -->\n\n")
+
         f.write(f"# {self.substance.name}\n\n")
     
     def _write_navigation(self, f):

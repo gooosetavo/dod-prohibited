@@ -262,13 +262,13 @@ class StreamingHttpClient(HttpClient):
         try:
             # Try HEAD first - most efficient method
             response = self.session.head(url, timeout=timeout, allow_redirects=True)
-            response.raise_for_status()
 
-            if 'content-length' in response.headers:
+            if response.ok and 'content-length' in response.headers:
                 return int(response.headers['content-length'])
 
             # Fallback to Range request (HTTP 206 Partial Content)
-            self.logger.debug(f"HEAD request didn't provide size, trying Range request for {url}")
+            # Some servers (e.g. AWS API Gateway) block HEAD requests with 403
+            self.logger.debug(f"HEAD request didn't provide size (status {response.status_code}), trying Range request for {url}")
             response = self.session.get(
                 url,
                 headers={'Range': 'bytes=0-0'},

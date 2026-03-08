@@ -3,6 +3,14 @@
 All notable changes to the DoD prohibited substances list will be documented in this file.
 
 
+## 2026-03-08
+
+### Substances Modified
+*2 substances modified, detected through data comparison*
+???+ info "Show details"
+    - **Piper methysticum:** Updated `other_names`
+    - **kratom:** Updated `References`, `other_names`, `Reasons`
+
 ## 2025-12-23
 
 ### New Substances Added

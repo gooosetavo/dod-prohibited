@@ -27,9 +27,8 @@ jobs:
       - name: Cache uv dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('requirements*.txt') }}
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
           restore-keys: |
             uv-${{ runner.os }}-
 
@@ -46,20 +45,13 @@ jobs:
       - name: Install uv
         run: pip install uv
 
-      - name: Export requirements from pyproject.toml
-        run: |
-          uv pip compile pyproject.toml --output-file requirements.txt
-          uv pip compile pyproject.toml --output-file requirements-docs.txt --extra docs
-
-      - name: Install dependencies with uv
-        run: |
-          uv pip install -r requirements.txt --system
-          uv pip install -r requirements-docs.txt --system || true
+      - name: Install dependencies
+        run: uv sync
 
       - name: Check for substance changes
         id: check-changes
         run: |
-          python workflow_helper.py check-changes
+          uv run python workflow_helper.py check-changes
 
   update-and-deploy:
     needs: check-for-changes
@@ -68,9 +60,8 @@ jobs:
       - name: Cache uv dependencies
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}-${{ hashFiles('requirements*.txt') }}
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('uv.lock') }}
           restore-keys: |
             uv-${{ runner.os }}-
 
@@ -82,29 +73,27 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
+          python-version: '3.14'
 
       - name: Install uv
         run: pip install uv
 
-      - name: Export requirements from pyproject.toml
-        run: |
-          uv pip compile pyproject.toml --output-file requirements.txt
-          uv pip compile pyproject.toml --output-file requirements-docs.txt --extra docs
-
-      - name: Install dependencies with uv
-        run: |
-          uv pip install -r requirements.txt --system
-          uv pip install -r requirements-docs.txt --system || true
+      - name: Install dependencies
+        run: uv sync
 
       - name: Regenerate data and documentation
         run: |
-          python generate_docs.py
+          uv run python generate_docs.py
+
+      - name: Build site
+        run: uv run zensical build
 
       - name: Deploy to GitHub Pages
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: mkdocs gh-deploy --force --remote-name origin --remote-branch gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+          publish_branch: gh-pages
 
       - name: Log deployment results
         run: |
@@ -112,7 +101,7 @@ jobs:
             echo "✅ Changes detected: ${{ needs.check-for-changes.outputs.changes-summary }}"
             echo "📖 GitHub Pages site updated with latest data"
             echo "🔄 Changes automatically deployed"
-            
+
             # Show summary from temp JSON if available
             TEMP_SUMMARY="/tmp/changes_summary.json"
             if [ -f "$TEMP_SUMMARY" ]; then
