@@ -910,7 +910,6 @@ def generate_changelog(
         docs_dir: Path to the docs directory.
     """
     changelog_path = docs_dir / "changelog.md"
-    source_changelog = Path(__file__).parent / "CHANGELOG.md"
 
     with open(changelog_path, "w", encoding="utf-8") as f:
         # Add frontmatter to exclude from search
@@ -918,7 +917,4 @@ def generate_changelog(
         f.write("search:\n")
         f.write("  exclude: true\n")
         f.write("---\n\n")
-        if source_changelog.exists():
-            f.write(source_changelog.read_text(encoding="utf-8"))
-        else:
-            f.write("# Changelog\n\nNo changelog available.\n")
+        f.write('--8<-- "CHANGELOG.md"\n')

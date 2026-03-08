@@ -43,6 +43,34 @@ features = [
 [project.theme.toc]
 permalink = true
 
+[project.markdown_extensions]
+# Zensical defaults (all 23 must be listed when customizing)
+admonition = {}
+abbr = {}
+attr_list = {}
+def_list = {}
+footnotes = {}
+md_in_html = {}
+tables = {}
+toc = {}
+"pymdownx.betterem" = {}
+"pymdownx.caret" = {}
+"pymdownx.details" = {}
+"pymdownx.emoji" = {}
+"pymdownx.highlight" = {}
+"pymdownx.inlinehilite" = {}
+"pymdownx.keys" = {}
+"pymdownx.magiclink" = {}
+"pymdownx.mark" = {}
+"pymdownx.smartsymbols" = {}
+"pymdownx.superfences" = {}
+"pymdownx.tabbed" = {}
+"pymdownx.tasklist" = {}
+"pymdownx.tilde" = {}
+"pymdownx.arithmatex" = {}
+# Added for --8<-- snippet includes (README.md, LICENSE.md)
+"pymdownx.snippets" = {base_path = ["."]}
+
 [project.extra]
 instructions = """
 ## How to Use This Site
