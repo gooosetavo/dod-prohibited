@@ -3970,11 +3970,11 @@
     "Warnings": "",
     "searchable_name": "piper methysticum",
     "Reasons": "[{\"reason_code\": 6017, \"reason\": \"Military policy\", \"link\": null, \"guid\": \"96435789-439c-44d4-83cf-1d10a25ab7b5\", \"link_title\": null, \"updated\": {\"_seconds\": 1703683268, \"_nanoseconds\": 216000000}}]",
-    "other_names": "[\"kava kava\", \"kava\", \"kavain\", \"kawain\", \"kavalactone\", \"kavalactones\"]",
+    "other_names": "[\"kava kava\", \"kavalactone\", \"kava\", \"kawain\", \"kavain\", \"kavalactones\", \"kava root\"]",
     "classifications": "[\"6000\"]",
-    "updated": "{\"_seconds\": 1749059330, \"_nanoseconds\": 729000000}",
+    "updated": "{\"_seconds\": 1769546046, \"_nanoseconds\": 93000000}",
     "label_terms": "[]",
-    "linked_ingredients": null,
+    "linked_ingredients": "[]",
     "added": "2025-12-30T21:42:08.769789+00:00"
   },
   {
@@ -9900,7 +9900,7 @@
     "added": "2025-12-30T21:42:08.769789+00:00"
   },
   {
-    "References": "[{\"title\": \"FDA and Kratom\", \"url\": \"https://www.fda.gov/news-events/public-health-focus/fda-and-kratom\"}, {\"title\": \"FDA Warning Letter\", \"url\": \"https://www.fda.gov/news-events/press-announcements/fda-issues-warning-letters-firms-marketing-products-containing-7-hydroxymitragynine?utm_medium=email&utm_source=govdelivery\"}]",
+    "References": "[{\"title\": \"ALNAV 003/26\", \"url\": \"https://www.mynavyhr.navy.mil/Portals/55/Messages/ALNAV/ALN2026/ALN26003.pdf?ver=8MtI6A5uBA8smuk9C-1qxQ%3d%3d\"}, {\"title\": \"DoD Memorandum\", \"url\": \"https://www.opss.org/infographic/dod-memo-policy-kratom\"}, {\"title\": \"FDA and Kratom\", \"url\": \"https://www.fda.gov/news-events/public-health-focus/fda-and-kratom\"}, {\"title\": \"FDA Warning Letter\", \"url\": \"https://www.fda.gov/news-events/press-announcements/fda-issues-warning-letters-firms-marketing-products-containing-7-hydroxymitragynine?utm_medium=email&utm_source=govdelivery\"}]",
     "SourceOf": "",
     "More_info_URL": "",
     "Reason": "FDA statement: New dietary ingredient lacking evidence for safe use; deadly risks associated with its use",
@@ -9909,10 +9909,10 @@
     "More_info": "",
     "Warnings": "",
     "searchable_name": "kratom",
-    "Reasons": "[{\"reason_code\": 6018, \"reason\": \"FDA Statement\", \"link\": \"\", \"guid\": \"3cd17124-6ebc-4828-9edb-c20a81755502\", \"link_title\": \"\", \"updated\": {\"_seconds\": 1711715334, \"_nanoseconds\": 457000000}}]",
-    "other_names": "[\"ketum\", \"gratom\", \"kratum\", \"Maeng Da Leaf\", \"drathom\", \"mambog\", \"mitragynine\", \"mitraciliatine\", \"cratom\", \"7-hydroxymitragynine\", \"Maeng Da\", \"kedemba\", \"Mitragyna speciose\", \"mitragynine extract\", \"biak\", \"ithang\", \"kraton\", \"katawn\", \"thom\", \"Mitragyna speciosa\", \"7-OH-mitragynine\", \"madat\", \"speciogynine\", \"7-hydroxy-mitragynine\", \"7-OH\", \"biak-biak\", \"thang\", \"7-hydroxy mitragynine\", \"speciociliatine\", \"kakuam\"]",
+    "Reasons": "[{\"reason_code\": 6018, \"reason\": \"FDA Statement\", \"link\": \"\", \"guid\": \"3cd17124-6ebc-4828-9edb-c20a81755502\", \"link_title\": \"\", \"updated\": {\"_seconds\": 1711715334, \"_nanoseconds\": 457000000}}, {\"reason_code\": 6017, \"reason\": \"Military policy\", \"link\": null, \"guid\": \"96435789-439c-44d4-83cf-1d10a25ab7b5\", \"link_title\": null, \"updated\": {\"_seconds\": 1703683268, \"_nanoseconds\": 216000000}}]",
+    "other_names": "[\"cratom\", \"mitragynine extract\", \"kedemba\", \"7-OH\", \"thang\", \"7-OH-mitragynine\", \"kakuam\", \"mitraciliatine\", \"biak-biak\", \"Maeng Da\", \"7-hydroxy-mitragynine\", \"Mitragyna speciose\", \"7-hydroxymitragynine\", \"drathom\", \"Maeng Da Leaf\", \"speciogynine\", \"gratom\", \"kratum\", \"ithang\", \"madat\", \"ketum\", \"kraton\", \"Mitragyna speciosa\", \"speciociliatine\", \"biak\", \"thom\", \"mitragynine\", \"katawn\", \"mambog\", \"7-hydroxy mitragynine\"]",
     "classifications": "[\"6000\"]",
-    "updated": "{\"_seconds\": 1759415380, \"_nanoseconds\": 817000000}",
+    "updated": "{\"_seconds\": 1769517596, \"_nanoseconds\": 99000000}",
     "label_terms": "[]",
     "linked_ingredients": "[]",
     "added": "2025-12-30T21:42:08.769789+00:00"
