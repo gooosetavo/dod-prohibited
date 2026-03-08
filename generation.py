@@ -43,8 +43,10 @@ def enhance_unii_data(unii_df: pd.DataFrame) -> pd.DataFrame:
         return f"https://comptox.epa.gov/dashboard/chemical/details/{comptox_id}" if not pd.isna(comptox_id) else None
     
     # Add DISPLAY_NAME column for matching (uppercase preferred term)
-    if 'PT' in enhanced_df.columns:
-        enhanced_df["DISPLAY_NAME"] = enhanced_df["PT"].str.upper()
+    # Column was 'PT' in older releases, 'Display Name' in newer releases
+    name_col = next((c for c in ('PT', 'Display Name') if c in enhanced_df.columns), None)
+    if name_col:
+        enhanced_df["DISPLAY_NAME"] = enhanced_df[name_col].str.upper()
     
     # Add URL columns
     enhanced_df["UNII_URL"] = enhanced_df["UNII"].apply(lambda x: f"https://precision.fda.gov/uniisearch/srs/unii/{x}")
