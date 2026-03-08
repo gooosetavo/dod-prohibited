@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 from dataclasses import dataclass
 from datetime import datetime
-from http_client import StreamingHttpClient
+from dod_prohibited.http import StreamingHttpClient
 
 # Configure logging
 logging.basicConfig(

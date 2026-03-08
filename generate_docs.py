@@ -1,19 +1,19 @@
 import logging
-import generation
+import dod_prohibited.site_builder as generation
 import sqlite3
 from pathlib import Path
 import json
 from datetime import datetime, timezone
 from dataclasses import dataclass, field
 from typing import Optional, List, Dict, Set, Tuple, Union, Any
-from changelog import (
+from dod_prohibited.changelog import (
     update_persistent_changelog,
     get_substance_source_date,
     get_substance_last_modified,
     has_substance_been_modified_since,
 )
-from ua import RandomUserAgent
-from data_loader import RemoteDataLoader, JsonFileDataLoader
+from dod_prohibited.user_agent import RandomUserAgent
+from dod_prohibited.loaders import RemoteDataLoader, JsonFileDataLoader
 
 @dataclass
 class Settings:

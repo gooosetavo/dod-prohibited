@@ -4,7 +4,7 @@ Quick test to verify that the UNII client properly uses cached files.
 """
 
 import logging
-from unii_client import UniiDataClient
+from dod_prohibited.unii import UniiDataClient
 import time
 import sys
 import os

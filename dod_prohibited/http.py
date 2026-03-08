@@ -349,3 +349,9 @@ class DrupalClient(HttpClient):
         settings = json.loads(script_tag.string)
         self.logger.info("Parsed Drupal settings JSON")
         return settings
+
+
+def fetch_drupal_settings(url: str, user_agent: Optional[str] = None) -> Dict[str, Any]:
+    """Convenience function to fetch Drupal settings without managing a client instance."""
+    with DrupalClient(user_agent=user_agent) as client:
+        return client.fetch_drupal_settings(url)

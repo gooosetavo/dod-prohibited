@@ -12,7 +12,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from generate_docs import load_previous_data_from_git
-from changelog import (
+from dod_prohibited.changelog import (
     update_persistent_changelog,
     get_substance_last_modified,
     get_substance_source_date,

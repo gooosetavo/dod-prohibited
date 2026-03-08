@@ -3,7 +3,7 @@ Test cases for the new Substance dataclass functionality.
 """
 
 import pytest
-from substance import Substance, UniiInfo
+from dod_prohibited.models import Substance, UniiInfo
 
 
 class TestSubstance:

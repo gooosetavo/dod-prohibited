@@ -10,8 +10,8 @@ import os
 # Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from retrieval import fetch_drupal_settings
-from parsing import get_nested
+from dod_prohibited.http import fetch_drupal_settings
+from dod_prohibited.parser import get_nested
 
 
 class TestRetrieval:
@@ -33,7 +33,7 @@ class TestRetrieval:
         assert get_nested({}, "a.b.c") is None
         assert get_nested(None, "a.b.c", "default") == "default"
 
-    @patch("http_client.HttpClient.get")
+    @patch("dod_prohibited.http.HttpClient.get")
     def test_fetch_drupal_settings_success(self, mock_get):
         """Test successful Drupal settings fetch"""
         mock_response = MagicMock()
@@ -50,7 +50,7 @@ class TestRetrieval:
         assert "dodProhibited" in result
         assert result["dodProhibited"] == [{"name": "test"}]
 
-    @patch("http_client.HttpClient.get")
+    @patch("dod_prohibited.http.HttpClient.get")
     def test_fetch_drupal_settings_no_script_tag(self, mock_get):
         """Test fetch when script tag is missing"""
         mock_response = MagicMock()
@@ -60,7 +60,7 @@ class TestRetrieval:
         with pytest.raises(ValueError, match="Drupal settings script tag not found"):
             fetch_drupal_settings("http://test.com")
 
-    @patch("http_client.HttpClient.get")
+    @patch("dod_prohibited.http.HttpClient.get")
     def test_fetch_drupal_settings_request_error(self, mock_get):
         """Test fetch when request fails"""
         mock_get.side_effect = Exception("Network error")
