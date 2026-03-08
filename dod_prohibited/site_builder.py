@@ -880,14 +880,15 @@ def generate_substances_index(
         letters = sorted(letter_groups.keys())
         letter_links = []
         for letter in letters:
-            if letter.isalpha():
+            ""
+            if letter.isalnum():
                 letter_links.append(f"[{letter}](#{letter.lower()})")
         
         f.write(" | ".join(letter_links) + "\n\n")
 
         # List substances by letter (limit to first 5 per letter for brevity)
         for letter in letters:
-            if letter.isalpha():
+            if letter.isalnum():
                 f.write(f"### {letter} {{#{letter.lower()}}}\n\n")
                 
                 displayed_count = 0
