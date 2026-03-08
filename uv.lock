@@ -530,6 +530,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "ctx-python" },
+    { name = "jinja2" },
     { name = "pandas" },
     { name = "pydantic-settings" },
     { name = "requests" },
@@ -565,6 +566,7 @@ jupyterlab = [
 requires-dist = [
     { name = "beautifulsoup4", specifier = ">=4.14.3" },
     { name = "ctx-python", specifier = ">=0.0.1a10" },
+    { name = "jinja2", specifier = ">=3.1.6" },
     { name = "jupyterlab", marker = "extra == 'jupyterlab'", specifier = ">=4.5.1" },
     { name = "pandas", specifier = ">=2.3.3" },
     { name = "pydantic-settings", specifier = ">=2.12.0" },
