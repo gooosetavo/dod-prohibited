@@ -69,9 +69,16 @@ def load_unii_data(settings=None) -> Optional[pd.DataFrame]:
         client = UniiDataClient(config)
         # Download ZIP if needed
         client.download_zip()
-        
-        # Load the UNII records (assuming this is the main file)
-        unii_df = client.load_csv_data('UNII_Records_18Aug2025.txt', sep='\t')
+
+        # Find the UNII Records file dynamically (filename changes with each release)
+        zip_contents = client.list_zip_contents()
+        records_files = [f for f in zip_contents if f.startswith('UNII_Records') and f.endswith('.txt')]
+        if not records_files:
+            raise FileNotFoundError(f"No UNII_Records*.txt file found in ZIP. Contents: {zip_contents}")
+        records_filename = records_files[0]
+
+        # Load the UNII records
+        unii_df = client.load_csv_data(records_filename, sep='\t')
         
         # Enhance with URLs
         enhanced_df = enhance_unii_data(unii_df)
