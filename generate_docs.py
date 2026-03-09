@@ -55,6 +55,13 @@ class Settings:
     use_unii_data: bool = True
     """Whether to include UNII (Unique Ingredient Identifier) data in substance pages."""
 
+    use_pubchem_data: bool = False
+    """Whether to fetch PubChem compound properties and embed 3D conformer widgets.
+    Requires UNII data. Enable with DOD_USE_PUBCHEM_DATA=true."""
+
+    pubchem_cache_dir: str = ".cache/pubchem"
+    """Directory for caching PubChem property JSON files. Can be overridden with DOD_PUBCHEM_CACHE_DIR."""
+
     include_search_metadata: bool = False
     """Whether to include generated search keywords/tags in substance page frontmatter.
     Disabled by default because the tags: field renders as visible tag chips in Zensical/MkDocs Material.

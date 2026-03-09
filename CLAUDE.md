@@ -28,7 +28,7 @@ This is a **DoD Prohibited Substances Database** project that makes DoD OPSS (Op
 - Scrapes and parses substance data from the OPSS Drupal site
 - Generates individual substance pages, sortable/filterable tables, and summary statistics
 - Integrates with FDA UNII (Unique Ingredient Identifier) database for enhanced substance information
-- Deploys as a MkDocs static site with JavaScript-based search and filtering
+- Deploys as a Zensical static site with JavaScript-based search and filtering
 
 **Python version**: 3.14 (pinned in `.python-version`)
 
@@ -94,7 +94,7 @@ dod-prohibited/
 │   └── data.json             # Machine-readable export
 │
 ├── pyproject.toml            # Project config (uv)
-├── mkdocs.yml                # MkDocs config (zensical theme)
+├── zensical.toml             # Zensical config
 ├── pytest.ini                # Pytest config (markers, logging)
 └── .python-version           # Python 3.14
 ```
@@ -107,7 +107,7 @@ dod-prohibited/
 4. **Overrides** → `overrides.py` applies manual overrides from `overrides.yaml`
 5. **UNII Enhancement** → `unii.py` adds FDA database links (matched by name or overridden UNII code)
 6. **Generation** → `site_builder.py` renders Jinja2 templates to markdown
-7. **Static Site** → MkDocs builds and deploys
+7. **Static Site** → Zensical builds and deploys
 
 ## Development Workflow
 
