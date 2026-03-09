@@ -608,12 +608,14 @@ class SubstancePageGenerator:
             props.append(("IUPAC Name", pc.iupac_name))
         if pc.inchikey:
             props.append(("InChIKey", f"<code>{pc.inchikey}</code>"))
-        if not props and not pc.has_3d_conformer:
+        if not props and not pc.cid:
             return
         f.write("## Chemical Structure\n\n")
-        if pc.has_3d_conformer:
-            from dod_prohibited.pubchem import conformer_embed_html
-            f.write(conformer_embed_html(pc.cid, self.substance.name) + "\n\n")
+        if pc.cid:
+            from dod_prohibited.pubchem import structure_html, conformer_admonition_md
+            f.write(structure_html(pc.cid, self.substance.name) + "\n\n")
+            if pc.has_3d_conformer:
+                f.write(conformer_admonition_md(pc.cid, self.substance.name) + "\n")
         if props:
             f.write('<table class="no-sort">\n')
             for label, value in props:

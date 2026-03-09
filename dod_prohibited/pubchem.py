@@ -13,16 +13,35 @@ _PROPERTIES = "MolecularFormula,MolecularWeight,IUPACName,InChIKey,CanonicalSMIL
 _BASE_URL = "https://pubchem.ncbi.nlm.nih.gov"
 
 
-def conformer_embed_html(cid: int, name: str = "") -> str:
-    """Return an iframe HTML string for the PubChem 3D conformer viewer."""
+def structure_html(cid: int, name: str = "") -> str:
+    """Return an HTML block showing the 2D structure image with a link to PubChem."""
+    img_url = f"{_BASE_URL}/rest/pug/compound/cid/{cid}/PNG?image_size=large"
+    compound_url = f"{_BASE_URL}/compound/{cid}"
+    alt = f"{name} structure" if name else f"CID {cid} structure"
+    return "\n".join([
+        '<div style="text-align:center;">',
+        f'<a href="{compound_url}" target="_blank" rel="noopener">',
+        f'<img src="{img_url}" alt="{alt}" loading="lazy" '
+        f'style="max-width:300px;width:100%;height:auto;" />',
+        '</a>',
+        f'<p style="font-size:0.85em;color:#666;margin-top:0.25em;">'
+        f'<a href="{compound_url}" target="_blank" rel="noopener">PubChem</a></p>',
+        '</div>',
+    ])
+
+
+def conformer_admonition_md(cid: int, name: str = "") -> str:
+    """Return a collapsible MkDocs admonition containing the PubChem 3D conformer iframe."""
     url = f"{_BASE_URL}/compound/{cid}#section=3D-Conformer&embed=true"
     title = f"{name} 3D conformer" if name else f"CID {cid} 3D conformer"
-    return (
-        '<div style="width:100%;aspect-ratio:4/3;max-height:500px;">'
-        f'<iframe src="{url}" loading="lazy" title="{title}" '
-        f'style="width:100%;height:100%;border:none;display:block;"></iframe>'
-        '</div>'
+    # Admonition content must be indented 4 spaces.
+    iframe = (
+        '    <div style="width:100%;height:500px;">\n'
+        f'    <iframe src="{url}" loading="lazy" title="{title}" '
+        f'style="width:100%;height:100%;border:none;display:block;"></iframe>\n'
+        '    </div>'
     )
+    return f'??? note "Interactive 3D Structure"\n{iframe}\n'
 
 
 class PubChemClient:
