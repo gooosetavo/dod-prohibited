@@ -114,6 +114,8 @@ jobs:
         run: uv sync
 
       - name: Regenerate data and documentation
+        env:
+          DOD_USE_PUBCHEM_DATA: "true"
         run: |
           uv run python generate_docs.py
 
