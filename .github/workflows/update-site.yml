@@ -45,6 +45,14 @@ jobs:
           restore-keys: |
             unii-data-${{ runner.os }}-
 
+      - name: Cache PubChem data
+        uses: actions/cache@v4
+        with:
+          path: .cache/pubchem
+          key: pubchem-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            pubchem-${{ runner.os }}-
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
@@ -85,6 +93,14 @@ jobs:
           key: unii-data-${{ runner.os }}-${{ github.run_id }}
           restore-keys: |
             unii-data-${{ runner.os }}-
+
+      - name: Cache PubChem data
+        uses: actions/cache@v4
+        with:
+          path: .cache/pubchem
+          key: pubchem-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            pubchem-${{ runner.os }}-
 
       - name: Set up Python
         uses: actions/setup-python@v5

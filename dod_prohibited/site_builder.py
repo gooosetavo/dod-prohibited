@@ -11,6 +11,7 @@ from jinja2 import Environment, FileSystemLoader
 from dod_prohibited.unii import UniiDataClient
 from dod_prohibited.models import Substance
 from dod_prohibited.overrides import load_overrides, get_unii_override
+from dod_prohibited.pubchem import PubChemClient
 
 if TYPE_CHECKING:
     pass
@@ -195,6 +196,14 @@ def generate_substance_pages(
         else:
             print("UNII data not available - substance pages will be generated without UNII information")
 
+    # Set up PubChem client if enabled
+    pubchem_client = None
+    if settings and getattr(settings, 'use_pubchem_data', False):
+        pubchem_client = PubChemClient(
+            cache_dir=Path(getattr(settings, 'pubchem_cache_dir', '.cache/pubchem')),
+        )
+        print("PubChem data fetching enabled")
+
     # Load substance overrides (e.g. manual UNII codes for substances that
     # don't match by name in the FDA database)
     overrides_path = getattr(settings, 'overrides_file', None)
@@ -224,6 +233,15 @@ def generate_substance_pages(
             unii_data = find_unii_data_for_substance(substance.name, unii_df)
             if unii_data:
                 substance.set_unii_info(unii_data)
+
+        # Attach PubChem data if client is available and CID is known
+        if pubchem_client and substance.unii_info:
+            cid = substance.unii_info.pubchem_cid
+            if cid:
+                pubchem_data = pubchem_client.get_properties(cid)
+                if pubchem_data:
+                    substance.set_pubchem_info(pubchem_data)
+
         substances.append(substance)
     
     # Sort substances alphabetically by name for consistent ordering
@@ -265,8 +283,10 @@ class SubstancePageGenerator:
         with open(page_path, "w", encoding="utf-8") as f:
             self._write_header(f)
             self._write_navigation(f)
-            self._write_basic_info(f)
-            self._write_unii_info(f)
+            self._write_properties_table(f)   # all OPSS data
+            self._write_references(f)          # OPSS references
+            self._write_external_resources(f)  # UNII identifiers/links
+            self._write_structure_section(f)   # PubChem 3D widget
             self._write_footer_navigation(f)
     
     def _generate_search_keywords(self):
@@ -501,156 +521,195 @@ class SubstancePageGenerator:
         f.write(" | ".join(nav_parts) + "\n\n")
         f.write("---\n\n")
     
-    def _write_basic_info(self, f):
-        """Write all basic substance information sections."""
-        self._write_other_names(f)
-        self._write_classifications(f)
-        self._write_reasons_for_prohibition(f)
-        self._write_warnings(f)
-        self._write_references(f)
-        self._write_metadata(f)
-    
-    def _write_other_names(self, f):
-        """Write other names section."""
-        other_names = self.substance.other_names
-        if other_names:
-            f.write("**Other names:**\n\n")
-            for name in other_names:
-                f.write(f"- {name}\n")
-            f.write("\n")
-    
-    def _write_classifications(self, f):
-        """Write classifications section."""
+    def _write_properties_table(self, f):
+        """Write all OPSS substance attributes as a single no-sort HTML table."""
+        rows = []
+
         classifications = self.substance.classifications
         if classifications:
-            f.write("**Classifications:**\n\n")
-            for classification in classifications:
-                f.write(f"- {classification}\n")
-            f.write("\n")
-    
-    def _write_reasons_for_prohibition(self, f):
-        """Write reasons for prohibition section."""
+            rows.append(("Classifications", ", ".join(classifications)))
+
+        dea = self.substance.dea_schedule
+        if dea:
+            rows.append(("DEA Schedule", dea))
+
+        reason = self.substance.reason
+        if reason:
+            rows.append(("Reason", reason))
+
+        other_names = self.substance.other_names
+        if other_names:
+            rows.append(("Also Known As", "<br>".join(other_names)))
+
         reasons = self.substance.reasons_for_prohibition
         if reasons:
-            f.write("**Reasons for prohibition:**\n\n")
-            for reason in reasons:
-                if isinstance(reason, dict):
-                    reason_text = reason.get('reason', '').strip()
-                    if reason_text:
-                        line = f"- {reason_text}"
-                        if reason.get("link"):
-                            link_title = reason.get("link_title", "source")
-                            line += f" (<a href=\"{reason['link']}\" target=\"_blank\">{link_title}</a>)"
-                        f.write(line + "\n")
-                elif isinstance(reason, str) and reason.strip():
-                    f.write(f"- {reason.strip()}\n")
-            f.write("\n")
-    
-    def _write_warnings(self, f):
-        """Write warnings section."""
+            items = []
+            for r in reasons:
+                if isinstance(r, dict):
+                    text = r.get('reason', '').strip()
+                    if text:
+                        if r.get('link'):
+                            lt = r.get('link_title', 'source')
+                            text += f' (<a href="{r["link"]}" target="_blank">{lt}</a>)'
+                        items.append(text)
+                elif isinstance(r, str) and r.strip():
+                    items.append(r.strip())
+            if items:
+                rows.append(("Prohibited Because", "<br>".join(items)))
+
         warnings = self.substance.warnings
         if warnings:
-            f.write("**Warnings:**\n\n")
-            for warning in warnings:
-                f.write(f"- {warning}\n")
-            f.write("\n")
-    
+            rows.append(("Warnings", "<br>".join(warnings)))
+
+        more_info_url = self.substance.more_info_url
+        if more_info_url and more_info_url.strip():
+            rows.append(("More Info", f'<a href="{more_info_url}" target="_blank">{more_info_url}</a>'))
+
+        source_of = self.substance.source_of
+        if source_of:
+            rows.append(("Source Of", source_of))
+
+        label_terms = self.substance.label_terms
+        if label_terms and label_terms not in ("[]", "", "Not specified"):
+            rows.append(("Label Terms", label_terms))
+
+        linked = self.substance.linked_ingredients
+        if linked and linked not in ("[]", "", "Not specified"):
+            rows.append(("Linked Ingredients", linked))
+
+        if self.substance.added_date:
+            rows.append(("Added to Database", self._format_date(self.substance.added_date)))
+
+        source_date = self.substance.source_updated_date
+        if source_date:
+            rows.append(("Source Last Updated", self._format_date(source_date)))
+
+        if self.substance.guid:
+            rows.append(("GUID", f"<code>{self.substance.guid}</code>"))
+
+        if not rows:
+            return
+        f.write('<table class="no-sort">\n')
+        for label, value in rows:
+            f.write(f"  <tr><td><strong>{label}</strong></td><td>{value}</td></tr>\n")
+        f.write("</table>\n\n")
+
+    def _write_structure_section(self, f):
+        """Write PubChem 3D conformer widget and molecular properties."""
+        pc = self.substance.pubchem_info
+        if not pc:
+            return
+        from dod_prohibited.pubchem import conformer_embed_html
+        f.write("## Chemical Structure\n\n")
+        f.write(conformer_embed_html(pc.cid, self.substance.name) + "\n\n")
+        props = []
+        if pc.molecular_formula:
+            props.append(("Molecular Formula", pc.molecular_formula))
+        if pc.molecular_weight:
+            props.append(("Molecular Weight", pc.molecular_weight))
+        if pc.iupac_name:
+            props.append(("IUPAC Name", pc.iupac_name))
+        if pc.inchikey:
+            props.append(("InChIKey", f"<code>{pc.inchikey}</code>"))
+        if props:
+            f.write('<table class="no-sort">\n')
+            for label, value in props:
+                f.write(f"  <tr><td><strong>{label}</strong></td><td>{value}</td></tr>\n")
+            f.write("</table>\n\n")
+
     def _write_references(self, f):
         """Write references section."""
         refs = self.substance.references
         if refs:
-            f.write("**References:**\n\n")
+            f.write("## References\n\n")
             for ref in refs:
                 if isinstance(ref, dict):
                     title = ref.get("title", "")
                     url = ref.get("url", "")
                     if title and url:
-                        f.write(f"- <a href=\"{url}\" target=\"_blank\">{title}</a>\n")
+                        f.write(f'- <a href="{url}" target="_blank">{title}</a>\n')
                     elif title:
                         f.write(f"- {title}\n")
                     elif url:
-                        f.write(f"- <a href=\"{url}\" target=\"_blank\">{url}</a>\n")
+                        f.write(f'- <a href="{url}" target="_blank">{url}</a>\n')
                     else:
                         f.write(f"- {ref}\n")
                 else:
                     f.write(f"- {ref}\n")
             f.write("\n")
+
+    def _format_date(self, date_str: str) -> str:
+        """Format an ISO date string as a human-readable date."""
+        try:
+            from datetime import datetime
+            dt = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
+            return dt.strftime("%B %-d, %Y")
+        except (ValueError, TypeError, AttributeError):
+            return date_str
     
-    def _write_metadata(self, f):
-        """Write metadata fields."""
-        # More info URL
+    def _write_external_resources(self, f):
+        """Write external resources combining UNII links and more_info_url."""
+        links = []
         more_info_url = self.substance.more_info_url
         if more_info_url and more_info_url.strip():
-            f.write(f"**More info:** <a href=\"{more_info_url}\" target=\"_blank\">{more_info_url}</a>\n\n")
-        else:
-            f.write("**More info:** Not specified\n\n")
-        
-        # Other metadata fields
-        f.write(f"**Source of:** {self.substance.source_of or 'Not specified'}\n\n")
-        f.write(f"**Reason:** {self.substance.reason or 'Not specified'}\n\n")
-        f.write(f"**Label terms:** {self.substance.label_terms or 'Not specified'}\n\n")
-        f.write(f"**Linked ingredients:** {self.substance.linked_ingredients or 'Not specified'}\n\n")
-        f.write(f"**Searchable name:** {self.substance.searchable_name or 'Not specified'}\n\n")
-        f.write(f"**GUID:** {self.substance.guid or 'Not specified'}\n\n")
-        
-        # Date fields
-        if self.substance.added_date:
-            f.write(f"**Added to this Database:** {self.substance.added_date}\n\n")
-        
-        source_date = self.substance.source_updated_date
-        if source_date:
-            f.write(f"**Last updated in source database:** {source_date}\n\n")
-    
-    def _write_unii_info(self, f):
-        """Write UNII information section."""
+            links.append(f'<a href="{more_info_url}" target="_blank">More Information</a>')
         if self.substance.unii_info:
             unii = self.substance.unii_info
-            f.write("## UNII (Unique Ingredient Identifier) Information\n\n")
-            
-            f.write(f"**UNII ID:** {unii.unii or 'Not available'}\n\n")
-            
-            if unii.preferred_term:
-                f.write(f"**Preferred Term:** {unii.preferred_term}\n\n")
-            
-            if unii.cas_rn:
-                f.write(f"**CAS Registry Number:** {unii.cas_rn}\n\n")
-            
-            if unii.substance_type:
-                f.write(f"**Substance Type:** {unii.substance_type}\n\n")
-            
-            # External links
-            f.write("**External Resources:**\n\n")
-            
-            links_added = False
-            
             if unii.fda_unii_url:
-                f.write(f"- <a href=\"{unii.fda_unii_url}\" target=\"_blank\">FDA UNII Search</a>\n")
-                links_added = True
-            
+                links.append(f'<a href="{unii.fda_unii_url}" target="_blank">FDA UNII Search</a>')
             if unii.gsrs_record_url:
-                f.write(f"- <a href=\"{unii.gsrs_record_url}\" target=\"_blank\">GSRS Full Record</a>\n")
-                links_added = True
-            
+                links.append(f'<a href="{unii.gsrs_record_url}" target="_blank">GSRS Full Record</a>')
             if unii.ncats_url:
-                f.write(f"- <a href=\"{unii.ncats_url}\" target=\"_blank\">NCATS Inxight Drugs</a>\n")
-                links_added = True
-            
+                links.append(f'<a href="{unii.ncats_url}" target="_blank">NCATS Inxight Drugs</a>')
             if unii.cas_common_chemistry_url:
-                f.write(f"- <a href=\"{unii.cas_common_chemistry_url}\" target=\"_blank\">CAS Common Chemistry</a>\n")
-                links_added = True
-            
+                links.append(f'<a href="{unii.cas_common_chemistry_url}" target="_blank">CAS Common Chemistry</a>')
             if unii.pubchem_url:
-                f.write(f"- <a href=\"{unii.pubchem_url}\" target=\"_blank\">PubChem</a>\n")
-                links_added = True
-            
+                links.append(f'<a href="{unii.pubchem_url}" target="_blank">PubChem</a>')
             if unii.epa_comptox_url:
-                f.write(f"- <a href=\"{unii.epa_comptox_url}\" target=\"_blank\">EPA CompTox Dashboard</a>\n")
-                links_added = True
-            
-            if not links_added:
-                f.write("- No external resources available\n")
-            
-            f.write("\n")
+                links.append(f'<a href="{unii.epa_comptox_url}" target="_blank">EPA CompTox Dashboard</a>')
+        if not links:
+            return
+        f.write("## External Resources\n\n")
+        for link in links:
+            f.write(f"- {link}\n")
+        f.write("\n")
+        if self.substance.unii_info:
+            unii = self.substance.unii_info
+            meta = []
+            if unii.unii:
+                meta.append(f"UNII: {unii.unii}")
+            if unii.preferred_term:
+                meta.append(f"Preferred term: {unii.preferred_term}")
+            if unii.cas_rn:
+                meta.append(f"CAS: {unii.cas_rn}")
+            if unii.substance_type:
+                meta.append(f"Type: {unii.substance_type}")
+            if meta:
+                f.write("*" + " · ".join(meta) + "*\n\n")
+
+    def _write_technical_details(self, f):
+        """Write technical metadata in a collapsible section."""
+        details = []
+        source_of = self.substance.source_of
+        if source_of:
+            details.append(f"**Source of:** {source_of}")
+        label_terms = self.substance.label_terms
+        if label_terms and label_terms not in ("[]", "", "Not specified"):
+            details.append(f"**Label terms:** {label_terms}")
+        linked = self.substance.linked_ingredients
+        if linked and linked not in ("[]", "", "Not specified"):
+            details.append(f"**Linked ingredients:** {linked}")
+        if self.substance.added_date:
+            details.append(f"**Added to Database:** {self._format_date(self.substance.added_date)}")
+        source_date = self.substance.source_updated_date
+        if source_date:
+            details.append(f"**Source Last Updated:** {self._format_date(source_date)}")
+        if self.substance.guid:
+            details.append(f"**GUID:** `{self.substance.guid}`")
+        if details:
+            f.write("## Technical Details\n\n")
+            for detail in details:
+                f.write(f"{detail}\n\n")
     
     def _write_footer_navigation(self, f):
         """Write footer navigation."""

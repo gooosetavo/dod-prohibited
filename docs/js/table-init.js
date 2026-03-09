@@ -4,8 +4,8 @@ function initTables() {
   const tables = document.querySelectorAll('article table, .md-content table, main table');
   
   tables.forEach(function(table) {
-    // Skip if already initialized
-    if (table.hasAttribute('data-tablesort-init')) {
+    // Skip if already initialized or explicitly excluded
+    if (table.hasAttribute('data-tablesort-init') || table.classList.contains('no-sort')) {
       return;
     }
     

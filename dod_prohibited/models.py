@@ -56,6 +56,39 @@ def _parse_list_field(value: Any) -> List[Any]:
 
 
 @dataclass
+class PubChemInfo:
+    """Holds PubChem compound property data for a substance."""
+
+    data: Dict[str, Any]
+
+    @property
+    def cid(self) -> Optional[int]:
+        cid = self.data.get("CID")
+        return int(cid) if cid is not None else None
+
+    @property
+    def molecular_formula(self) -> Optional[str]:
+        return self.data.get("MolecularFormula")
+
+    @property
+    def molecular_weight(self) -> Optional[str]:
+        w = self.data.get("MolecularWeight")
+        return f"{w} g/mol" if w is not None else None
+
+    @property
+    def iupac_name(self) -> Optional[str]:
+        return self.data.get("IUPACName")
+
+    @property
+    def inchikey(self) -> Optional[str]:
+        return self.data.get("InChIKey")
+
+    @property
+    def smiles(self) -> Optional[str]:
+        return self.data.get("CanonicalSMILES")
+
+
+@dataclass
 class UniiInfo:
     """
     Dataclass to hold UNII (Unique Ingredient Identifier) information.
@@ -131,6 +164,7 @@ class Substance:
     """
     data: Dict[str, Any]
     unii_info: Optional[UniiInfo] = None
+    pubchem_info: Optional[PubChemInfo] = None
 
     @property
     def name(self) -> str:
@@ -270,3 +304,7 @@ class Substance:
         Attaches UNII information to the substance.
         """
         self.unii_info = UniiInfo(data=unii_data)
+
+    def set_pubchem_info(self, pubchem_data: Dict[str, Any]):
+        """Attaches PubChem compound data to the substance."""
+        self.pubchem_info = PubChemInfo(data=pubchem_data)
