@@ -1,3 +1,18 @@
+/* Striped rows for substance detail tables */
+table.no-sort tbody tr:nth-child(odd) {
+  background-color: var(--md-code-bg-color, rgba(0,0,0,0.03));
+}
+
+table.no-sort td {
+  padding: 6px 10px;
+  vertical-align: top;
+}
+
+table.no-sort td ul {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
 /* Table filtering styles */
 .table-controls {
   margin-bottom: 20px;

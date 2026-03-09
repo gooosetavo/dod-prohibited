@@ -539,7 +539,8 @@ class SubstancePageGenerator:
 
         other_names = self.substance.other_names
         if other_names:
-            rows.append(("Also Known As", "<br>".join(other_names)))
+            items = "".join(f"<li>{n}</li>" for n in other_names)
+            rows.append(("Also Known As", f"<ul style='margin:0;padding-left:1.2em;'>{items}</ul>"))
 
         reasons = self.substance.reasons_for_prohibition
         if reasons:
