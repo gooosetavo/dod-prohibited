@@ -488,6 +488,29 @@ class SubstancePageGenerator:
         
         return variations
 
+    def _build_tags(self) -> list:
+        """Build a list of meaningful search/filter tags for this substance."""
+        tags = []
+
+        dea = self.substance.dea_schedule
+        if dea:
+            tags.append(dea)
+            tags.append("Controlled Substance")
+
+        reasons = self.substance.reasons_for_prohibition or []
+        reason_text = " ".join(
+            (r.get("reason", "") if isinstance(r, dict) else str(r)).lower()
+            for r in reasons
+        )
+        if "wada" in reason_text:
+            tags.append("WADA Prohibited")
+        if "fda" in reason_text:
+            tags.append("FDA Action")
+        if "military" in reason_text or "dod" in reason_text.replace("-", ""):
+            tags.append("Military Policy")
+
+        return tags
+
     def _write_header(self, f):
         """Write the page header with metadata front matter."""
         include_search_metadata = self.settings and getattr(self.settings, 'include_search_metadata', False)
@@ -495,10 +518,18 @@ class SubstancePageGenerator:
         f.write("---\n")
         f.write(f"title: {self.substance.name}\n")
         f.write(f"description: Information about {self.substance.name}, a substance prohibited by the Department of Defense\n")
+
+        tags = self._build_tags()
         if include_search_metadata:
             search_keywords = self._generate_search_keywords()
             f.write(f"keywords: {', '.join(search_keywords)}\n")
-            f.write(f"tags: {search_keywords}\n")
+            tags = list(dict.fromkeys(tags + search_keywords))  # merge, deduplicate, preserve order
+
+        if tags:
+            f.write("tags:\n")
+            for tag in tags:
+                f.write(f"  - {tag}\n")
+
         f.write("---\n\n")
 
         if include_search_metadata:

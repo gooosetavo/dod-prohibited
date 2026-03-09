@@ -174,6 +174,52 @@ uv run python generate_docs.py
 DOD_USE_UNII_DATA=true uv run python generate_docs.py
 ```
 
+## Zensical Search & Tags
+
+Zensical uses **Disco** (client-side search) with native tag support. Tags are written to each page's YAML frontmatter and surface as filterable chips in search results — no extra config needed.
+
+### How tags are generated
+
+`SubstancePageGenerator._build_tags()` in `site_builder.py` derives tags automatically from substance data:
+
+| Tag | Source |
+| --- | --- |
+| `Schedule I` … `Schedule V` | `substance.dea_schedule` |
+| `Controlled Substance` | Any DEA schedule present |
+| `WADA Prohibited` | "wada" appears in reasons_for_prohibition |
+| `FDA Action` | "fda" appears in reasons_for_prohibition |
+| `Military Policy` | "military" / "dod" in reasons_for_prohibition |
+
+Tags are emitted in frontmatter:
+
+```yaml
+---
+title: 1-testosterone
+tags:
+  - Schedule III
+  - Controlled Substance
+  - WADA Prohibited
+---
+```
+
+### Hiding tags on a page
+
+```yaml
+---
+hide:
+  - tags
+---
+```
+
+### Excluding a page from search
+
+```yaml
+---
+search:
+  exclude: true
+---
+```
+
 ## Important Notes
 
 - **Use `uv`**: Do not use pip or python directly
@@ -181,6 +227,7 @@ DOD_USE_UNII_DATA=true uv run python generate_docs.py
 - **Package structure**: All source code is in `dod_prohibited/` package
 - **Dataclass-based**: `Substance` wraps raw dict data with typed properties (in `models.py`)
 - **UNII optional**: Gracefully degrades if UNII data unavailable; controlled by `DOD_USE_UNII_DATA=true`
+- **PubChem optional**: Enabled with `DOD_USE_PUBCHEM_DATA=true`; caches to `.cache/pubchem/`; set automatically in GitHub Actions
 - **Overrides**: `overrides.yaml` at project root allows manual UNII code assignment for name-mismatch substances
 - **Config via env vars**: `Settings` dataclass (in `generate_docs.py`) uses `DOD_` prefix
 - **Changelog automation**: `workflow_helper.py` + `dod_prohibited/changelog.py` support GitHub Actions CI
