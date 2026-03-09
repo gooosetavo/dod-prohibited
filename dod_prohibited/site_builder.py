@@ -599,9 +599,6 @@ class SubstancePageGenerator:
         pc = self.substance.pubchem_info
         if not pc:
             return
-        from dod_prohibited.pubchem import conformer_embed_html
-        f.write("## Chemical Structure\n\n")
-        f.write(conformer_embed_html(pc.cid, self.substance.name) + "\n\n")
         props = []
         if pc.molecular_formula:
             props.append(("Molecular Formula", pc.molecular_formula))
@@ -611,6 +608,12 @@ class SubstancePageGenerator:
             props.append(("IUPAC Name", pc.iupac_name))
         if pc.inchikey:
             props.append(("InChIKey", f"<code>{pc.inchikey}</code>"))
+        if not props and not pc.has_3d_conformer:
+            return
+        f.write("## Chemical Structure\n\n")
+        if pc.has_3d_conformer:
+            from dod_prohibited.pubchem import conformer_embed_html
+            f.write(conformer_embed_html(pc.cid, self.substance.name) + "\n\n")
         if props:
             f.write('<table class="no-sort">\n')
             for label, value in props:
@@ -687,30 +690,6 @@ class SubstancePageGenerator:
             if meta:
                 f.write("*" + " · ".join(meta) + "*\n\n")
 
-    def _write_technical_details(self, f):
-        """Write technical metadata in a collapsible section."""
-        details = []
-        source_of = self.substance.source_of
-        if source_of:
-            details.append(f"**Source of:** {source_of}")
-        label_terms = self.substance.label_terms
-        if label_terms and label_terms not in ("[]", "", "Not specified"):
-            details.append(f"**Label terms:** {label_terms}")
-        linked = self.substance.linked_ingredients
-        if linked and linked not in ("[]", "", "Not specified"):
-            details.append(f"**Linked ingredients:** {linked}")
-        if self.substance.added_date:
-            details.append(f"**Added to Database:** {self._format_date(self.substance.added_date)}")
-        source_date = self.substance.source_updated_date
-        if source_date:
-            details.append(f"**Source Last Updated:** {self._format_date(source_date)}")
-        if self.substance.guid:
-            details.append(f"**GUID:** `{self.substance.guid}`")
-        if details:
-            f.write("## Technical Details\n\n")
-            for detail in details:
-                f.write(f"{detail}\n\n")
-    
     def _write_footer_navigation(self, f):
         """Write footer navigation."""
         f.write("---\n\n")

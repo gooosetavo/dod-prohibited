@@ -87,6 +87,11 @@ class PubChemInfo:
     def smiles(self) -> Optional[str]:
         return self.data.get("CanonicalSMILES")
 
+    @property
+    def has_3d_conformer(self) -> bool:
+        """True when PubChem has a 3D conformer for this compound."""
+        return bool(self.data.get("has_3d_conformer", True))
+
 
 @dataclass
 class UniiInfo:
