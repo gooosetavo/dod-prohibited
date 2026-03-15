@@ -178,7 +178,7 @@ def build_minimal_unii_data(unii_code: str) -> Dict[str, Any]:
 
 def generate_substance_pages(
     data: List[Dict[str, Any]], columns: List[str], substances_dir: Path, settings=None
-) -> None:
+) -> List[Any]:
     """
     Generates a Markdown file for each substance in the data list.
     Args:
@@ -186,6 +186,8 @@ def generate_substance_pages(
         columns: List of column names to include.
         substances_dir: Path to the directory where files will be written.
         settings: Settings object containing configuration options.
+    Returns:
+        List of enriched Substance objects (with UNII/PubChem data attached).
     """
     # Load UNII data if enabled in settings
     unii_df = None
@@ -264,6 +266,8 @@ def generate_substance_pages(
 
         generator = SubstancePageGenerator(substance, i + 1, len(sorted_substances), prev_substance, next_substance, settings=settings)
         generator.generate_page(page_path)
+
+    return sorted_substances
 
 
 class SubstancePageGenerator:
@@ -509,6 +513,14 @@ class SubstancePageGenerator:
         if "military" in reason_text or "dod" in reason_text.replace("-", ""):
             tags.append("Military Policy")
 
+        # External data augmentation tags
+        if self.substance.unii_info:
+            tags.append("UNII Data")
+        if self.substance.pubchem_info:
+            tags.append("PubChem Structure")
+            if self.substance.pubchem_info.has_3d_conformer:
+                tags.append("3D Conformer")
+
         return tags
 
     def _write_header(self, f):
@@ -536,6 +548,22 @@ class SubstancePageGenerator:
             f.write("<!-- Search Keywords: " + " ".join(search_keywords) + " -->\n\n")
 
         f.write(f"# {self.substance.name}\n\n")
+
+        # Inline text summary for search indexing. All ## sub-sections are
+        # marked data-search-exclude, so this paragraph is the sole search
+        # index entry for the page — giving exactly one result per substance
+        # when filtering by tag.
+        # summary_parts = []
+        # if self.substance.classifications:
+        #     summary_parts.append("Classifications: " + ", ".join(self.substance.classifications))
+        # if self.substance.dea_schedule:
+        #     summary_parts.append(self.substance.dea_schedule)
+        # if self.substance.reason:
+        #     summary_parts.append(self.substance.reason)
+        # if self.substance.other_names:
+        #     summary_parts.append("Also known as: " + ", ".join(self.substance.other_names))
+        # if summary_parts:
+        #     f.write(" · ".join(summary_parts) + "\n\n")
     
     def _write_navigation(self, f):
         """Write the top navigation."""
@@ -554,6 +582,7 @@ class SubstancePageGenerator:
     
     def _write_properties_table(self, f):
         """Write all OPSS substance attributes as a single no-sort HTML table."""
+        f.write('## OPSS Properties { data-search-exclude }\n\n')
         rows = []
 
         classifications = self.substance.classifications
@@ -628,9 +657,11 @@ class SubstancePageGenerator:
 
     def _write_structure_section(self, f):
         """Write PubChem 3D conformer widget and molecular properties."""
+        f.write('<!-- PubChem structure section start -->\n')
         pc = self.substance.pubchem_info
         if not pc:
             return
+        f.write('## PubChem Properties { data-search-exclude }\n\n')
         props = []
         if pc.molecular_formula:
             props.append(("Molecular Formula", pc.molecular_formula))
@@ -642,7 +673,7 @@ class SubstancePageGenerator:
             props.append(("InChIKey", f"<code>{pc.inchikey}</code>"))
         if not props and not pc.cid:
             return
-        f.write("## Chemical Structure\n\n")
+        f.write("## Chemical Structure { data-search-exclude }\n\n")
         if pc.cid:
             from dod_prohibited.pubchem import structure_html, conformer_admonition_md
             f.write(structure_html(pc.cid, self.substance.name) + "\n\n")
@@ -658,7 +689,7 @@ class SubstancePageGenerator:
         """Write references section."""
         refs = self.substance.references
         if refs:
-            f.write("## References\n\n")
+            f.write("## References { data-search-exclude }\n\n")
             for ref in refs:
                 if isinstance(ref, dict):
                     title = ref.get("title", "")
@@ -706,7 +737,7 @@ class SubstancePageGenerator:
                 links.append(f'<a href="{unii.epa_comptox_url}" target="_blank">EPA CompTox Dashboard</a>')
         if not links:
             return
-        f.write("## External Resources\n\n")
+        f.write("## External Resources { data-search-exclude }\n\n")
         for link in links:
             f.write(f"- {link}\n")
         f.write("\n")
@@ -920,7 +951,8 @@ def generate_substances_table(
 
 
 def generate_substances_index(
-    data: List[Dict[str, Any]], columns: List[str], docs_dir: Path
+    data: List[Dict[str, Any]], columns: List[str], docs_dir: Path,
+    enriched_substances: Optional[List[Any]] = None,
 ) -> None:
     """
     Generates the substances index with metrics summary.
@@ -928,10 +960,14 @@ def generate_substances_index(
         data: List of substance dictionaries.
         columns: List of column names to include.
         docs_dir: Path to the docs directory.
+        enriched_substances: Optional list of enriched Substance objects returned by
+            generate_substance_pages(). When provided, external data coverage stats
+            are included in the summary.
     """
-    # Convert data to Substance objects
-    substances = [Substance(data=entry) for entry in data]
-    
+    # Use enriched substances when available so augmentation flags are accurate;
+    # fall back to plain Substance objects created from raw data.
+    substances = enriched_substances if enriched_substances is not None else [Substance(data=entry) for entry in data]
+
     # Calculate metrics
     total_substances = len(substances)
 
@@ -999,6 +1035,38 @@ def generate_substances_index(
                     f"- **{classification}:** {count} substances ({percentage:.1f}%)\n"
                 )
             f.write("\n")
+
+        # External data coverage (only meaningful when enriched data is available)
+        with_unii = sum(1 for s in substances if s.unii_info is not None)
+        with_pubchem = sum(1 for s in substances if s.pubchem_info is not None)
+        with_3d = sum(
+            1 for s in substances
+            if s.pubchem_info is not None and s.pubchem_info.has_3d_conformer
+        )
+        if with_unii > 0 or with_pubchem > 0:
+            f.write("### External Data Coverage\n\n")
+            f.write(
+                "The following substances have been augmented with data from external "
+                "databases beyond the OPSS source.\n\n"
+            )
+            if with_unii > 0:
+                pct = (with_unii / total_substances) * 100
+                f.write(f"- **FDA UNII / GSRS:** {with_unii} substances ({pct:.1f}%) — "
+                        "includes UNII codes, CAS numbers, substance type, and links to "
+                        "FDA GSRS, NCATS Inxight Drugs, CAS Common Chemistry, PubChem, and EPA CompTox.\n")
+            if with_pubchem > 0:
+                pct = (with_pubchem / total_substances) * 100
+                f.write(f"- **PubChem:** {with_pubchem} substances ({pct:.1f}%) — "
+                        "includes molecular formula, molecular weight, IUPAC name, InChIKey, and 2D structure image.\n")
+            if with_3d > 0:
+                pct = (with_3d / total_substances) * 100
+                f.write(f"- **PubChem 3D Conformer:** {with_3d} substances ({pct:.1f}%) — "
+                        "includes interactive 3D structure viewer.\n")
+            f.write("\n")
+            f.write(
+                "Use the **UNII Data**, **PubChem Structure**, and **3D Conformer** "
+                "tags in search results to filter for substances with these data sources.\n\n"
+            )
 
         # Navigation links
         f.write("## Browse Substances\n\n")

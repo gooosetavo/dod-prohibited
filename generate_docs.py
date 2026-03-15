@@ -803,9 +803,9 @@ def main():
     logging.info(f"Wrote {len(data)} substances to docs/data.json.")
 
     # Use generation module for page and changelog creation
-    generation.generate_substance_pages(data, columns, substances_dir, settings)
+    enriched_substances = generation.generate_substance_pages(data, columns, substances_dir, settings)
     logging.info("Generated substance pages.")
-    generation.generate_substances_index(data, columns, docs_dir)
+    generation.generate_substances_index(data, columns, docs_dir, enriched_substances=enriched_substances)
     logging.info("Generated substances index.")
     generation.generate_changelog(data, columns, docs_dir)
     logging.info("Generated changelog page.")
