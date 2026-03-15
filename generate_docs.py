@@ -65,6 +65,7 @@ class Settings:
     include_search_metadata: bool = False
     """Whether to include generated search keywords/tags in substance page frontmatter.
     Disabled by default because the tags: field renders as visible tag chips in Zensical/MkDocs Material.
+    Will be removed/deprecated in the future.
     Enable with DOD_INCLUDE_SEARCH_METADATA=true."""
     
     log_level: str = "INFO"

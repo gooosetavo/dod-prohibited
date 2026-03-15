@@ -1021,7 +1021,7 @@ def generate_substances_index(
         letters = sorted(letter_groups.keys())
         letter_links = []
         for letter in letters:
-            ""
+            ### Only include alphanumeric letters in the quick navigation
             if letter.isalnum():
                 letter_links.append(f"[{letter}](#{letter.lower()})")
         

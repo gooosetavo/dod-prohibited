@@ -10,6 +10,7 @@ extra_javascript = [
 nav = [
     {Home = "index.md"},
     {"User Guide" = "guide.md"},
+    {"Developer Guide" = "dev-guide.md"},
     {Substances = ["substances/index.md", {"Complete Table" = "substances/table.md"}]},
     {Changelog = "changelog.md"},
 ]
