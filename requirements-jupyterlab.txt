@@ -116,7 +116,7 @@ jupyter-server==2.17.0
     #   notebook-shim
 jupyter-server-terminals==0.5.3
     # via jupyter-server
-jupyterlab==4.5.1
+jupyterlab==4.5.7
     # via dod-prohibited (pyproject.toml)
 jupyterlab-pygments==0.3.0
     # via nbconvert

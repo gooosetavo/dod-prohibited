@@ -18,7 +18,7 @@ dependencies = [
 
 
 [project.optional-dependencies]
-jupyterlab = ["jupyterlab>=4.5.1"]
+jupyterlab = ["jupyterlab>=4.5.7"]
 docs = [
     "zensical",
 ]
