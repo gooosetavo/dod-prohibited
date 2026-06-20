@@ -26,7 +26,7 @@ beautifulsoup4==4.14.3
     # via
     #   dod-prohibited (pyproject.toml)
     #   nbconvert
-bleach==6.3.0
+bleach==6.4.0
     # via nbconvert
 certifi==2025.11.12
     # via
