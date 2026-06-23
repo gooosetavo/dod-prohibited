@@ -79,7 +79,7 @@ mkdocs-redirects==1.2.2
     # via mkdocs-material
 mkdocs-rss-plugin==1.17.9
     # via mkdocs-material
-msgpack==1.1.2
+msgpack==1.2.1
     # via cachecontrol
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
