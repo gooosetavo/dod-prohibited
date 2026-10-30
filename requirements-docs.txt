@@ -22,7 +22,7 @@ colorama==0.4.6
     # via mkdocs-material
 csscompressor==0.9.5
     # via mkdocs-minify-plugin
-filelock==3.20.3
+filelock==4.2.1
     # via cachecontrol
 ghp-import==2.1.0
     # via mkdocs
